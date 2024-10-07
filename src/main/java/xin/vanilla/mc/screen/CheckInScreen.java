@@ -1,4 +1,4 @@
-package xin.vanilla.mc.client;
+package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.SakuraSignIn;
@@ -25,7 +26,7 @@ public class CheckInScreen extends Screen {
     private Button submitButton;
 
     public CheckInScreen() {
-        super(new StringTextComponent("check in"));
+        super(new TranslationTextComponent("check_in.title"));
     }
 
     /**
@@ -56,6 +57,31 @@ public class CheckInScreen extends Screen {
     }
 
     /**
+     * 重写render方法，用于渲染屏幕上的图像
+     *
+     * @param matrixStack  模型视图矩阵堆栈，用于渲染的坐标变换
+     * @param mouseX       鼠标的X坐标，用于响应鼠标事件
+     * @param mouseY       鼠标的Y坐标，用于响应鼠标事件
+     * @param partialTicks 帧插值因子，用于平滑动画效果
+     */
+    @Override
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        // 渲染背景
+        this.renderBackground(matrixStack);
+
+        // 绑定背景纹理，以便在屏幕上显示
+        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
+        // 从纹理中复制图像到屏幕上，位置和大小根据屏幕的宽高进行调整
+        blit(matrixStack, this.width / 2 - 128, this.height / 2 - 128, 0, 0, 256, 256, 256, 256);
+
+        // 调用父类的render方法，进行其他渲染操作
+        super.render(matrixStack, mouseX, mouseY, partialTicks);
+
+        // 渲染输入框，处理鼠标交互
+        this.inputField.render(matrixStack, mouseX, mouseY, partialTicks);
+    }
+
+    /**
      * 提交表单的方法
      * 此方法用于处理用户在游戏中的提交操作，它尝试将用户输入的文本转换为物品堆叠并将其添加到玩家的库存中
      * 如果库存已满，则将物品作为掉落物实体添加到世界上
@@ -80,31 +106,6 @@ public class CheckInScreen extends Screen {
 
         // 调用关闭方法，通常用于关闭当前界面
         this.onClose();
-    }
-
-    /**
-     * 重写render方法，用于渲染屏幕上的图像
-     *
-     * @param matrixStack  模型视图矩阵堆栈，用于渲染的坐标变换
-     * @param mouseX       鼠标的X坐标，用于响应鼠标事件
-     * @param mouseY       鼠标的Y坐标，用于响应鼠标事件
-     * @param partialTicks 帧插值因子，用于平滑动画效果
-     */
-    @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        // 渲染背景
-        this.renderBackground(matrixStack);
-
-        // 绑定背景纹理，以便在屏幕上显示
-        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        // 从纹理中复制图像到屏幕上，位置和大小根据屏幕的宽高进行调整
-        blit(matrixStack, this.width / 2 - 128, this.height / 2 - 128, 0, 0, 256, 256, 256, 256);
-
-        // 调用父类的render方法，进行其他渲染操作
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-
-        // 渲染输入框，处理鼠标交互
-        this.inputField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     /**

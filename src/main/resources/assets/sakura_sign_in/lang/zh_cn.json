@@ -1,4 +1,7 @@
 {
-  "key.sakurasignin.signin": "签到",
-  "key.categories.sakurasignin": "樱花签到"
+  "key.categories.sakurasignin": "樱花签到",
+  "key.sakurasignin.signin": "打开签到页面",
+  "key.sakurasignin.calendar": "打开日历页面",
+  "calendar.title": "日历",
+  "check_in.title": "签到"
 }

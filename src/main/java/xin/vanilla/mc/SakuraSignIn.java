@@ -5,6 +5,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.command.CheckInCommand;
@@ -26,6 +27,9 @@ public class SakuraSignIn {
 
         // 注册当前实例到MinecraftForge的事件总线，以便监听和处理游戏内的各种事件
         MinecraftForge.EVENT_BUS.register(this);
+
+        // 注册客户端设置事件到MOD事件总线
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
     }
 
     /**
@@ -35,10 +39,10 @@ public class SakuraSignIn {
      * @param event FMLClientSetupEvent 类型的事件参数，包含 Minecraft 的供应商对象
      */
     @SubscribeEvent
-    public static void onClientSetup(final FMLClientSetupEvent event) {
+    public void onClientSetup(final FMLClientSetupEvent event) {
         LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().options);
-
         // 注册键绑定
+        LOGGER.info("Registering key bindings");
         ClientEventHandler.registerKeyBindings();
     }
 
@@ -52,6 +56,7 @@ public class SakuraSignIn {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         // 注册签到命令到事件调度器
+        LOGGER.info("Registering commands");
         CheckInCommand.register(event.getDispatcher());
     }
 }

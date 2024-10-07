@@ -3,23 +3,28 @@ package xin.vanilla.mc.event;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
-import xin.vanilla.mc.client.CheckInScreen;
+import xin.vanilla.mc.screen.CalendarScreen;
+import xin.vanilla.mc.screen.CheckInScreen;
 
-@OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = "sakura_sign_in", value = Dist.CLIENT)
 public class ClientEventHandler {
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final String CATEGORIES = "key.categories.sakurasignin";
 
     // 定义一个静态常量 SIGN_IN_KEY，用于绑定签到功能的快捷键
     // 该快捷键的名称为 "key.sakurasignin.signin"，按键为 G
-    // 它属于 "key.categories.sakurasignin" 这一类别
-    private static final KeyBinding SIGN_IN_KEY = new KeyBinding("key.sakurasignin.signin",
-            GLFW.GLFW_KEY_G, "key.categories.sakurasignin");
+    // 它属于类别 CATEGORIES
+    public static KeyBinding SIGN_IN_KEY = new KeyBinding("key.sakurasignin.signin",
+            GLFW.GLFW_KEY_G, CATEGORIES);
+    public static KeyBinding CALENDAR_KEY = new KeyBinding("key.sakurasignin.calendar",
+            GLFW.GLFW_KEY_H, CATEGORIES);
 
     /**
      * 注册键绑定
@@ -28,6 +33,7 @@ public class ClientEventHandler {
     public static void registerKeyBindings() {
         // 在客户端注册SIGN_IN键绑定，使得游戏能够识别玩家按下该键时执行对应的操作
         ClientRegistry.registerKeyBinding(SIGN_IN_KEY);
+        ClientRegistry.registerKeyBinding(CALENDAR_KEY);
     }
 
     /**
@@ -43,6 +49,8 @@ public class ClientEventHandler {
         if (SIGN_IN_KEY.consumeClick()) {
             // 打开签到界面
             Minecraft.getInstance().setScreen(new CheckInScreen());
+        } else if (CALENDAR_KEY.consumeClick()) {
+            Minecraft.getInstance().setScreen(new CalendarScreen());
         }
     }
 }
