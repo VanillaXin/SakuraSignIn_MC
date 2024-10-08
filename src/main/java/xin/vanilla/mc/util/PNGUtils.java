@@ -4,7 +4,10 @@ import xin.vanilla.mc.screen.CalendarBackgroundConf;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
@@ -87,6 +90,82 @@ public class PNGUtils {
         }
         return ztxtMap;
     }
+
+    /**
+     * 根据关键字从输入流中读取PNG的zTXt信息
+     *
+     * @param inputStream   PNG输入流，方法操作的主体
+     * @param targetKeyword 目标关键字，用于在zTXt数据中查找
+     * @return 返回与目标关键字对应的字符串，如果找不到则返回null
+     * @throws IOException 如果无法读取数据，抛出IO异常
+     */
+    public static String readZTxtByKey(InputStream inputStream, String targetKeyword) throws IOException {
+        // 首先读取PNG文件中的所有zTxt信息到Map中
+        Map<String, String> ztxtMap = readAllZTxt(inputStream);
+        // 从Map中根据关键字获取对应的值，如果没有找到则返回null
+        return ztxtMap.getOrDefault(targetKeyword, null);
+    }
+
+    /**
+     * 读取输入流中的所有zTXt（压缩文本）块，并将其解压缩为键值对映射
+     * zTXt块包含一个关键字和一个压缩的文本字符串，该方法将关键字与解压缩后的文本字符串一起返回
+     *
+     * @param inputStream PNG输入流对象，用于读取其中的zTXt块
+     * @return 包含解压缩后文本字符串的映射，以关键字为键
+     * @throws IOException 如果PNG流无效或遇到IO错误时抛出
+     */
+    public static Map<String, String> readAllZTxt(InputStream inputStream) throws IOException {
+        Map<String, String> ztxtMap = new LinkedHashMap<>();
+
+        try (DataInputStream dis = new DataInputStream(inputStream)) {
+
+            byte[] pngHeader = new byte[8];
+            dis.readFully(pngHeader);
+
+            if (!isPNGHeaderValid(pngHeader)) {
+                throw new IOException("Invalid PNG stream.");
+            }
+
+            while (dis.available() > 0) {
+                int length = dis.readInt();
+                byte[] chunkType = new byte[4];
+                dis.readFully(chunkType);
+
+                String chunkName = new String(chunkType, StandardCharsets.UTF_8);
+
+                byte[] data = new byte[length];
+                dis.readFully(data);
+                // 跳过校验和部分，因为我们只关心文本数据
+                dis.skipBytes(4);
+                // 如果块的名称是"zTXt"
+                if (chunkName.equals("zTXt")) {
+                    // 读取空字符终止的字符串，这个字符串是关键字
+                    String keyword = readNullTerminatedString(data);
+                    // 计算下一个字段的索引位置
+                    int index = keyword.length() + 1;
+
+                    // 读取压缩方法的字段
+                    int compressionMethod = data[index];
+                    // 将索引指向下一个字段
+                    index += 1;
+                    // 如果压缩方法不是0（表示未压缩），抛出异常
+                    if (compressionMethod != 0) {
+                        throw new IOException("Unsupported compression method in zTXt block.");
+                    }
+                    // 创建一个字节数组，用于存储压缩的文本
+                    byte[] compressedText = new byte[length - index];
+                    // 将数据中的压缩文本复制到字节数组中
+                    System.arraycopy(data, index, compressedText, 0, compressedText.length);
+                    // 解压缩文本
+                    String decompressedText = inflateText(compressedText);
+                    // 将关键字和解压缩的文本存入映射中
+                    ztxtMap.put(keyword, decompressedText);
+                }
+            }
+        }
+        return ztxtMap;
+    }
+
 
     /**
      * 根据关键字更新zTxt标签信息，并写入到新的文件中
@@ -191,6 +270,10 @@ public class PNGUtils {
             fis.read(pngHeader);
             dos.write(pngHeader);
 
+            // 记录IEND块的相关信息（不直接写入）
+            byte[] iendChunkData = null;
+            int iendChunkCRC = 0;
+
             // 遍历PNG文件中的每个块
             while (fis.available() > 0) {
                 // 读取块的长度
@@ -208,6 +291,13 @@ public class PNGUtils {
                 // 将块的类型转换为字符串
                 String currentChunkType = new String(typeBuffer, StandardCharsets.UTF_8);
 
+                // 如果遇到IEND块，则暂存，不立即写入
+                if (currentChunkType.equals("IEND")) {
+                    iendChunkData = chunkData;
+                    iendChunkCRC = crc;
+                    continue;  // 暂不写入
+                }
+
                 // 如果要删除已存在的相同类型块，则跳过该块
                 if (deleteExisting && currentChunkType.equals(chunkType)) {
                     continue;
@@ -217,8 +307,13 @@ public class PNGUtils {
                 writeChunk(dos, currentChunkType, chunkData, crc);
             }
 
-            // 写入新的私有块
-            writeChunk(dos, chunkType, data, calculateCRC(chunkType.getBytes(), data));
+            // 在IEND块之前写入新的私有块
+            writeChunk(dos, chunkType, data, calculateCRC(chunkType.getBytes(StandardCharsets.UTF_8), data));
+
+            // 最后写入IEND块
+            if (iendChunkData != null) {
+                writeChunk(dos, "IEND", iendChunkData, iendChunkCRC);
+            }
         }
     }
 
@@ -269,6 +364,51 @@ public class PNGUtils {
     public static <T> List<T> readAllPrivateChunks(File pngFile, String chunkType) throws IOException, ClassNotFoundException {
         // 调用readPrivateChunk方法，读取PNG文件中指定类型的私有块，不进行压缩
         return readPrivateChunk(pngFile, chunkType, false);
+    }
+
+    /**
+     * 从PNG输入流中读取第一个指定类型的私有chunk
+     *
+     * @param inputStream 要读取的PNG输入流
+     * @param chunkType   要读取的chunk类型
+     * @return 如果存在，则返回第一个私有chunk的对象；否则返回null
+     * @throws IOException            如果读取输入流时发生错误
+     * @throws ClassNotFoundException 如果chunk中包含的类不存在
+     */
+    public static <T> T readFirstPrivateChunk(InputStream inputStream, String chunkType) throws IOException, ClassNotFoundException {
+        // 读取指定类型的第一个私有chunk，如果存在则返回chunk对象，否则返回null
+        List<T> objects = readPrivateChunk(inputStream, chunkType, true);
+        return objects.isEmpty() ? null : objects.get(0);
+    }
+
+    /**
+     * 读取PNG输入流中指定类型的最后一个私有块数据
+     *
+     * @param inputStream PNG输入流对象，用于读取私有块数据
+     * @param chunkType   指定要读取的私有块类型
+     * @return 返回指定类型私有块中的最后一个数据项，如果不存在则返回null
+     * @throws IOException            如果读取PNG文件过程中发生输入输出异常
+     * @throws ClassNotFoundException 如果在私有块数据中使用的类未找到
+     */
+    public static <T> T readLastPrivateChunk(InputStream inputStream, String chunkType) throws IOException, ClassNotFoundException {
+        // 读取PNG输入流中指定类型的私有块数据，返回包含所有符合条件的私有块数据列表
+        List<T> objects = readPrivateChunk(inputStream, chunkType, true);
+        // 返回列表中的最后一个元素，如果列表为空，则返回null
+        return objects.isEmpty() ? null : objects.get(objects.size() - 1);
+    }
+
+    /**
+     * 读取PNG输入流中指定类型的所有私有块
+     *
+     * @param inputStream PNG输入流对象
+     * @param chunkType   需要读取的块类型
+     * @return 包含指定类型私有块数据的列表
+     * @throws IOException            如果读取输入流时发生错误
+     * @throws ClassNotFoundException 如果私有块类型无法识别
+     */
+    public static <T> List<T> readAllPrivateChunks(InputStream inputStream, String chunkType) throws IOException, ClassNotFoundException {
+        // 调用readPrivateChunk方法，读取PNG输入流中指定类型的私有块，不进行压缩
+        return readPrivateChunk(inputStream, chunkType, false);
     }
 
     /**
@@ -430,6 +570,48 @@ public class PNGUtils {
         }
         // 返回包含所有匹配的反序列化对象的列表
         return result;
+    }
+
+    /**
+     * 读取PNG输入流中的指定类型的私有块
+     *
+     * @param inputStream PNG输入流对象
+     * @param chunkType   需要读取的块类型
+     * @param stopAtFirst 如果为true，则读取第一个匹配的块后停止；否则读取所有匹配的块
+     * @return 包含指定类型私有块数据的列表
+     * @throws IOException            如果读取输入流时发生错误
+     * @throws ClassNotFoundException 如果私有块类型无法识别
+     */
+    private static <T> List<T> readPrivateChunk(InputStream inputStream, String chunkType, boolean stopAtFirst) throws IOException, ClassNotFoundException {
+        List<T> privateChunks = new ArrayList<>();
+
+        try (DataInputStream dis = new DataInputStream(inputStream)) {
+            byte[] pngHeader = new byte[8];
+            dis.readFully(pngHeader);
+            if (!isPNGHeaderValid(pngHeader)) {
+                throw new IOException("Invalid PNG file.");
+            }
+            while (dis.available() > 0) {
+                int length = dis.readInt();
+                byte[] chunkTypeBytes = new byte[4];
+                dis.readFully(chunkTypeBytes);
+                String chunkName = new String(chunkTypeBytes);
+                byte[] data = new byte[length];
+                dis.readFully(data);
+                // 跳过CRC
+                dis.skipBytes(4);
+                // 如果块类型匹配
+                if (chunkName.equals(chunkType)) {
+                    T chunkObject = deserializeObject(data);
+                    privateChunks.add(chunkObject);
+                    if (stopAtFirst) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return privateChunks;
     }
 
     /**

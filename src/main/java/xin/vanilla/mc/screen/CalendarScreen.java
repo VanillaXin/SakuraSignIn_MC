@@ -21,8 +21,8 @@ import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.PNGUtils;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -57,7 +57,8 @@ public class CalendarScreen extends Screen {
     protected void init() {
         super.init();
         try {
-            calendarBackgroundConf = PNGUtils.readLastPrivateChunk(new File(BACKGROUND_TEXTURE.getPath()), BACKGROUND_PNG_CHUNK_NAME);
+            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
+            calendarBackgroundConf = PNGUtils.readLastPrivateChunk(inputStream, BACKGROUND_PNG_CHUNK_NAME);
         } catch (IOException | ClassNotFoundException ignored) {
         }
         if (calendarBackgroundConf == null) {
