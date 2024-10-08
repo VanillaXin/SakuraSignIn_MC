@@ -12,26 +12,42 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.SakuraSignIn;
+import xin.vanilla.mc.enums.ESignInStatus;
+import xin.vanilla.mc.network.ItemStackPacket;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.util.DateUtils;
+import xin.vanilla.mc.util.PNGUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
 @OnlyIn(Dist.CLIENT)
 public class CalendarScreen extends Screen {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final String BACKGROUND_PNG_CHUNK_NAME = "vacb";
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/checkin_background.png");
+
     private final List<CalendarCell> calendarCells = new ArrayList<>();
-    private int startX = 50, startY = 50;
-    int totalWidth = 0, totalHeight = 0;
-    private int slotSize = 40; // 格子大小
+    private CalendarBackgroundConf calendarBackgroundConf;
+
     private final int columns = 7;  // 列数
     private final int rows = 6;     // 行数
-    private final int topMargin = 20;  // 顶部预留距离
-    private final int bottomMargin = 22 + 39;  // 底部预留距离
-    private final int horizontalPadding = 10;  // 左右间距
-    private final int verticalPadding = 15;    // 上下间距
+
+    private int bgH = Math.max(this.height - 20, 120);
+    private int bgW = Math.max(bgH * 5 / 6, 100);
+    private int bgX = (this.width - bgW) / 2;
+    private int bgY = 0;
+
+    private float scale = 1.0F;
 
     public CalendarScreen() {
         super(new TranslationTextComponent("calendar.title"));
@@ -40,6 +56,39 @@ public class CalendarScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        try {
+            calendarBackgroundConf = PNGUtils.readLastPrivateChunk(new File(BACKGROUND_TEXTURE.getPath()), BACKGROUND_PNG_CHUNK_NAME);
+        } catch (IOException | ClassNotFoundException ignored) {
+        }
+        if (calendarBackgroundConf == null) {
+            // 使用默认配置
+            calendarBackgroundConf = new CalendarBackgroundConf() {{
+                setTitleStartX(84);
+                setTitleStartY(70);
+                setTitleWidth(100);
+                setTitleHeight(32);
+                setSubTitleStartX(346);
+                setSubTitleStartY(76);
+                setSubTitleWidth(100);
+                setSubTitleHeight(28);
+                setCellStartX(62);
+                setCellStartY(148);
+                setCellWidth(32);
+                setCellHeight(32);
+                setCellHMargin(26);
+                setCellVMargin(28);
+                setLeftButtonStartX(409);
+                setLeftButtonStartY(466);
+                setLeftButtonWidth(11);
+                setLeftButtonHeight(11);
+                setRightButtonStartX(431);
+                setRightButtonStartY(466);
+                setRightButtonWidth(11);
+                setRightButtonHeight(11);
+                setTotalWidth(500);
+                setTotalHeight(600);
+            }};
+        }
         updateLayout(); // 初始化布局
     }
 
@@ -52,68 +101,106 @@ public class CalendarScreen extends Screen {
     }
 
     // 创建日历格子
-    private void createCalendarCells() {
-        calendarCells.clear();  // 清除原有格子，避免重复添加
 
-        int itemIndex = 0; // 用于模拟日期
+    /**
+     * 创建日历格子
+     * 此方法用于生成日历控件中的每日格子，包括当前月和上月的末尾几天
+     * 它根据当前日期计算出上月和本月的天数以及每周的起始天数，并据此创建相应数量的格子
+     */
+    private void createCalendarCells(Date current) {
+        // 清除原有格子，避免重复添加
+        calendarCells.clear();
+
+        int itemIndex = 0;
+        float startX = bgX + calendarBackgroundConf.getCellStartX() * this.scale;
+        float startY = bgY + calendarBackgroundConf.getCellStartY() * this.scale;
+        Date lastMonth = DateUtils.addMonth(current, -1);
+        int daysOfLastMonth = DateUtils.getDaysOfMonth(lastMonth);
+        int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current);
+        int daysOfCurrentMonth = DateUtils.getDaysOfMonth(current);
 
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
-                int x = startX + col * (slotSize + horizontalPadding);
-                int y = startY + row * (slotSize + verticalPadding);
-
+                // 检查是否已超过设置显示上限
+                if (itemIndex >= 40) break;
+                float x = startX + col * (calendarBackgroundConf.getCellWidth() + calendarBackgroundConf.getCellHMargin()) * this.scale;
+                float y = startY + row * (calendarBackgroundConf.getCellHeight() + calendarBackgroundConf.getCellVMargin()) * this.scale;
+                ItemStack itemStack = getRandomItem(1);
+                int month, day, status;
+                // 根据itemIndex确定日期和状态
+                if (itemIndex >= dayOfWeekOfMonthStart + daysOfCurrentMonth) {
+                    // 属于下月的日期
+                    month = DateUtils.getMonthOfDate(DateUtils.addMonth(current, 1));
+                    day = itemIndex - dayOfWeekOfMonthStart - daysOfCurrentMonth + 1;
+                    status = ESignInStatus.NO_ACTION.getCode();
+                } else if (itemIndex >= dayOfWeekOfMonthStart) {
+                    // 属于当前月的日期
+                    month = DateUtils.getMonthOfDate(current);
+                    day = itemIndex - dayOfWeekOfMonthStart + 1;
+                    status = ESignInStatus.NO_ACTION.getCode();
+                    // 如果是今天，则设置为未签到状态
+                    if (day == DateUtils.getDayOfMonth(current) && month == DateUtils.getMonthOfDate(new Date())) {
+                        status = ESignInStatus.NOT_SIGNED_IN.getCode();
+                    }
+                } else {
+                    // 属于上月的日期
+                    month = DateUtils.getMonthOfDate(lastMonth);
+                    day = daysOfLastMonth - (dayOfWeekOfMonthStart - itemIndex) + 1;
+                    status = ESignInStatus.NO_ACTION.getCode();
+                }
                 // 创建物品格子
-                ItemStack itemStack = getRandomItem(1); // 模拟显示随机物品
-                CalendarCell cell = new CalendarCell(x, y, slotSize, slotSize, itemStack, itemIndex + 1);
-
+                CalendarCell cell = new CalendarCell(x, y, calendarBackgroundConf.getCellWidth() * this.scale, calendarBackgroundConf.getCellHeight() * this.scale, this.scale, itemStack, month, day, status);
                 // 添加到列表
                 calendarCells.add(cell);
-
                 itemIndex++;
             }
+            // 检查是否已超过设置显示上限
+            if (itemIndex >= 40) break;
         }
     }
 
     // 计算并更新布局
     private void updateLayout() {
-        // 获取屏幕宽度和高度
-        int screenWidth = this.width;
-        int screenHeight = this.height;
-
-        // 计算宽高比满足7:6的情况
-        int availableHeight = screenHeight - topMargin - bottomMargin - (rows - 1) * verticalPadding;
-        int availableWidth = screenWidth - (columns - 1) * horizontalPadding;
-
-        // 根据可用空间计算格子的大小
-        slotSize = Math.min(availableWidth / columns, availableHeight / rows);
-
-        // 计算整个日历的总宽度和总高度
-        totalWidth = columns * slotSize + (columns - 1) * horizontalPadding;
-        totalHeight = rows * slotSize + (rows - 1) * verticalPadding;
-
-        // 居中对齐
-        this.startX = (screenWidth - totalWidth) / 2;
-        this.startY = topMargin;
-
+        bgH = Math.max(this.height - 20, 120);
+        bgW = Math.max(bgH * 5 / 6, 100);
+        bgX = (this.width - bgW) / 2;
+        this.scale = bgH * 1.0f / calendarBackgroundConf.getTotalHeight();
         // 创建或更新格子位置
-        createCalendarCells();
+        createCalendarCells(new Date());
     }
 
     // 绘制背景纹理
-    private void renderBackgroundTexture(MatrixStack matrixStack, int x, int y, int width, int height) {
+    private void renderBackgroundTexture(MatrixStack matrixStack) {
+        // 绘制背景纹理，使用缩放后的宽度和高度
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        blit(matrixStack, x, y, 0, 0, width, height);
+        // 绘制的位置坐标x
+        // 绘制的位置坐标y
+        // 绘制的纹理中的u坐标
+        // 绘制的纹理中的v坐标
+        // 绘制的纹理的宽度
+        // 绘制的纹理的高度
+        // 绘制的width宽度
+        // 绘制的height高度
+        // 以上注释仅供参考, 搞不懂一点
+        blit(matrixStack, bgX, bgY, 0, 0, bgW, bgH, bgW, bgH);
     }
 
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        renderBackgroundTexture(matrixStack, startX, startY, width, height);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        // 绘制背景
+        renderBackground(matrixStack);
 
-        // 渲染标题，居中显示
-        String title = new TranslationTextComponent("calendar.title").getString();
-        int titleWidth = this.font.width(title);
-        this.font.draw(matrixStack, title, (this.width - titleWidth) / 2.0f, startY - slotSize * 1.5f, 0xFFFFFF00);  // 标题居中显示在日历上方
+        // 绘制缩放背景纹理
+        renderBackgroundTexture(matrixStack);
+
+        // 渲染年份
+        String yearTitle = DateUtils.getYearPart(new Date()) + "年";
+        this.font.draw(matrixStack, yearTitle, bgX + calendarBackgroundConf.getTitleStartX() * this.scale, bgY + calendarBackgroundConf.getTitleStartY() * this.scale, 0xFFFFFF00);
+        // 渲染月份
+        String monthTitle = DateUtils.getMonthOfDate(new Date()) + "月";
+        this.font.draw(matrixStack, monthTitle, bgX + calendarBackgroundConf.getSubTitleStartX() * this.scale, bgY + calendarBackgroundConf.getSubTitleStartY() * this.scale, 0xFFFFFF00);
+
+        super.render(matrixStack, mouseX, mouseY, partialTicks);
 
         // 渲染所有格子
         for (CalendarCell cell : calendarCells) {
@@ -129,7 +216,17 @@ public class CalendarScreen extends Screen {
             if (cell.isMouseOver((int) mouseX, (int) mouseY)) {
                 // 点击了该格子，执行对应操作
                 if (player != null) {
-                    player.sendMessage(new StringTextComponent("Clicked on day " + cell.day), player.getUUID());
+                    if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
+                        player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
+                        ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
+                        cell.itemStack.setCount(0);
+                    } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
+                        player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
+                    } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
+                        player.sendMessage(new StringTextComponent("Cannot sign-in: " + cell.day), player.getUUID());
+                    } else {
+                        player.sendMessage(new StringTextComponent(ESignInStatus.fromCode(cell.status).getDescription() + ": " + cell.day), player.getUUID());
+                    }
                 }
                 return true;
             }
@@ -143,6 +240,13 @@ public class CalendarScreen extends Screen {
         super.resize(mc, width, height);
         this.width = width;
         this.height = height;
-        updateLayout(); // 在窗口大小变化时更新布局
+        // 在窗口大小变化时更新布局
+        updateLayout();
+        LOGGER.info("{},{}", this.width, this.height);
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 }

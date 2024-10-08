@@ -4,21 +4,30 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.item.ItemStack;
+import xin.vanilla.mc.enums.ESignInStatus;
+import xin.vanilla.mc.util.DateUtils;
 
-import static net.minecraft.client.gui.AbstractGui.fill;
+import java.util.Date;
 
 public class CalendarCell {
-    public final int x, y, width, height;
+    public final float x, y, width, height, scale;
     public final ItemStack itemStack;
-    public final int day;
+    public final int month, day;
+    /**
+     * @see xin.vanilla.mc.enums.ESignInStatus
+     */
+    public final int status;
 
-    public CalendarCell(int x, int y, int width, int height, ItemStack itemStack, int day) {
+    public CalendarCell(float x, float y, float width, float height, float scale, ItemStack itemStack, int month, int day, int status) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.itemStack = itemStack;
+        this.month = month;
         this.day = day;
+        this.scale = scale;
+        this.status = status;
     }
 
     // 判断鼠标是否在当前格子内
@@ -32,11 +41,41 @@ public class CalendarCell {
         // fill(matrixStack, x, y, x + width, y + height, 0xFFAAAAAA);
 
         // 绘制物品图标
-        itemRenderer.renderGuiItem(itemStack, x + (width - 16) / 2, y + (height - 16) / 2);
+        itemRenderer.renderGuiItem(itemStack, (int) x, (int) y);
 
         // 绘制日期
         String dayStr = String.valueOf(day);
-        int dayWidth = font.width(dayStr);
-        font.draw(matrixStack, dayStr, x + (float) (width - dayWidth) / 2, y + height + 2, 0xFFFFFFFF);
+        float dayWidth = font.width(dayStr) * scale;
+        int color;
+        switch (ESignInStatus.fromCode(status)) {
+            case NO_ACTION:
+                if (month == DateUtils.getMonthOfDate(new Date())) {
+                    // 白色
+                    color = 0xFFFFFFFF;
+                } else {
+                    // 灰色
+                    color = 0xFFAAAAAA;
+                }
+                break;
+            case CAN_REPAIR:
+                // 红色
+                color = 0xFF0000FF;
+                break;
+            case NOT_SIGNED_IN:
+                // 粉红色
+                color = 0xFFFF00FF;
+                break;
+            case SIGNED_IN:
+                // 绿色
+                color = 0xFF00FF00;
+                break;
+            case REWARDED:
+                // 灰绿色
+                color = 0xFF00AAAA;
+                break;
+            default:
+                color = 0xFF000000;
+        }
+        font.draw(matrixStack, dayStr, x + (width - dayWidth) / 2, y + height + 2, color);
     }
 }
