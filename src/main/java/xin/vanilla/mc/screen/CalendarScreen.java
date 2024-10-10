@@ -14,8 +14,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ESignInStatus;
+import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.ItemStackPacket;
 import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.util.DateUtils;
@@ -72,12 +74,12 @@ public class CalendarScreen extends Screen {
                 setSubTitleStartY(76);
                 setSubTitleWidth(100);
                 setSubTitleHeight(28);
-                setCellStartX(62);
+                setCellStartX(61);
                 setCellStartY(148);
-                setCellWidth(32);
-                setCellHeight(32);
-                setCellHMargin(26);
-                setCellVMargin(28);
+                setCellWidth(36);
+                setCellHeight(36);
+                setCellHMargin(22);
+                setCellVMargin(24);
                 setLeftButtonStartX(409);
                 setLeftButtonStartY(466);
                 setLeftButtonWidth(11);
@@ -202,10 +204,9 @@ public class CalendarScreen extends Screen {
         this.font.draw(matrixStack, monthTitle, bgX + calendarBackgroundConf.getSubTitleStartX() * this.scale, bgY + calendarBackgroundConf.getSubTitleStartY() * this.scale, 0xFFFFFF00);
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-
         // 渲染所有格子
         for (CalendarCell cell : calendarCells) {
-            cell.render(matrixStack, this.font, this.itemRenderer);
+            cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
         }
     }
 
@@ -221,6 +222,7 @@ public class CalendarScreen extends Screen {
                         player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
                         ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
                         cell.itemStack.setCount(0);
+                        cell.status = ESignInStatus.REWARDED.getCode();
                     } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
                         player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
                     } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
@@ -243,11 +245,34 @@ public class CalendarScreen extends Screen {
         this.height = height;
         // 在窗口大小变化时更新布局
         updateLayout();
-        LOGGER.info("{},{}", this.width, this.height);
+        LOGGER.debug("{},{}", this.width, this.height);
     }
 
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    /**
+     * 重写keyPressed方法，处理键盘按键事件
+     *
+     * @param keyCode   按键的键码
+     * @param scanCode  按键的扫描码
+     * @param modifiers 按键时按下的修饰键（如Shift、Ctrl等）
+     * @return boolean 表示是否消耗了该按键事件
+     * <p>
+     * 此方法主要监听特定的按键事件，当按下CALENDAR_KEY或E键时，触发onClose方法，执行一些关闭操作
+     * 对于其他按键，则交由父类处理
+     */
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // 当按键等于CALENDAR_KEY键的值或E键时，调用onClose方法，并返回true，表示该按键事件已被消耗
+        if (keyCode == ClientEventHandler.CALENDAR_KEY.getKey().getValue() || keyCode == GLFW.GLFW_KEY_E) {
+            this.onClose();
+            return true;
+        } else {
+            // 对于其他按键，交由父类处理，并返回父类的处理结果
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
     }
 }

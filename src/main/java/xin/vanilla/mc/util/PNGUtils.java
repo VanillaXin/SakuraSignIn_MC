@@ -742,7 +742,7 @@ public class PNGUtils {
 
     }
 
-    private static <T> void testWriteChunk() throws IOException, ClassNotFoundException {
+    private static void testWriteChunk() throws IOException, ClassNotFoundException {
         File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_source.png");
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
         File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background.png");
@@ -755,12 +755,12 @@ public class PNGUtils {
             setSubTitleStartY(76);
             setSubTitleWidth(100);
             setSubTitleHeight(28);
-            setCellStartX(62);
+            setCellStartX(61);
             setCellStartY(148);
-            setCellWidth(32);
-            setCellHeight(32);
-            setCellHMargin(26);
-            setCellVMargin(28);
+            setCellWidth(36);
+            setCellHeight(36);
+            setCellHMargin(22);
+            setCellVMargin(24);
             setLeftButtonStartX(409);
             setLeftButtonStartY(466);
             setLeftButtonWidth(11);

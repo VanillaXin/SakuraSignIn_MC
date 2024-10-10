@@ -17,7 +17,6 @@ public class SakuraSignIn {
 
     public static final String MODID = "sakura_sign_in";
 
-    // 直接引用 log4j 记录器。
     private static final Logger LOGGER = LogManager.getLogger();
 
     public SakuraSignIn() {
@@ -40,9 +39,9 @@ public class SakuraSignIn {
      */
     @SubscribeEvent
     public void onClientSetup(final FMLClientSetupEvent event) {
-        LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().options);
+        LOGGER.debug("Got game settings {}", event.getMinecraftSupplier().get().options);
         // 注册键绑定
-        LOGGER.info("Registering key bindings");
+        LOGGER.debug("Registering key bindings");
         ClientEventHandler.registerKeyBindings();
     }
 
@@ -56,7 +55,7 @@ public class SakuraSignIn {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         // 注册签到命令到事件调度器
-        LOGGER.info("Registering commands");
+        LOGGER.debug("Registering commands");
         CheckInCommand.register(event.getDispatcher());
     }
 }

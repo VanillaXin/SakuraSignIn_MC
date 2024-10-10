@@ -47,9 +47,10 @@ public class ClientEventHandler {
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         // 检测并消费签到点击事件
         if (SIGN_IN_KEY.consumeClick()) {
-            // 打开签到界面
+            // 打开测试界面
             Minecraft.getInstance().setScreen(new CheckInScreen());
         } else if (CALENDAR_KEY.consumeClick()) {
+            // 打开日历界面
             Minecraft.getInstance().setScreen(new CalendarScreen());
         }
     }
