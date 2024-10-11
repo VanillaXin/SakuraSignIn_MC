@@ -1,7 +1,7 @@
 {
-  "key.categories.sakurasignin": "Sakura Sign-In",
-  "key.sakurasignin.signin": "Open Sign-In Screen",
-  "key.sakurasignin.calendar": "Open Calendar Screen",
+  "key.categories.sakura_sign_in": "Sakura Sign-In",
+  "key.sakura_sign_in.sign_in": "Open Sign-In Screen",
+  "key.sakura_sign_in.calendar": "Open Calendar Screen",
   "calendar.title": "Calendar",
   "check_in.title": "Check In"
 }
