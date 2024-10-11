@@ -43,8 +43,6 @@ public class SakuraSignIn {
     /**
      * 在客户端设置阶段触发的事件处理方法
      * 此方法主要用于接收 FML 客户端设置事件，并执行相应的初始化操作
-     *
-     * @param event FMLClientSetupEvent 类型的事件参数，包含 Minecraft 的供应商对象
      */
     @SubscribeEvent
     public void onClientSetup(final FMLClientSetupEvent event) {
