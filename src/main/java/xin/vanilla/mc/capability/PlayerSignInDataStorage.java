@@ -2,9 +2,14 @@ package xin.vanilla.mc.capability;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 玩家签到数据存储类，实现了IStorage接口，用于对玩家签到数据(IPlayerSignInData)的读写操作
@@ -27,8 +32,14 @@ public class PlayerSignInDataStorage implements IStorage<IPlayerSignInData> {
         }
         // 创建一个CompoundNBT对象，并将玩家的分数和活跃状态写入其中
         CompoundNBT tag = new CompoundNBT();
-        tag.putInt("score", instance.getScore());
-        tag.putBoolean("isActive", instance.isActive());
+        tag.putInt("continuousSignInDays", instance.getContinuousSignInDays());
+        tag.putLong("lastSignInTime", instance.getLastSignInTime().getTime());
+        // 序列化签到记录
+        ListNBT recordsNBT = new ListNBT();
+        for (SignInRecord record : instance.getSignInRecords()) {
+            recordsNBT.add(record.writeToNBT());
+        }
+        tag.put("signInRecords", recordsNBT);
         return tag;
     }
 
@@ -46,8 +57,15 @@ public class PlayerSignInDataStorage implements IStorage<IPlayerSignInData> {
         if (nbt instanceof CompoundNBT) {
             CompoundNBT nbtTag = (CompoundNBT) nbt;
             // 从NBT标签中读取玩家的分数和活跃状态，并更新到实例中
-            instance.setScore(nbtTag.getInt("score"));
-            instance.setActive(nbtTag.getBoolean("isActive"));
+            instance.setContinuousSignInDays(nbtTag.getInt("continuousSignInDays"));
+            instance.setLastSignInTime(new Date(nbtTag.getLong("lastSignInTime")));
+            // 反序列化签到记录
+            ListNBT recordsNBT = nbtTag.getList("signInRecords", 10); // 10 是 CompoundNBT 的类型ID
+            List<SignInRecord> records = new ArrayList<>();
+            for (int i = 0; i < recordsNBT.size(); i++) {
+                records.add(SignInRecord.readFromNBT(recordsNBT.getCompound(i)));
+            }
+            instance.setSignInRecords(records);
         }
     }
 }

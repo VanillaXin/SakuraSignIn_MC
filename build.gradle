@@ -120,6 +120,8 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
+    implementation "com.alibaba.fastjson2:fastjson2:2.0.53"
+
     testImplementation 'junit:junit:4.13.2'
 
     compileOnly 'org.projectlombok:lombok:1.18.34'

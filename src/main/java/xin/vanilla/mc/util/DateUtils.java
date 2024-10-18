@@ -9,27 +9,25 @@ import java.util.Date;
 public class DateUtils {
 
     public static final String HMS_FORMAT = "HH:mm:ss";
-    public static final String ISO_YEAR_FORMAT = "yyyy";
-    public static final String ISO_DATE_FORMAT = "yyyyMMdd";
     public static final String ISO_MONTH_FORMAT = "yyyyMM";
-    public static final String DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    public static final String TAIWAN_DATE_FORMAT = "yyyy/MM/ddHHmm";
-    public static final String TAIWAN_DATE_FORMAT2 = "yyyy/MM/dd";
-    public static final String ISO_ISO_DATE_FORMAT = "yyyy-MM-dd HH:mm";
-    public static final String DATE_FORMAT_DATETIME_14 = "yyyyMMddHHmmss";
-    public static final String ISO_EXPANDED_DATE_FORMAT = "yyyy-MM-dd";
-    public static final String DATE_FORMAT_POINTYYYYMMDD = "yyyy.MM.dd";
-    public static final String CHINESE_EXPANDED_DATE_FORMAT = "yyyy年MM月dd日";
+    public static final String ISO_DATE_FORMAT = "yyyyMMdd";
+    public static final String ISO_DATE_TIME_FORMAT = "yyyyMMddHHmmss";
+    public static final String DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String TAIWAN_DATE_FORMAT = "yyyy/MM/dd";
+    public static final String TAIWAN_DATE_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
+    public static final String POINT_DATE_FORMAT = "yyyy.MM.dd";
+    public static final String CHINESE_DATE_FORMAT = "yyyy年MM月dd日";
 
     public DateUtils() {
     }
 
     public static String toString(Date date) {
-        return toString(date, ISO_EXPANDED_DATE_FORMAT);
+        return toString(date, DATE_FORMAT);
     }
 
     public static String toDateTimeString(Date date) {
-        return toString(date, DATETIME_PATTERN);
+        return toString(date, DATETIME_FORMAT);
     }
 
     public static String toString(Date date, String pattern) {
@@ -37,6 +35,17 @@ public class DateUtils {
         return format.format(date);
     }
 
+    public static int toDateInt(Date date) {
+        return date == null ? 0 : Integer.parseInt(toString(date, ISO_DATE_FORMAT));
+    }
+
+    public static long toDateTimeInt(Date date) {
+        return date == null ? 0 : Long.parseLong(toString(date, ISO_DATE_TIME_FORMAT));
+    }
+
+    /**
+     * 获取给定日期的月份
+     */
     public static int getMonthOfDate(Date date) {
         if (date == null) {
             date = new Date();
@@ -58,12 +67,30 @@ public class DateUtils {
         return localDate.getDayOfWeek().getValue();
     }
 
+    /**
+     * 获取给定日期的年份
+     */
     public static int getYearPart(Date date) {
         Calendar ca = Calendar.getInstance();
         ca.setTime(date);
         return ca.get(Calendar.YEAR);
     }
 
+    /**
+     * 获取给定日期是当年的第几天
+     */
+    public static int getDayOfYear(Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+
+        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return localDate.getDayOfYear();
+    }
+
+    /**
+     * 获取给定日期是当月的第几天
+     */
     public static int getDayOfMonth(Date date) {
         if (date == null) {
             date = new Date();
@@ -73,18 +100,39 @@ public class DateUtils {
         return localDate.getDayOfMonth();
     }
 
+    /**
+     * 获取给定日期是星期几
+     */
+    public static int getDayOfWeek(Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+
+        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return localDate.getDayOfWeek().getValue();
+    }
+
+    /**
+     * 获取给定年份的总天数
+     */
     public static int getDaysOfYear(Date date) {
         Calendar ca = Calendar.getInstance();
         ca.setTime(date);
         return ca.getActualMaximum(Calendar.DAY_OF_YEAR);
     }
 
+    /**
+     * 获取给定年份的总天数
+     */
     public static int getDaysOfYear(int year) {
         Calendar ca = Calendar.getInstance();
         ca.set(year, Calendar.JANUARY, 1);
         return ca.getActualMaximum(Calendar.DAY_OF_YEAR);
     }
 
+    /**
+     * 获取给定月份的总天数
+     */
     public static int getDaysOfMonth(Date date) {
         Calendar ca = Calendar.getInstance();
         ca.setTime(date);
@@ -244,5 +292,54 @@ public class DateUtils {
         calendar.setTime(current);
         calendar.add(Calendar.MILLISECOND, ms);
         return calendar.getTime();
+    }
+
+    public static Date getDate(int year, int month, int day, int hour, int minute, int second, int milliSecond) {
+        Calendar cal = Calendar.getInstance();
+        cal.setLenient(false);
+        cal.set(year, month - 1, day, hour, minute, second);
+        cal.set(Calendar.MILLISECOND, milliSecond);
+        return cal.getTime();
+    }
+
+    public static Date getDate(String yearStr, String monthStr, String dayStr, String hourStr, String minuteStr, String secondStr, String milliSecondStr) {
+        Date date = null;
+        if (StringUtils.isNotNullOrEmpty(yearStr) && StringUtils.isNotNullOrEmpty(monthStr) && StringUtils.isNotNullOrEmpty(dayStr)) {
+            int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, milliSecond = 0;
+            try {
+                year = Integer.parseInt(yearStr);
+                month = Integer.parseInt(monthStr);
+                day = Integer.parseInt(dayStr);
+                hour = StringUtils.isNotNullOrEmpty(hourStr) ? 0 : Integer.parseInt(hourStr);
+                minute = StringUtils.isNotNullOrEmpty(minuteStr) ? 0 : Integer.parseInt(minuteStr);
+                second = StringUtils.isNotNullOrEmpty(secondStr) ? 0 : Integer.parseInt(secondStr);
+                milliSecond = Integer.parseInt(milliSecondStr);
+            } catch (NumberFormatException ignored) {
+            }
+            if (year > 0 && month > 0 && day > 0) {
+                date = getDate(year, month, day, hour, minute, second, milliSecond);
+            }
+        }
+        return date;
+    }
+
+    public static Date getDate(int year, int month, int day, int hour, int minute, int second) {
+        return getDate(year, month, day, hour, minute, second, 0);
+    }
+
+    public static Date getDate(String yearStr, String monthStr, String dayStr, String hourStr, String minuteStr, String secondStr) {
+        return getDate(yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr, null);
+    }
+
+    public static Date getDate(int year, int month, int day) {
+        return getDate(year, month, day, 0, 0, 0, 0);
+    }
+
+    public static Date getDate(String yearStr, String monthStr, String dayStr) {
+        return getDate(yearStr, monthStr, dayStr, null, null, null, null);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getYearPart(new Date()));
     }
 }

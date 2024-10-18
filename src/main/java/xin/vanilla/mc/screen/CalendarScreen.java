@@ -4,22 +4,20 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
+import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.event.ClientEventHandler;
-import xin.vanilla.mc.network.ItemStackPacket;
-import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.rewards.RewardList;
+import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.PNGUtils;
 
@@ -28,7 +26,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 @OnlyIn(Dist.CLIENT)
 public class CalendarScreen extends Screen {
@@ -95,14 +93,6 @@ public class CalendarScreen extends Screen {
         updateLayout(); // 初始化布局
     }
 
-    public static ItemStack getRandomItem(int amount) {
-        List<Item> items = new ArrayList<>(ForgeRegistries.ITEMS.getValues());
-
-        Random random = new Random();
-        Item randomItem = items.get(random.nextInt(items.size()));
-        return new ItemStack(randomItem, amount);
-    }
-
     // 创建日历格子
 
     /**
@@ -122,43 +112,52 @@ public class CalendarScreen extends Screen {
         int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current);
         int daysOfCurrentMonth = DateUtils.getDaysOfMonth(current);
 
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < columns; col++) {
+        // 获取奖励列表
+        if (Minecraft.getInstance().player != null) {
+            Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, PlayerSignInDataCapability.getData(Minecraft.getInstance().player));
+
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < columns; col++) {
+                    // 检查是否已超过设置显示上限
+                    if (itemIndex >= 40) break;
+                    float x = startX + col * (calendarBackgroundConf.getCellWidth() + calendarBackgroundConf.getCellHMargin()) * this.scale;
+                    float y = startY + row * (calendarBackgroundConf.getCellHeight() + calendarBackgroundConf.getCellVMargin()) * this.scale;
+                    int year, month, day, status;
+                    // 根据itemIndex确定日期和状态
+                    if (itemIndex >= dayOfWeekOfMonthStart + daysOfCurrentMonth) {
+                        // 属于下月的日期
+                        year = DateUtils.getYearPart(DateUtils.addMonth(current, 1));
+                        month = DateUtils.getMonthOfDate(DateUtils.addMonth(current, 1));
+                        day = itemIndex - dayOfWeekOfMonthStart - daysOfCurrentMonth + 1;
+                        status = ESignInStatus.NO_ACTION.getCode();
+                    } else if (itemIndex >= dayOfWeekOfMonthStart) {
+                        // 属于当前月的日期
+                        year = DateUtils.getYearPart(current);
+                        month = DateUtils.getMonthOfDate(current);
+                        day = itemIndex - dayOfWeekOfMonthStart + 1;
+                        status = ESignInStatus.NO_ACTION.getCode();
+                        // 如果是今天，则设置为未签到状态
+                        if (day == DateUtils.getDayOfMonth(current) && month == DateUtils.getMonthOfDate(new Date())) {
+                            status = ESignInStatus.NOT_SIGNED_IN.getCode();
+                        }
+                    } else {
+                        // 属于上月的日期
+                        year = DateUtils.getYearPart(lastMonth);
+                        month = DateUtils.getMonthOfDate(lastMonth);
+                        day = daysOfLastMonth - (dayOfWeekOfMonthStart - itemIndex) + 1;
+                        status = ESignInStatus.NO_ACTION.getCode();
+                    }
+                    int key = year * 10000 + month * 100 + day;
+                    RewardList rewards = monthRewardList.get(key);
+                    // 创建物品格子
+                    CalendarCell cell = new CalendarCell(x, y, calendarBackgroundConf.getCellWidth() * this.scale, calendarBackgroundConf.getCellHeight() * this.scale, this.scale, rewards, month, day, status);
+                    // 添加到列表
+                    calendarCells.add(cell);
+                    itemIndex++;
+                }
                 // 检查是否已超过设置显示上限
                 if (itemIndex >= 40) break;
-                float x = startX + col * (calendarBackgroundConf.getCellWidth() + calendarBackgroundConf.getCellHMargin()) * this.scale;
-                float y = startY + row * (calendarBackgroundConf.getCellHeight() + calendarBackgroundConf.getCellVMargin()) * this.scale;
-                ItemStack itemStack = getRandomItem(1);
-                int month, day, status;
-                // 根据itemIndex确定日期和状态
-                if (itemIndex >= dayOfWeekOfMonthStart + daysOfCurrentMonth) {
-                    // 属于下月的日期
-                    month = DateUtils.getMonthOfDate(DateUtils.addMonth(current, 1));
-                    day = itemIndex - dayOfWeekOfMonthStart - daysOfCurrentMonth + 1;
-                    status = ESignInStatus.NO_ACTION.getCode();
-                } else if (itemIndex >= dayOfWeekOfMonthStart) {
-                    // 属于当前月的日期
-                    month = DateUtils.getMonthOfDate(current);
-                    day = itemIndex - dayOfWeekOfMonthStart + 1;
-                    status = ESignInStatus.NO_ACTION.getCode();
-                    // 如果是今天，则设置为未签到状态
-                    if (day == DateUtils.getDayOfMonth(current) && month == DateUtils.getMonthOfDate(new Date())) {
-                        status = ESignInStatus.NOT_SIGNED_IN.getCode();
-                    }
-                } else {
-                    // 属于上月的日期
-                    month = DateUtils.getMonthOfDate(lastMonth);
-                    day = daysOfLastMonth - (dayOfWeekOfMonthStart - itemIndex) + 1;
-                    status = ESignInStatus.NO_ACTION.getCode();
-                }
-                // 创建物品格子
-                CalendarCell cell = new CalendarCell(x, y, calendarBackgroundConf.getCellWidth() * this.scale, calendarBackgroundConf.getCellHeight() * this.scale, this.scale, itemStack, month, day, status);
-                // 添加到列表
-                calendarCells.add(cell);
-                itemIndex++;
             }
-            // 检查是否已超过设置显示上限
-            if (itemIndex >= 40) break;
         }
     }
 
@@ -220,8 +219,9 @@ public class CalendarScreen extends Screen {
                 if (player != null) {
                     if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
                         player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
-                        ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
-                        cell.itemStack.setCount(0);
+                        // TODO 领取奖励
+                        // ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
+                        // cell.itemStack.setCount(0);
                         cell.status = ESignInStatus.REWARDED.getCode();
                     } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
                         player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());

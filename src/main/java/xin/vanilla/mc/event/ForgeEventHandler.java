@@ -13,6 +13,7 @@ import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.PlayerSignInDataProvider;
+import xin.vanilla.mc.config.ServerConfig;
 
 /**
  * Forge 事件处理
@@ -49,17 +50,8 @@ public class ForgeEventHandler {
         }
         // 获取玩家的自定义数据
         IPlayerSignInData data = PlayerSignInDataCapability.getData(event.getPlayer());
+        if (ServerConfig.AUTO_SIGN_IN.get()) {
 
-        // 设置一些值
-        if (data.isActive()) {
-            LOGGER.debug("Get Player Score: {}", data.getScore());
-            LOGGER.debug("Get Player Active: {}", data.isActive());
-        } else {
-            data.setScore(100);
-            data.setActive(true);
-            LOGGER.debug("Set Player Score: {}", data.getScore());
-            LOGGER.debug("Set Player Active: {}", data.isActive());
         }
-
     }
 }

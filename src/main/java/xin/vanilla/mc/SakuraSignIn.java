@@ -7,12 +7,15 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.command.CheckInCommand;
 import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.ServerConfig;
+import xin.vanilla.mc.config.SignInDataManager;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.ModNetworkHandler;
 
@@ -28,6 +31,10 @@ public class SakuraSignIn {
         // 注册网络通道
         ModNetworkHandler.registerPackets();
 
+        // 注册服务器启动和关闭事件
+        MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
+        MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
+
         // 注册当前实例到MinecraftForge的事件总线，以便监听和处理游戏内的各种事件
         MinecraftForge.EVENT_BUS.register(this);
 
@@ -38,6 +45,17 @@ public class SakuraSignIn {
 
         // 注册客户端设置事件到MOD事件总线
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+    }
+
+    // 服务器启动时加载数据
+    private void onServerStarting(FMLServerStartingEvent event) {
+        SignInDataManager.loadSignInData();
+        LOGGER.debug("SignIn data loaded.");
+    }
+
+    // 服务器关闭时保存数据
+    private void onServerStopping(FMLServerStoppingEvent event) {
+        // SignInDataManager.saveSignInData();
     }
 
     /**
