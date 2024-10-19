@@ -10,8 +10,7 @@ import net.minecraft.potion.Effects;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
-import xin.vanilla.mc.rewards.impl.EffectRewardParser;
-import xin.vanilla.mc.rewards.impl.ItemRewardParser;
+import xin.vanilla.mc.rewards.impl.*;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.StringUtils;
 
@@ -285,20 +284,20 @@ public class SignInData implements Serializable {
                     setType(ERewardType.ITEM);
                 }});
                 add(new Reward() {{
-                    setContent(new ItemRewardParser().serialize(new ItemStack(Items.BREAD, 1)));
+                    setContent(new SignInCardRewardParser().serialize(1));
                     setType(ERewardType.ITEM);
                 }});
             }});
             setContinuousRewards(new LinkedHashMap<String, RewardList>() {{
                 put("1", new RewardList() {{
                     add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.APPLE, 1)));
-                        setType(ERewardType.ITEM);
+                        setContent(new ExpPointRewardParser().serialize(5));
+                        setType(ERewardType.EXP_POINT);
                     }});
                 }});
                 put("2", new RewardList() {{
                     add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.MELON_SLICE, 1)));
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.LUCK, 300, 1)));
                         setType(ERewardType.ITEM);
                     }});
                 }});
@@ -318,8 +317,8 @@ public class SignInData implements Serializable {
             setCycleRewards(new LinkedHashMap<String, RewardList>() {{
                 put("1", new RewardList() {{
                     add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.APPLE, 1)));
-                        setType(ERewardType.ITEM);
+                        setContent(new ExpLevelRewardParser().serialize(1));
+                        setType(ERewardType.EXP_LEVEL);
                     }});
                 }});
                 put("2", new RewardList() {{
