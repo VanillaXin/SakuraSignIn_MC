@@ -152,6 +152,7 @@ public class RewardManager {
                     if (DateUtils.toDateInt(playerData.getLastSignInTime()) < nowCompensate8) {
                         continuousSignInDays++;
                     }
+                    continuousSignInDays += key - nowCompensate8;
                     // 连续签到奖励
                     int continuousMax = serverData.getContinuousRewardsRelation().keySet().stream().map(Integer::parseInt).max(Comparator.naturalOrder()).orElse(0);
                     rewardList.addAll(
@@ -166,7 +167,7 @@ public class RewardManager {
                     rewardList.addAll(
                             serverData.getCycleRewards().get(
                                     serverData.getCycleRewardsRelation().get(
-                                            String.valueOf(continuousSignInDays % (cycleMax + 1))
+                                            String.valueOf(continuousSignInDays % cycleMax == 0 ? cycleMax : continuousSignInDays % cycleMax)
                                     )
                             )
                     );
