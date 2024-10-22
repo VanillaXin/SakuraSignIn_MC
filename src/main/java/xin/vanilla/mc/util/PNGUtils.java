@@ -706,8 +706,8 @@ public class PNGUtils {
 
     private static void testWriteZTxt() {
         try {
-            File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_source.png");
-            File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background.png");
+            File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg_source.png");
+            File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg.png");
             PNGUtils.writeZTxt(sourceFile, targetFile, new LinkedHashMap<String, String>() {{
                 put("titleStartX", "20");
                 put("titleStartY", "20");
@@ -743,35 +743,10 @@ public class PNGUtils {
     }
 
     private static void testWriteChunk() throws IOException, ClassNotFoundException {
-        File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_source.png");
+        File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg_source.png");
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
-        File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background.png");
-        writePrivateChunk(sourceFile, tempFile, "vacb", new CalendarBackgroundConf() {{
-            setTitleStartX(84);
-            setTitleStartY(70);
-            setTitleWidth(100);
-            setTitleHeight(32);
-            setSubTitleStartX(346);
-            setSubTitleStartY(76);
-            setSubTitleWidth(100);
-            setSubTitleHeight(28);
-            setCellStartX(61);
-            setCellStartY(148);
-            setCellWidth(36);
-            setCellHeight(36);
-            setCellHMargin(22);
-            setCellVMargin(24);
-            setLeftButtonStartX(409);
-            setLeftButtonStartY(466);
-            setLeftButtonWidth(11);
-            setLeftButtonHeight(11);
-            setRightButtonStartX(431);
-            setRightButtonStartY(466);
-            setRightButtonWidth(11);
-            setRightButtonHeight(11);
-            setTotalWidth(500);
-            setTotalHeight(600);
-        }}, true);
+        File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg.png");
+        writePrivateChunk(sourceFile, tempFile, "vacb", CalendarBackgroundConf.getDefault(), true);
         writeZTxtByKey(tempFile, targetFile, "Software", "Minecraft SakuraSignIn");
         tempFile.deleteOnExit();
         CalendarBackgroundConf backgroundConf = readLastPrivateChunk(targetFile, "vacb");

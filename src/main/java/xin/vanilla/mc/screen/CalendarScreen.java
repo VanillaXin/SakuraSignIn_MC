@@ -18,6 +18,7 @@ import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
+import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.PNGUtils;
 
@@ -34,7 +35,7 @@ public class CalendarScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String BACKGROUND_PNG_CHUNK_NAME = "vacb";
-    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/checkin_background.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_bg.png");
 
     private final List<CalendarCell> calendarCells = new ArrayList<>();
     private CalendarBackgroundConf calendarBackgroundConf;
@@ -47,6 +48,8 @@ public class CalendarScreen extends Screen {
     private int bgX = (this.width - bgW) / 2;
     private int bgY = 0;
 
+    private Date currentDate;
+
     private float scale = 1.0F;
 
     public CalendarScreen() {
@@ -56,6 +59,7 @@ public class CalendarScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        currentDate = new Date();
         try {
             InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
             calendarBackgroundConf = PNGUtils.readLastPrivateChunk(inputStream, BACKGROUND_PNG_CHUNK_NAME);
@@ -63,32 +67,7 @@ public class CalendarScreen extends Screen {
         }
         if (calendarBackgroundConf == null) {
             // 使用默认配置
-            calendarBackgroundConf = new CalendarBackgroundConf() {{
-                setTitleStartX(84);
-                setTitleStartY(70);
-                setTitleWidth(100);
-                setTitleHeight(32);
-                setSubTitleStartX(346);
-                setSubTitleStartY(76);
-                setSubTitleWidth(100);
-                setSubTitleHeight(28);
-                setCellStartX(61);
-                setCellStartY(148);
-                setCellWidth(36);
-                setCellHeight(36);
-                setCellHMargin(22);
-                setCellVMargin(24);
-                setLeftButtonStartX(409);
-                setLeftButtonStartY(466);
-                setLeftButtonWidth(11);
-                setLeftButtonHeight(11);
-                setRightButtonStartX(431);
-                setRightButtonStartY(466);
-                setRightButtonWidth(11);
-                setRightButtonHeight(11);
-                setTotalWidth(500);
-                setTotalHeight(600);
-            }};
+            calendarBackgroundConf = CalendarBackgroundConf.getDefault();
         }
         updateLayout(); // 初始化布局
     }
@@ -137,7 +116,7 @@ public class CalendarScreen extends Screen {
                         day = itemIndex - dayOfWeekOfMonthStart + 1;
                         status = ESignInStatus.NO_ACTION.getCode();
                         // 如果是今天，则设置为未签到状态
-                        if (day == DateUtils.getDayOfMonth(current) && month == DateUtils.getMonthOfDate(new Date())) {
+                        if (year == DateUtils.getYearPart(new Date()) && day == DateUtils.getDayOfMonth(new Date()) && month == DateUtils.getMonthOfDate(new Date())) {
                             status = ESignInStatus.NOT_SIGNED_IN.getCode();
                         }
                     } else {
@@ -149,8 +128,9 @@ public class CalendarScreen extends Screen {
                     }
                     int key = year * 10000 + month * 100 + day;
                     RewardList rewards = monthRewardList.get(key);
+                    if (CollectionUtils.isNullOrEmpty(rewards)) break;
                     // 创建物品格子
-                    CalendarCell cell = new CalendarCell(x, y, calendarBackgroundConf.getCellWidth() * this.scale, calendarBackgroundConf.getCellHeight() * this.scale, this.scale, rewards, month, day, status);
+                    CalendarCell cell = new CalendarCell(x, y, calendarBackgroundConf.getCellWidth() * this.scale, calendarBackgroundConf.getCellHeight() * this.scale, this.scale, rewards, year, month, day, status);
                     // 添加到列表
                     calendarCells.add(cell);
                     itemIndex++;
@@ -168,7 +148,7 @@ public class CalendarScreen extends Screen {
         bgX = (this.width - bgW) / 2;
         this.scale = bgH * 1.0f / calendarBackgroundConf.getTotalHeight();
         // 创建或更新格子位置
-        createCalendarCells(new Date());
+        createCalendarCells(currentDate);
     }
 
     // 绘制背景纹理
@@ -196,10 +176,10 @@ public class CalendarScreen extends Screen {
         renderBackgroundTexture(matrixStack);
 
         // 渲染年份
-        String yearTitle = DateUtils.getYearPart(new Date()) + "年";
+        String yearTitle = DateUtils.getYearPart(currentDate) + "年";
         this.font.draw(matrixStack, yearTitle, bgX + calendarBackgroundConf.getTitleStartX() * this.scale, bgY + calendarBackgroundConf.getTitleStartY() * this.scale, 0xFFFFFF00);
         // 渲染月份
-        String monthTitle = DateUtils.getMonthOfDate(new Date()) + "月";
+        String monthTitle = DateUtils.getMonthOfDate(currentDate) + "月";
         this.font.draw(matrixStack, monthTitle, bgX + calendarBackgroundConf.getSubTitleStartX() * this.scale, bgY + calendarBackgroundConf.getSubTitleStartY() * this.scale, 0xFFFFFF00);
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -273,6 +253,30 @@ public class CalendarScreen extends Screen {
         } else {
             // 对于其他按键，交由父类处理，并返回父类的处理结果
             return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+            currentDate = DateUtils.addMonth(currentDate, -1);
+            updateLayout();
+            return true;
+        } else if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+            currentDate = DateUtils.addMonth(currentDate, 1);
+            updateLayout();
+            return true;
+        } else if (keyCode == GLFW.GLFW_KEY_UP) {
+            currentDate = DateUtils.addYear(currentDate, -1);
+            updateLayout();
+            return true;
+        } else if (keyCode == GLFW.GLFW_KEY_DOWN) {
+            currentDate = DateUtils.addYear(currentDate, 1);
+            updateLayout();
+            return true;
+        } else {
+            // 对于其他按键，交由父类处理，并返回父类的处理结果
+            return super.keyReleased(keyCode, scanCode, modifiers);
         }
     }
 }

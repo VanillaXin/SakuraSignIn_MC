@@ -296,7 +296,7 @@ public class DateUtils {
 
     public static Date getDate(int year, int month, int day, int hour, int minute, int second, int milliSecond) {
         Calendar cal = Calendar.getInstance();
-        cal.setLenient(false);
+        // cal.setLenient(false);
         cal.set(year, month - 1, day, hour, minute, second);
         cal.set(Calendar.MILLISECOND, milliSecond);
         return cal.getTime();

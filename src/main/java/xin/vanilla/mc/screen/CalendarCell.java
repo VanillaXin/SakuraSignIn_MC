@@ -2,6 +2,7 @@ package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -25,18 +26,19 @@ public class CalendarCell {
     private final int itemIconSize = 16;
     public float x, y, width, height, scale;
     public RewardList rewardList;
-    public int month, day;
+    public int year, month, day;
     /**
      * @see xin.vanilla.mc.enums.ESignInStatus
      */
     public int status;
 
-    public CalendarCell(float x, float y, float width, float height, float scale, RewardList rewardList, int month, int day, int status) {
+    public CalendarCell(float x, float y, float width, float height, float scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.rewardList = rewardList;
+        this.year = year;
         this.month = month;
         this.day = day;
         this.scale = scale;
@@ -49,7 +51,7 @@ public class CalendarCell {
     }
 
     // 渲染物品图标
-    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, float scale, int zLevel) {
+    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, float scale, int zLevel, boolean showNum) {
         // TODO 缩放图标以适应格子大小
         float blitOffset = itemRenderer.blitOffset;
         itemRenderer.blitOffset = zLevel;
@@ -57,7 +59,9 @@ public class CalendarCell {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             itemRenderer.renderGuiItem(itemStack, itemX, itemY);
-            itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, itemX, itemY, String.valueOf(itemStack.getCount()));
+            if (showNum) {
+                itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, itemX, itemY, String.valueOf(itemStack.getCount()));
+            }
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
 
         } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
@@ -84,7 +88,7 @@ public class CalendarCell {
             AbstractGui.blit(matrixStack, (int) x, (int) y, 0, 0, (int) width, (int) height, (int) width, (int) height);
         } else {
             // 绘制物品图标
-            renderCustomReward(matrixStack, itemRenderer, font, rewardList.get(0), (int) (x + (width - 16) / 2), (int) (y + (height - 16) / 2), width / itemIconSize, 0);
+            renderCustomReward(matrixStack, itemRenderer, font, rewardList.get(0), (int) (x + (width - 16) / 2), (int) (y + (height - 16) / 2), width / itemIconSize, 0, false);
         }
 
         // 绘制日期
@@ -159,7 +163,7 @@ public class CalendarCell {
             int itemY = mouseY + padding - tooltipHeight;
 
             // 渲染物品图标
-            renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, itemX, itemY, width / itemIconSize, 200);
+            renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, itemX, itemY, width / itemIconSize, 200, true);
         }
         // 绘制文字
         fontRenderer.draw(matrixStack, title, mouseX + padding - tooltipWidth, mouseY + padding + itemIconSize + padding * 2 - tooltipHeight, 0xFFFFFF);

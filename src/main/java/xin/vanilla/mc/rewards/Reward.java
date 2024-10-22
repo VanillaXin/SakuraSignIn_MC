@@ -2,6 +2,8 @@ package xin.vanilla.mc.rewards;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import xin.vanilla.mc.enums.ERewardType;
 
 import java.io.Serializable;
@@ -48,5 +50,9 @@ public class Reward implements Cloneable, Serializable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
+    }
+
+    public static Reward getDefault(){
+        return new Reward(RewardManager.serializeReward(new ItemStack(Items.AIR), ERewardType.ITEM), ERewardType.ITEM);
     }
 }
