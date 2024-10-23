@@ -1,10 +1,13 @@
 package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -36,6 +39,8 @@ public class CalendarScreen extends Screen {
 
     private static final String BACKGROUND_PNG_CHUNK_NAME = "vacb";
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_bg.png");
+    private static final ResourceLocation ARROW_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_arrow.png");
+    private static final ResourceLocation ARROW_TEXTURE_TAP = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_arrow_tap.png");
 
     private final List<CalendarCell> calendarCells = new ArrayList<>();
     private CalendarBackgroundConf calendarBackgroundConf;
@@ -51,6 +56,11 @@ public class CalendarScreen extends Screen {
     private Date currentDate;
 
     private float scale = 1.0F;
+
+    private OperationButton leftArrow = new OperationButton(1);
+    private OperationButton rightArrow = new OperationButton(2);
+    private OperationButton upArrow = new OperationButton(3);
+    private OperationButton downArrow = new OperationButton(4);
 
     public CalendarScreen() {
         super(new TranslationTextComponent("calendar.title"));
@@ -70,6 +80,20 @@ public class CalendarScreen extends Screen {
             calendarBackgroundConf = CalendarBackgroundConf.getDefault();
         }
         updateLayout(); // 初始化布局
+    }
+
+    @Data
+    @Accessors(chain = true)
+    private class OperationButton {
+        private int x, y, width, height, operation;
+
+        public OperationButton(int operation) {
+            this.operation = operation;
+        }
+
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        }
     }
 
     // 创建日历格子
@@ -157,14 +181,31 @@ public class CalendarScreen extends Screen {
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         // 绘制的位置坐标x
         // 绘制的位置坐标y
-        // 绘制的纹理中的u坐标
-        // 绘制的纹理中的v坐标
-        // 绘制的纹理的宽度
-        // 绘制的纹理的高度
+        // 纹理中的u坐标
+        // 纹理中的v坐标
+        // 纹理的宽度
+        // 纹理的高度
         // 绘制的width宽度
         // 绘制的height高度
         // 以上注释仅供参考, 搞不懂一点
         blit(matrixStack, bgX, bgY, 0, 0, bgW, bgH, bgW, bgH);
+    }
+
+    private void renderRotatedTexture(MatrixStack matrixStack, double x, double y, int width, int height, float angle, ResourceLocation texture) {
+        // 绑定纹理
+        Minecraft.getInstance().getTextureManager().bind(texture);
+        // 保存当前矩阵状态
+        matrixStack.pushPose();
+        // 平移到旋转中心 (x + width / 2, y + height / 2)
+        matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
+        // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
+        matrixStack.mulPose(Vector3f.ZP.rotationDegrees(angle));
+        // 平移回去原点，准备绘制
+        matrixStack.translate(-width / 2.0, -height / 2.0, 0);
+        // 绘制纹理，注意这里的 x, y 都是相对于旋转后的坐标系的
+        blit(matrixStack, 0, 0, 0, 0, width, height, width, height);
+        // 恢复矩阵状态
+        matrixStack.popPose();
     }
 
     @Override
@@ -175,12 +216,43 @@ public class CalendarScreen extends Screen {
         // 绘制缩放背景纹理
         renderBackgroundTexture(matrixStack);
 
+        int arrowWidth = font.lineHeight;
+        int arrowHeight = font.lineHeight;
+        double arrowMargin = calendarBackgroundConf.getCellHMargin() * 0.1 * this.scale;
         // 渲染年份
-        String yearTitle = DateUtils.getYearPart(currentDate) + "年";
-        this.font.draw(matrixStack, yearTitle, bgX + calendarBackgroundConf.getTitleStartX() * this.scale, bgY + calendarBackgroundConf.getTitleStartY() * this.scale, 0xFFFFFF00);
+        {
+            String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
+            double titleX = bgX + calendarBackgroundConf.getTitleStartX() * this.scale;
+            double titleY = bgY + calendarBackgroundConf.getTitleStartY() * this.scale;
+            double titleWidth = font.width(yearTitle);
+            double titleHeight = font.lineHeight;
+            // 渲染翻页箭头
+            upArrow.setX((int) (titleX - arrowWidth - arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
+            this.renderRotatedTexture(matrixStack, titleX - arrowWidth - arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 270,
+                    upArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
+            downArrow.setX((int) (titleX + titleWidth + arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
+            this.renderRotatedTexture(matrixStack, titleX + titleWidth + arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 90,
+                    downArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
+            // 渲染年份
+            this.font.draw(matrixStack, yearTitle, (float) titleX, (float) titleY, 0xFFFFFF00);
+        }
+
         // 渲染月份
-        String monthTitle = DateUtils.getMonthOfDate(currentDate) + "月";
-        this.font.draw(matrixStack, monthTitle, bgX + calendarBackgroundConf.getSubTitleStartX() * this.scale, bgY + calendarBackgroundConf.getSubTitleStartY() * this.scale, 0xFFFFFF00);
+        {
+            String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
+            double titleX = bgX + calendarBackgroundConf.getSubTitleStartX() * this.scale;
+            double titleY = bgY + calendarBackgroundConf.getSubTitleStartY() * this.scale;
+            double titleWidth = font.width(monthTitle);
+            double titleHeight = font.lineHeight;
+            // 渲染翻页箭头
+            leftArrow.setX((int) (titleX - arrowWidth - arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
+            this.renderRotatedTexture(matrixStack, titleX - arrowWidth - arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 180,
+                    leftArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
+            rightArrow.setX((int) (titleX + titleWidth + arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
+            this.renderRotatedTexture(matrixStack, titleX + titleWidth + arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 0,
+                    rightArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
+            this.font.draw(matrixStack, monthTitle, (float) titleX, (float) titleY, 0xFFFFFF00);
+        }
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
         // 渲染所有格子
@@ -193,25 +265,43 @@ public class CalendarScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         ClientPlayerEntity player = Minecraft.getInstance().player;
-        for (CalendarCell cell : calendarCells) {
-            if (cell.isMouseOver((int) mouseX, (int) mouseY)) {
-                // 点击了该格子，执行对应操作
-                if (player != null) {
-                    if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
-                        player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
-                        // TODO 领取奖励
-                        // ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
-                        // cell.itemStack.setCount(0);
-                        cell.status = ESignInStatus.REWARDED.getCode();
-                    } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
-                        player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
-                    } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
-                        player.sendMessage(new StringTextComponent("Cannot sign-in: " + cell.day), player.getUUID());
-                    } else {
-                        player.sendMessage(new StringTextComponent(ESignInStatus.fromCode(cell.status).getDescription() + ": " + cell.day), player.getUUID());
+        if (leftArrow.isMouseOver(mouseX, mouseY)) {
+            currentDate = DateUtils.addMonth(currentDate, -1);
+            updateLayout();
+            return true;
+        } else if (rightArrow.isMouseOver(mouseX, mouseY)) {
+            currentDate = DateUtils.addMonth(currentDate, 1);
+            updateLayout();
+            return true;
+        } else if (upArrow.isMouseOver(mouseX, mouseY)) {
+            currentDate = DateUtils.addYear(currentDate, -1);
+            updateLayout();
+            return true;
+        } else if (downArrow.isMouseOver(mouseX, mouseY)) {
+            currentDate = DateUtils.addYear(currentDate, 1);
+            updateLayout();
+            return true;
+        } else {
+            for (CalendarCell cell : calendarCells) {
+                if (cell.isMouseOver((int) mouseX, (int) mouseY)) {
+                    // 点击了该格子，执行对应操作
+                    if (player != null) {
+                        if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
+                            player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
+                            // TODO 领取奖励
+                            // ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
+                            // cell.itemStack.setCount(0);
+                            cell.status = ESignInStatus.REWARDED.getCode();
+                        } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
+                            player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
+                        } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
+                            player.sendMessage(new StringTextComponent("Cannot sign-in: " + cell.day), player.getUUID());
+                        } else {
+                            player.sendMessage(new StringTextComponent(ESignInStatus.fromCode(cell.status).getDescription() + ": " + cell.day), player.getUUID());
+                        }
                     }
+                    return true;
                 }
-                return true;
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);

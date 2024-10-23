@@ -2,9 +2,13 @@ package xin.vanilla.mc.util;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class DateUtils {
 
@@ -20,6 +24,54 @@ public class DateUtils {
     public static final String CHINESE_DATE_FORMAT = "yyyy年MM月dd日";
 
     public DateUtils() {
+    }
+
+    private static LocalDateTime getLocalDateTime(Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    private static Locale getLocalFromLanguageTag(String languageTag) {
+        if (StringUtils.isNullOrEmpty(languageTag)) {
+            languageTag = Locale.getDefault().getLanguage();
+        } else if (languageTag.contains("_") || languageTag.contains("-")) {
+            languageTag = languageTag.replace("-", "_").split("_")[0];
+        }
+        return Locale.forLanguageTag(languageTag);
+    }
+
+    public static String toLocalStringYear(Date date, String languageTag) {
+        LocalDateTime localDateTime = getLocalDateTime(date);
+        if (getLocalFromLanguageTag(languageTag).getLanguage().equalsIgnoreCase(Locale.CHINESE.getLanguage())) {
+            return localDateTime.format(DateTimeFormatter.ofPattern("yyyy年"));
+        } else {
+            return localDateTime.format(DateTimeFormatter.ofPattern("yyyy"));
+        }
+    }
+
+    public static String toLocalStringMonth(Date date, String languageTag) {
+        LocalDateTime localDateTime = getLocalDateTime(date);
+        if (getLocalFromLanguageTag(languageTag).getLanguage().equalsIgnoreCase(Locale.CHINESE.getLanguage())) {
+            return localDateTime.format(DateTimeFormatter.ofPattern("M月"));
+        } else {
+            return localDateTime.getMonth().getDisplayName(TextStyle.SHORT_STANDALONE, getLocalFromLanguageTag(languageTag));
+        }
+    }
+
+    public static String toLocalStringWeek(Date date, String languageTag) {
+        LocalDateTime localDateTime = getLocalDateTime(date);
+        return localDateTime.getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, getLocalFromLanguageTag(languageTag));
+    }
+
+    public static String toLocalStringDay(Date date, String languageTag) {
+        LocalDateTime localDateTime = getLocalDateTime(date);
+        if (getLocalFromLanguageTag(languageTag).getLanguage().equalsIgnoreCase(Locale.CHINESE.getLanguage())) {
+            return localDateTime.format(DateTimeFormatter.ofPattern("d日"));
+        } else {
+            return localDateTime.format(DateTimeFormatter.ofPattern("dd"));
+        }
     }
 
     public static String toString(Date date) {
@@ -340,6 +392,6 @@ public class DateUtils {
     }
 
     public static void main(String[] args) {
-        System.out.println(getYearPart(new Date()));
+        System.out.println(toLocalStringMonth(new Date(), "zh"));
     }
 }
