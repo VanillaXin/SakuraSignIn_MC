@@ -189,14 +189,18 @@ public class CalendarScreen extends Screen {
         int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current) % weekStart;
         int daysOfCurrentMonth = DateUtils.getDaysOfMonth(current);
 
+        // FIXME 日期不根据周起始日渲染的问题
+        // FIXME 本月第一天是周期起始日时会从第二行开始渲染
+
         // 获取奖励列表
         if (Minecraft.getInstance().player != null) {
             Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, PlayerSignInDataCapability.getData(Minecraft.getInstance().player), lastOffset, nextOffset);
 
-            boolean showLineSex = false;
+            boolean allCurrentDaysDisplayed = false;
             boolean showLastReward = ClientConfig.SHOW_LAST_REWARD.get();
             boolean showNextReward = ClientConfig.SHOW_NEXT_REWARD.get();
             for (int row = 0; row < rows; row++) {
+                if (allCurrentDaysDisplayed && !showNextReward) break;
                 for (int col = 0; col < columns; col++) {
                     // 检查是否已超过设置显示上限
                     if (itemIndex >= 40) break;
@@ -211,15 +215,10 @@ public class CalendarScreen extends Screen {
                         month = DateUtils.getMonthOfDate(DateUtils.addMonth(current, 1));
                         day = itemIndex - dayOfWeekOfMonthStart - daysOfCurrentMonth + 1;
                         status = ESignInStatus.NO_ACTION.getCode();
-                        showIcon = showNextReward && showLineSex && day < lastOffset;
-                        showText = showLineSex || row == 4 || showNextReward && day < lastOffset;
-                        showHover = showNextReward && showLineSex && day < lastOffset;
-                        // } else if (itemIndex >= dayOfWeekOfMonthStart || dayOfWeekOfMonthStart == weekStart) {
-                        // 若本月第一天的星期 == 周起始日 且 itemIndex < 本月第一天的星期
-                        // if (dayOfWeekOfMonthStart == weekStart && itemIndex < dayOfWeekOfMonthStart)
-                        //     itemIndex = weekStart;
+                        showIcon = showNextReward && day < lastOffset;
+                        showText = row == 4 || showNextReward && day < lastOffset;
+                        showHover = showNextReward && day < lastOffset;
                     } else if (itemIndex >= dayOfWeekOfMonthStart) {
-                        showLineSex = row == 5;
                         // 属于当前月的日期
                         year = DateUtils.getYearPart(current);
                         month = DateUtils.getMonthOfDate(current);
@@ -232,6 +231,7 @@ public class CalendarScreen extends Screen {
                         showIcon = true;
                         showText = true;
                         showHover = true;
+                        allCurrentDaysDisplayed = day == daysOfCurrentMonth;
                     } else {
                         // 属于上月的日期
                         year = DateUtils.getYearPart(lastMonth);
@@ -478,7 +478,9 @@ public class CalendarScreen extends Screen {
                     } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
 
                     } else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
-
+                        ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
+                        this.updateTextureAndCoordinate();
+                        this.updateLayout();
                     }
                 }
                 value.setPressed(false);

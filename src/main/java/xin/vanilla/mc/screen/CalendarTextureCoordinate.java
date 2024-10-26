@@ -9,6 +9,8 @@ import java.io.Serializable;
  */
 @Data
 public class CalendarTextureCoordinate implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * 纹理图片总宽度
      */
@@ -17,6 +19,17 @@ public class CalendarTextureCoordinate implements Serializable {
      * 纹理图片总高度
      */
     private int totalHeight;
+    /**
+     * 周起始日
+     * 7: 周日
+     * 1: 周一
+     * 2: 周二
+     * 3: 周三
+     * 4: 周四
+     * 5: 周五
+     * 6: 周六
+     */
+    private int weekStart;
 
     /**
      * 文本颜色: 无法操作

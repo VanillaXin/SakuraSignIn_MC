@@ -8,6 +8,8 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 public class TextureCoordinate implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public double x;
     public double y;
     public double width;
