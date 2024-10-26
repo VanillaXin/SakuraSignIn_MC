@@ -1,8 +1,8 @@
 package xin.vanilla.mc.config;
 
-import lombok.Getter;
 import net.minecraftforge.common.ForgeConfigSpec;
 import xin.vanilla.mc.SakuraSignIn;
+import xin.vanilla.mc.enums.ETimeCoolingMethod;
 
 public class ServerConfig {
     public static final String SIGN_IN_CARD_ITEM_NAME = SakuraSignIn.MODID + ":sign_in_card";
@@ -15,7 +15,7 @@ public class ServerConfig {
     /**
      * 签到时间冷却方式
      */
-    public static final ForgeConfigSpec.EnumValue<E_TIME_COOLING_METHOD> TIME_COOLING_METHOD;
+    public static final ForgeConfigSpec.EnumValue<ETimeCoolingMethod> TIME_COOLING_METHOD;
     /**
      * 签到冷却刷新时间
      */
@@ -45,7 +45,7 @@ public class ServerConfig {
         TIME_COOLING_METHOD = SERVER_BUILDER
                 .comment("Sign in time cooling method. FIXED_TIME: Fixed time point, FIXED_INTERVAL: Fixed time interval."
                         , "签到时间冷却方式。 FIXED_TIME: 固定时间， FIXED_INTERVAL: 固定时间间隔， MIXED: 混合模式。")
-                .defineEnum("timeCoolingMethod", E_TIME_COOLING_METHOD.FIXED_TIME, E_TIME_COOLING_METHOD.values());
+                .defineEnum("timeCoolingMethod", ETimeCoolingMethod.FIXED_TIME, ETimeCoolingMethod.values());
 
         // 签到冷却刷新时间
         TIME_COOLING_TIME = SERVER_BUILDER
@@ -80,19 +80,4 @@ public class ServerConfig {
         SERVER_CONFIG = SERVER_BUILDER.build();
     }
 
-    /**
-     * 签到时间冷却方式
-     */
-    @Getter
-    public enum E_TIME_COOLING_METHOD {
-        FIXED_TIME("固定时间"),
-        FIXED_INTERVAL("固定间隔"),
-        MIXED("混合模式");
-
-        private final String name;
-
-        E_TIME_COOLING_METHOD(String name) {
-            this.name = name;
-        }
-    }
 }

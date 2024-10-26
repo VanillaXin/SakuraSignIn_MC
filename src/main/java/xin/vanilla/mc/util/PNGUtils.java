@@ -1,6 +1,6 @@
 package xin.vanilla.mc.util;
 
-import xin.vanilla.mc.screen.CalendarBackgroundConf;
+import xin.vanilla.mc.screen.CalendarTextureCoordinate;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -704,10 +704,11 @@ public class PNGUtils {
         }
     }
 
+    private static final File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_clover_source.png");
+    private static final File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_clover.png");
+
     private static void testWriteZTxt() {
         try {
-            File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg_source.png");
-            File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg.png");
             PNGUtils.writeZTxt(sourceFile, targetFile, new LinkedHashMap<String, String>() {{
                 put("titleStartX", "20");
                 put("titleStartY", "20");
@@ -743,13 +744,21 @@ public class PNGUtils {
     }
 
     private static void testWriteChunk() throws IOException, ClassNotFoundException {
-        File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg_source.png");
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
-        File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_bg.png");
-        writePrivateChunk(sourceFile, tempFile, "vacb", CalendarBackgroundConf.getDefault(), true);
+        CalendarTextureCoordinate aDefault = CalendarTextureCoordinate.getDefault();
+        if (sourceFile.getPath().contains("original")) {
+            aDefault.getCellCoordinate().setX(73).setY(134).setWidth(36).setHeight(36);
+            aDefault.setCellHMargin(18);
+            aDefault.setCellVMargin(26);
+        } else if (sourceFile.getPath().contains("clover")) {
+            aDefault.getCellCoordinate().setX(80);
+            aDefault.setTextColorNoActionCur(0xFF555555);
+            aDefault.setTextColorNoAction(0xFFAAAAAA);
+        }
+        writePrivateChunk(sourceFile, tempFile, "vacb", aDefault, true);
         writeZTxtByKey(tempFile, targetFile, "Software", "Minecraft SakuraSignIn");
         tempFile.deleteOnExit();
-        CalendarBackgroundConf backgroundConf = readLastPrivateChunk(targetFile, "vacb");
+        CalendarTextureCoordinate backgroundConf = readLastPrivateChunk(targetFile, "vacb");
         System.out.println(backgroundConf);
     }
 

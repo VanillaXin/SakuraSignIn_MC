@@ -2,7 +2,9 @@ package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import lombok.Data;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -10,29 +12,49 @@ import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
-import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
+import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.DateUtils;
+import xin.vanilla.mc.util.PNGUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 
+import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
+
+@Data
+@Accessors(chain = true)
 public class CalendarCell {
-    private static final ResourceLocation CHECKED_IN_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/singed_in.png");
+    private final ResourceLocation BACKGROUND_TEXTURE;
+    private final CalendarTextureCoordinate textureCoordinate;
     // 物品图标的大小
     private final int itemIconSize = 16;
-    public float x, y, width, height, scale;
+    public double x, y, width, height, scale;
     public RewardList rewardList;
     public int year, month, day;
     /**
      * @see xin.vanilla.mc.enums.ESignInStatus
      */
     public int status;
+    private boolean showIcon;
+    private boolean showText;
+    private boolean showHover;
 
-    public CalendarCell(float x, float y, float width, float height, float scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
+    public CalendarCell(ResourceLocation resourceLocation, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
+        BACKGROUND_TEXTURE = resourceLocation;
+        CalendarTextureCoordinate textureCoordinate1;
+        try {
+            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
+            textureCoordinate1 = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
+        } catch (IOException | ClassNotFoundException ignored) {
+            textureCoordinate1 = CalendarTextureCoordinate.getDefault();
+        }
+        textureCoordinate = textureCoordinate1;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -51,7 +73,7 @@ public class CalendarCell {
     }
 
     // 渲染物品图标
-    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, float scale, int zLevel, boolean showNum) {
+    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, double scale, int zLevel, boolean showNum) {
         // TODO 缩放图标以适应格子大小
         float blitOffset = itemRenderer.blitOffset;
         itemRenderer.blitOffset = zLevel;
@@ -77,57 +99,57 @@ public class CalendarCell {
     // 渲染格子
     public void render(MatrixStack matrixStack, FontRenderer font, ItemRenderer itemRenderer, int mouseX, int mouseY) {
         boolean isHovered = isMouseOver(mouseX, mouseY);
-        // 绘制格子背景
-        if (isHovered) {
-            AbstractGui.fill(matrixStack, (int) x, (int) y, (int) (x + width), (int) (y + height), 0xFFAAAAAA);
-        }
-
-        if (status == ESignInStatus.REWARDED.getCode()) {
-            // 绘制已领取图标
-            Minecraft.getInstance().getTextureManager().bind(CHECKED_IN_TEXTURE);
-            AbstractGui.blit(matrixStack, (int) x, (int) y, 0, 0, (int) width, (int) height, (int) width, (int) height);
-        } else {
-            // 绘制物品图标
-            renderCustomReward(matrixStack, itemRenderer, font, rewardList.get(0), (int) (x + (width - 16) / 2), (int) (y + (height - 16) / 2), width / itemIconSize, 0, false);
-        }
-
-        // 绘制日期
-        String dayStr = String.valueOf(day);
-        float dayWidth = font.width(dayStr);
-        int color;
-        switch (ESignInStatus.fromCode(status)) {
-            case NO_ACTION:
-                if (month == DateUtils.getMonthOfDate(new Date())) {
-                    // 白色
-                    color = 0xFFFFFFFF;
+        if (showIcon) {
+            Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
+            if (status == ESignInStatus.REWARDED.getCode()) {
+                // 绘制已领取图标
+                TextureCoordinate signedInUV = textureCoordinate.getSignedInUV();
+                AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, (float) signedInUV.getU0(), (float) signedInUV.getV0(), (int) signedInUV.getUWidth(), (int) signedInUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+            } else {
+                // 绘制奖励图标
+                TextureCoordinate rewardUV = textureCoordinate.getRewardUV();
+                // 绘制格子背景
+                if (isHovered) {
+                    AbstractGuiUtils.blit(matrixStack, (int) x - 2, (int) y - 2, (int) width + 4, (int) height + 4, (float) rewardUV.getU0(), (float) rewardUV.getV0(), (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
                 } else {
-                    // 灰色
-                    color = 0xFFAAAAAA;
+                    AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, (float) rewardUV.getU0(), (float) rewardUV.getV0(), (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
                 }
-                break;
-            case CAN_REPAIR:
-                // 红色
-                color = 0xFF0000FF;
-                break;
-            case NOT_SIGNED_IN:
-                // 粉红色
-                color = 0xFFFF00FF;
-                break;
-            case SIGNED_IN:
-                // 绿色
-                color = 0xFF00FF00;
-                break;
-            case REWARDED:
-                // 灰绿色
-                color = 0xFF00AAAA;
-                break;
-            default:
-                color = 0xFF000000;
+            }
         }
-        font.draw(matrixStack, dayStr, x + (width - dayWidth) / 2, y + height + 2, color);
+
+        if (showText) {
+            // 绘制日期
+            String dayStr = String.valueOf(day);
+            float dayWidth = font.width(dayStr);
+            int color;
+            switch (ESignInStatus.fromCode(status)) {
+                case NO_ACTION:
+                    if (month == DateUtils.getMonthOfDate(new Date())) {
+                        color = textureCoordinate.getTextColorNoActionCur();
+                    } else {
+                        color = textureCoordinate.getTextColorNoAction();
+                    }
+                    break;
+                case CAN_REPAIR:
+                    color = textureCoordinate.getTextColorCanRepair();
+                    break;
+                case NOT_SIGNED_IN:
+                    color = textureCoordinate.getTextColorNotSignedIn();
+                    break;
+                case SIGNED_IN:
+                    color = textureCoordinate.getTextColorSignedIn();
+                    break;
+                case REWARDED:
+                    color = textureCoordinate.getTextColorRewarded();
+                    break;
+                default:
+                    color = textureCoordinate.getTextColorDefault();
+            }
+            font.draw(matrixStack, dayStr, (float) (x + (width - dayWidth) / 2), (float) (y + height + 0.1f), color);
+        }
 
         // 绘制弹出层
-        if (isHovered) {
+        if (showHover && isHovered) {
             renderTooltip(matrixStack, itemRenderer, font, mouseX, mouseY);
         }
     }

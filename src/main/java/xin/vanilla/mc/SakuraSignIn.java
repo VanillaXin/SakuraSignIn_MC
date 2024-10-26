@@ -23,6 +23,7 @@ import xin.vanilla.mc.network.ModNetworkHandler;
 public class SakuraSignIn {
 
     public static final String MODID = "sakura_sign_in";
+    public static final String PNG_CHUNK_NAME = "vacb";
 
     private static final Logger LOGGER = LogManager.getLogger();
 

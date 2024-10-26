@@ -53,7 +53,15 @@ public class RewardManager {
         return parser.serialize(reward);
     }
 
-    public static Map<Integer, RewardList> getMonthRewardList(Date currentMonth, IPlayerSignInData playerData) {
+    /**
+     * 获取指定月份的奖励列表
+     *
+     * @param currentMonth 当前月份
+     * @param playerData   玩家签到数据
+     * @param lastOffset   上月最后offset天
+     * @param nextOffset   下月开始offset天
+     */
+    public static Map<Integer, RewardList> getMonthRewardList(Date currentMonth, IPlayerSignInData playerData, int lastOffset, int nextOffset) {
         SignInData serverData = SignInDataManager.getSignInData();
         Map<Integer, RewardList> result = new LinkedHashMap<>();
 
@@ -75,24 +83,24 @@ public class RewardManager {
         // 本年总天数
         int daysOfCurrentYear = DateUtils.getDaysOfYear(currentMonth);
 
-        // 计算本月+上月最后七天+下月开始七天的奖励
-        for (int i = 1; i <= daysOfCurrentMonth + 14; i++) {
+        // 计算本月+上月最后offset天+下月开始offset的奖励
+        for (int i = 1; i <= daysOfCurrentMonth + lastOffset + nextOffset; i++) {
             int month, day, year;
-            if (i <= 7) {
+            if (i <= lastOffset) {
                 // 属于上月的日期
                 year = DateUtils.getYearPart(lastMonth);
                 month = DateUtils.getMonthOfDate(lastMonth);
-                day = daysOfLastMonth - (7 - i);
-            } else if (i <= 7 + daysOfCurrentMonth) {
+                day = daysOfLastMonth - (lastOffset - i);
+            } else if (i <= lastOffset + daysOfCurrentMonth) {
                 // 属于当前月的日期
                 year = DateUtils.getYearPart(currentMonth);
                 month = DateUtils.getMonthOfDate(currentMonth);
-                day = i - 7;
+                day = i - lastOffset;
             } else {
                 // 属于下月的日期
                 year = DateUtils.getYearPart(nextMonth);
                 month = DateUtils.getMonthOfDate(nextMonth);
-                day = i - daysOfCurrentMonth - 7;
+                day = i - daysOfCurrentMonth - nextOffset;
             }
             int key = year * 10000 + month * 100 + day;
             Date date = DateUtils.getDate(year, month, day);

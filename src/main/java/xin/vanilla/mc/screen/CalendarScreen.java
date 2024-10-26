@@ -1,8 +1,7 @@
 package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import lombok.Data;
-import lombok.experimental.Accessors;
+import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,52 +14,106 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
-import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
+import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
-import xin.vanilla.mc.util.CollectionUtils;
-import xin.vanilla.mc.util.DateUtils;
-import xin.vanilla.mc.util.PNGUtils;
+import xin.vanilla.mc.util.*;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
+import static xin.vanilla.mc.screen.CalendarScreen.OperationButtonType.*;
 
 @OnlyIn(Dist.CLIENT)
 public class CalendarScreen extends Screen {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    /**
+     * 上月最后offset天
+     */
+    public static int lastOffset = 6;
+    /**
+     * 下月开始offset天
+     */
+    public static int nextOffset = 6;
 
-    private static final String BACKGROUND_PNG_CHUNK_NAME = "vacb";
-    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_bg.png");
-    private static final ResourceLocation ARROW_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_arrow.png");
-    private static final ResourceLocation ARROW_TEXTURE_TAP = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_arrow_tap.png");
+    /**
+     * 周起始日，默认为周日
+     * TODO 做成主题配置
+     */
+    public static int weekStart = 7;
+
+    private ResourceLocation BACKGROUND_TEXTURE;
 
     private final List<CalendarCell> calendarCells = new ArrayList<>();
-    private CalendarBackgroundConf calendarBackgroundConf;
+    public CalendarTextureCoordinate textureCoordinate;
 
-    private final int columns = 7;  // 列数
-    private final int rows = 6;     // 行数
+    // 日历表格数量定义
+    // 列数
+    private final int columns = 7;
+    // 行数
+    private final int rows = 6;
 
+    // 背景渲染坐标大小定义
     private int bgH = Math.max(this.height - 20, 120);
     private int bgW = Math.max(bgH * 5 / 6, 100);
     private int bgX = (this.width - bgW) / 2;
     private int bgY = 0;
 
+    /**
+     * 当前显示的日期
+     */
     private Date currentDate;
 
-    private float scale = 1.0F;
+    /**
+     * UI缩放比例
+     */
+    private double scale = 1.0F;
 
-    private OperationButton leftArrow = new OperationButton(1);
-    private OperationButton rightArrow = new OperationButton(2);
-    private OperationButton upArrow = new OperationButton(3);
-    private OperationButton downArrow = new OperationButton(4);
+    /**
+     * 操作按钮集合
+     */
+    private final Map<Integer, OperationButton> BUTTONS = new HashMap<>();
+
+    /**
+     * 操作按钮类型
+     */
+    @Getter
+    enum OperationButtonType {
+        LEFT_ARROW(1),
+        RIGHT_ARROW(2),
+        UP_ARROW(3),
+        DOWN_ARROW(4),
+        THEME_ORIGINAL_BUTTON(100, "textures/gui/sign_in_calendar_original.png"),
+        THEME_SAKURA_BUTTON(101, "textures/gui/sign_in_calendar_sakura.png"),
+        THEME_CLOVER_BUTTON(102, "textures/gui/sign_in_calendar_clover.png"),
+        THEME_MAPLE_BUTTON(103, "textures/gui/sign_in_calendar_maple.png"),
+        THEME_CHAOS_BUTTON(104, "textures/gui/sign_in_calendar_chaos.png");
+
+        final int code;
+        final String path;
+
+        OperationButtonType(int code) {
+            this.code = code;
+            path = "";
+        }
+
+        OperationButtonType(int code, String path) {
+            this.code = code;
+            this.path = path;
+        }
+
+        static OperationButtonType valueOf(int code) {
+            return Arrays.stream(values()).filter(v -> v.getCode() == code).findFirst().orElse(null);
+        }
+    }
 
     public CalendarScreen() {
         super(new TranslationTextComponent("calendar.title"));
@@ -70,33 +123,54 @@ public class CalendarScreen extends Screen {
     protected void init() {
         super.init();
         currentDate = new Date();
+        // 初始化材质及材质坐标信息
+        this.updateTextureAndCoordinate();
+
+        BUTTONS.put(LEFT_ARROW.getCode(), new OperationButton(LEFT_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getLeftArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
+        BUTTONS.put(RIGHT_ARROW.getCode(), new OperationButton(RIGHT_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getRightArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
+        BUTTONS.put(UP_ARROW.getCode(), new OperationButton(UP_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getUpArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
+        BUTTONS.put(DOWN_ARROW.getCode(), new OperationButton(DOWN_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getDownArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
+
+        BUTTONS.put(THEME_ORIGINAL_BUTTON.getCode(), new OperationButton(THEME_ORIGINAL_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
+        BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
+        BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
+        BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
+        BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
+        // 初始化布局信息
+        this.updateLayout();
+    }
+
+    /**
+     * 更新材质及材质坐标信息
+     */
+    private void updateTextureAndCoordinate() {
         try {
+            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.THEME.get());
             InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
-            calendarBackgroundConf = PNGUtils.readLastPrivateChunk(inputStream, BACKGROUND_PNG_CHUNK_NAME);
+            textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
         } catch (IOException | ClassNotFoundException ignored) {
         }
-        if (calendarBackgroundConf == null) {
+        if (textureCoordinate == null) {
             // 使用默认配置
-            calendarBackgroundConf = CalendarBackgroundConf.getDefault();
-        }
-        updateLayout(); // 初始化布局
-    }
-
-    @Data
-    @Accessors(chain = true)
-    private class OperationButton {
-        private int x, y, width, height, operation;
-
-        public OperationButton(int operation) {
-            this.operation = operation;
-        }
-
-        public boolean isMouseOver(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+            textureCoordinate = CalendarTextureCoordinate.getDefault();
         }
     }
 
-    // 创建日历格子
+    /**
+     * 计算并更新布局信息
+     */
+    private void updateLayout() {
+        // 限制背景高度大于120
+        bgH = Math.max(this.height - 20, 120);
+        // 限制背景宽度大于100
+        bgW = Math.max(bgH * 5 / 6, 100);
+        // 使背景水平居中
+        bgX = (this.width - bgW) / 2;
+        // 更新缩放比例
+        this.scale = bgH * 1.0f / textureCoordinate.getBgUV().getVHeight();
+        // 创建或更新格子位置
+        this.createCalendarCells(currentDate);
+    }
 
     /**
      * 创建日历格子
@@ -108,24 +182,28 @@ public class CalendarScreen extends Screen {
         calendarCells.clear();
 
         int itemIndex = 0;
-        float startX = bgX + calendarBackgroundConf.getCellStartX() * this.scale;
-        float startY = bgY + calendarBackgroundConf.getCellStartY() * this.scale;
+        double startX = bgX + textureCoordinate.getCellCoordinate().getX() * this.scale;
+        double startY = bgY + textureCoordinate.getCellCoordinate().getY() * this.scale;
         Date lastMonth = DateUtils.addMonth(current, -1);
         int daysOfLastMonth = DateUtils.getDaysOfMonth(lastMonth);
-        int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current);
+        int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current) % weekStart;
         int daysOfCurrentMonth = DateUtils.getDaysOfMonth(current);
 
         // 获取奖励列表
         if (Minecraft.getInstance().player != null) {
-            Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, PlayerSignInDataCapability.getData(Minecraft.getInstance().player));
+            Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, PlayerSignInDataCapability.getData(Minecraft.getInstance().player), lastOffset, nextOffset);
 
+            boolean showLineSex = false;
+            boolean showLastReward = ClientConfig.SHOW_LAST_REWARD.get();
+            boolean showNextReward = ClientConfig.SHOW_NEXT_REWARD.get();
             for (int row = 0; row < rows; row++) {
                 for (int col = 0; col < columns; col++) {
                     // 检查是否已超过设置显示上限
                     if (itemIndex >= 40) break;
-                    float x = startX + col * (calendarBackgroundConf.getCellWidth() + calendarBackgroundConf.getCellHMargin()) * this.scale;
-                    float y = startY + row * (calendarBackgroundConf.getCellHeight() + calendarBackgroundConf.getCellVMargin()) * this.scale;
+                    double x = startX + col * (textureCoordinate.getCellCoordinate().getWidth() + textureCoordinate.getCellHMargin()) * this.scale;
+                    double y = startY + row * (textureCoordinate.getCellCoordinate().getHeight() + textureCoordinate.getCellVMargin()) * this.scale;
                     int year, month, day, status;
+                    boolean showIcon, showText, showHover;
                     // 根据itemIndex确定日期和状态
                     if (itemIndex >= dayOfWeekOfMonthStart + daysOfCurrentMonth) {
                         // 属于下月的日期
@@ -133,7 +211,15 @@ public class CalendarScreen extends Screen {
                         month = DateUtils.getMonthOfDate(DateUtils.addMonth(current, 1));
                         day = itemIndex - dayOfWeekOfMonthStart - daysOfCurrentMonth + 1;
                         status = ESignInStatus.NO_ACTION.getCode();
+                        showIcon = showNextReward && showLineSex && day < lastOffset;
+                        showText = showLineSex || row == 4 || showNextReward && day < lastOffset;
+                        showHover = showNextReward && showLineSex && day < lastOffset;
+                        // } else if (itemIndex >= dayOfWeekOfMonthStart || dayOfWeekOfMonthStart == weekStart) {
+                        // 若本月第一天的星期 == 周起始日 且 itemIndex < 本月第一天的星期
+                        // if (dayOfWeekOfMonthStart == weekStart && itemIndex < dayOfWeekOfMonthStart)
+                        //     itemIndex = weekStart;
                     } else if (itemIndex >= dayOfWeekOfMonthStart) {
+                        showLineSex = row == 5;
                         // 属于当前月的日期
                         year = DateUtils.getYearPart(current);
                         month = DateUtils.getMonthOfDate(current);
@@ -143,21 +229,28 @@ public class CalendarScreen extends Screen {
                         if (year == DateUtils.getYearPart(new Date()) && day == DateUtils.getDayOfMonth(new Date()) && month == DateUtils.getMonthOfDate(new Date())) {
                             status = ESignInStatus.NOT_SIGNED_IN.getCode();
                         }
+                        showIcon = true;
+                        showText = true;
+                        showHover = true;
                     } else {
                         // 属于上月的日期
                         year = DateUtils.getYearPart(lastMonth);
                         month = DateUtils.getMonthOfDate(lastMonth);
                         day = daysOfLastMonth - (dayOfWeekOfMonthStart - itemIndex) + 1;
                         status = ESignInStatus.NO_ACTION.getCode();
+                        showIcon = showLastReward && day > daysOfLastMonth - lastOffset;
+                        showText = true;
+                        showHover = showLastReward && day > daysOfLastMonth - lastOffset;
                     }
+                    itemIndex++;
                     int key = year * 10000 + month * 100 + day;
                     RewardList rewards = monthRewardList.get(key);
-                    if (CollectionUtils.isNullOrEmpty(rewards)) break;
+                    if (CollectionUtils.isNullOrEmpty(rewards)) continue;
                     // 创建物品格子
-                    CalendarCell cell = new CalendarCell(x, y, calendarBackgroundConf.getCellWidth() * this.scale, calendarBackgroundConf.getCellHeight() * this.scale, this.scale, rewards, year, month, day, status);
+                    CalendarCell cell = new CalendarCell(BACKGROUND_TEXTURE, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
+                    cell.setShowIcon(showIcon).setShowText(showText).setShowHover(showHover);
                     // 添加到列表
                     calendarCells.add(cell);
-                    itemIndex++;
                 }
                 // 检查是否已超过设置显示上限
                 if (itemIndex >= 40) break;
@@ -165,93 +258,150 @@ public class CalendarScreen extends Screen {
         }
     }
 
-    // 计算并更新布局
-    private void updateLayout() {
-        bgH = Math.max(this.height - 20, 120);
-        bgW = Math.max(bgH * 5 / 6, 100);
-        bgX = (this.width - bgW) / 2;
-        this.scale = bgH * 1.0f / calendarBackgroundConf.getTotalHeight();
-        // 创建或更新格子位置
-        createCalendarCells(currentDate);
-    }
-
-    // 绘制背景纹理
+    /**
+     * 绘制背景纹理
+     */
     private void renderBackgroundTexture(MatrixStack matrixStack) {
         // 绘制背景纹理，使用缩放后的宽度和高度
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        // 绘制的位置坐标x
-        // 绘制的位置坐标y
-        // 纹理中的u坐标
-        // 纹理中的v坐标
-        // 纹理的宽度
-        // 纹理的高度
-        // 绘制的width宽度
-        // 绘制的height高度
-        // 以上注释仅供参考, 搞不懂一点
-        blit(matrixStack, bgX, bgY, 0, 0, bgW, bgH, bgW, bgH);
+        AbstractGuiUtils.blit(matrixStack, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
     }
 
-    private void renderRotatedTexture(MatrixStack matrixStack, double x, double y, int width, int height, float angle, ResourceLocation texture) {
+    /**
+     * 绘制旋转的纹理
+     */
+    private void renderRotatedTexture(MatrixStack matrixStack, float angle, TextureCoordinate coordinate) {
+        double x = bgX + coordinate.getX() * this.scale;
+        double y = bgY + coordinate.getY() * this.scale;
+        int width = (int) (coordinate.getWidth() * this.scale);
+        int height = (int) (coordinate.getHeight() * this.scale);
         // 绑定纹理
-        Minecraft.getInstance().getTextureManager().bind(texture);
+        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         // 保存当前矩阵状态
         matrixStack.pushPose();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
         matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
         // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
         matrixStack.mulPose(Vector3f.ZP.rotationDegrees(angle));
-        // 平移回去原点，准备绘制
+        // 平移回原点
         matrixStack.translate(-width / 2.0, -height / 2.0, 0);
-        // 绘制纹理，注意这里的 x, y 都是相对于旋转后的坐标系的
-        blit(matrixStack, 0, 0, 0, 0, width, height, width, height);
+        // 绘制纹理
+        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, (float) coordinate.getU0(), (float) coordinate.getV0(), (int) coordinate.getUWidth(), (int) coordinate.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 恢复矩阵状态
         matrixStack.popPose();
     }
 
+    /**
+     * 获取操作按钮的纹理坐标
+     */
+    private TextureCoordinate getCoordinate(OperationButton button, int mouseX, int mouseY) {
+        TextureCoordinate coordinate = new TextureCoordinate().setX(button.getX()).setY(button.getY()).setWidth(button.getWidth()).setHeight(button.getHeight());
+        double mouseX1 = (mouseX - bgX) / this.scale;
+        double mouseY1 = (mouseY - bgY) / this.scale;
+        if (button.isMouseOver(mouseX1, mouseY1) && button.isPressed()) {
+            coordinate.setU0(button.getTapU()).setV0(button.getTapV()).setUWidth(button.getTapWidth()).setVHeight(button.getTapHeight());
+        } else if (button.isMouseOver(mouseX1, mouseY1)) {
+            coordinate.setU0(button.getHoverU()).setV0(button.getHoverV()).setUWidth(button.getHoverWidth()).setVHeight(button.getHoverHeight());
+        } else {
+            coordinate.setU0(button.getNormalU()).setV0(button.getNormalV()).setUWidth(button.getNormalWidth()).setVHeight(button.getNormalHeight());
+        }
+        return coordinate;
+    }
+
     @Override
+    @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
         renderBackground(matrixStack);
-
         // 绘制缩放背景纹理
         renderBackgroundTexture(matrixStack);
 
-        int arrowWidth = font.lineHeight;
-        int arrowHeight = font.lineHeight;
-        double arrowMargin = calendarBackgroundConf.getCellHMargin() * 0.1 * this.scale;
         // 渲染年份
-        {
-            String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
-            double titleX = bgX + calendarBackgroundConf.getTitleStartX() * this.scale;
-            double titleY = bgY + calendarBackgroundConf.getTitleStartY() * this.scale;
-            double titleWidth = font.width(yearTitle);
-            double titleHeight = font.lineHeight;
-            // 渲染翻页箭头
-            upArrow.setX((int) (titleX - arrowWidth - arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
-            this.renderRotatedTexture(matrixStack, titleX - arrowWidth - arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 270,
-                    upArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
-            downArrow.setX((int) (titleX + titleWidth + arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
-            this.renderRotatedTexture(matrixStack, titleX + titleWidth + arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 90,
-                    downArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
-            // 渲染年份
-            this.font.draw(matrixStack, yearTitle, (float) titleX, (float) titleY, 0xFFFFFF00);
-        }
+        double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
+        double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
+        String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
+        this.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDefault());
 
         // 渲染月份
-        {
-            String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
-            double titleX = bgX + calendarBackgroundConf.getSubTitleStartX() * this.scale;
-            double titleY = bgY + calendarBackgroundConf.getSubTitleStartY() * this.scale;
-            double titleWidth = font.width(monthTitle);
-            double titleHeight = font.lineHeight;
-            // 渲染翻页箭头
-            leftArrow.setX((int) (titleX - arrowWidth - arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
-            this.renderRotatedTexture(matrixStack, titleX - arrowWidth - arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 180,
-                    leftArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
-            rightArrow.setX((int) (titleX + titleWidth + arrowMargin)).setY((int) (titleY + (titleHeight - arrowHeight) / 2)).setHeight(arrowHeight).setWidth(arrowWidth);
-            this.renderRotatedTexture(matrixStack, titleX + titleWidth + arrowMargin, titleY + (titleHeight - arrowHeight) / 2, arrowWidth, arrowHeight, 0,
-                    rightArrow.isMouseOver(mouseX, mouseY) ? ARROW_TEXTURE_TAP : ARROW_TEXTURE);
-            this.font.draw(matrixStack, monthTitle, (float) titleX, (float) titleY, 0xFFFFFF00);
+        double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
+        double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
+        String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
+        this.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDefault());
+
+        // 渲染操作按钮
+        for (Integer op : BUTTONS.keySet()) {
+            OperationButton button = BUTTONS.get(op);
+            TextureCoordinate coordinate = this.getCoordinate(button, mouseX, mouseY);
+            int angle;
+            switch (valueOf(op)) {
+                case RIGHT_ARROW:
+                    // 如果宽度和高度与月份相同，则将大小设置为字体行高
+                    if (coordinate.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
+                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    }
+                    // 如果坐标与月份相同，则将坐标设置为月份右边的位置
+                    if (coordinate.getX() == textureCoordinate.getMonthCoordinate().getX() && coordinate.getY() == textureCoordinate.getMonthCoordinate().getY()) {
+                        coordinate.setX((monthX - bgX + font.width(monthTitle) + 1) / this.scale);
+                    }
+                    angle = 0;
+                    break;
+                case DOWN_ARROW:
+                    // 如果宽度和高度与年份相同，则将大小设置为字体行高
+                    if (coordinate.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
+                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    }
+                    // 如果坐标与年份相同，则将坐标设置为年份右边的位置
+                    if (coordinate.getX() == textureCoordinate.getYearCoordinate().getX() && coordinate.getY() == textureCoordinate.getYearCoordinate().getY()) {
+                        coordinate.setX((yearX - bgX + font.width(yearTitle) + 1) / this.scale);
+                    }
+                    angle = 90;
+                    break;
+                case LEFT_ARROW:
+                    // 如果宽度和高度与月份相同，则将大小设置为字体行高
+                    if (coordinate.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
+                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    }
+                    // 如果坐标与月份相同，则将坐标设置为月份左边的位置
+                    if (coordinate.getX() == textureCoordinate.getMonthCoordinate().getX() && coordinate.getY() == textureCoordinate.getMonthCoordinate().getY()) {
+                        coordinate.setX((monthX - bgX - 1) / this.scale - coordinate.getWidth());
+                    }
+                    angle = 180;
+                    break;
+                case UP_ARROW:
+                    // 如果宽度和高度与年份相同，则将大小设置为字体行高
+                    if (coordinate.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
+                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    }
+                    // 如果坐标与年份相同，则将坐标设置为年份左边的位置
+                    if (coordinate.getX() == textureCoordinate.getYearCoordinate().getX() && coordinate.getY() == textureCoordinate.getYearCoordinate().getY()) {
+                        coordinate.setX((yearX - bgX - 1) / this.scale - coordinate.getWidth());
+                    }
+                    angle = 270;
+                    break;
+                case THEME_ORIGINAL_BUTTON:
+                case THEME_SAKURA_BUTTON:
+                case THEME_CLOVER_BUTTON:
+                case THEME_MAPLE_BUTTON:
+                case THEME_CHAOS_BUTTON:
+                    // 如选中主题为当前主题则设置为鼠标按下(选中)状态
+                    if (BACKGROUND_TEXTURE.getPath().equalsIgnoreCase(valueOf(op).getPath())) {
+                        button.setNormalV(button.getTapV());
+                        button.setHoverV(button.getTapV());
+                    } else {
+                        button.setNormalV(textureCoordinate.getThemeUV().getV0());
+                        button.setHoverV(textureCoordinate.getThemeHoverUV().getV0());
+                    }
+                    button.setNormalU((op - 100) * textureCoordinate.getThemeUV().getUWidth());
+                    button.setHoverU((op - 100) * textureCoordinate.getThemeHoverUV().getUWidth());
+                    button.setTapU((op - 100) * textureCoordinate.getThemeTapUV().getUWidth());
+                    button.setX((op - 100) * (textureCoordinate.getThemeCoordinate().getWidth() + textureCoordinate.getThemeHMargin()) + textureCoordinate.getThemeCoordinate().getX());
+                    coordinate = this.getCoordinate(button, mouseX, mouseY);
+                default:
+                    angle = 0;
+            }
+            button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
+            button.setX(coordinate.getX()).setY(coordinate.getY());
+            this.renderRotatedTexture(matrixStack, angle, coordinate);
         }
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -261,66 +411,104 @@ public class CalendarScreen extends Screen {
         }
     }
 
-    // 检测鼠标点击事件
+    /**
+     * 检测鼠标点击事件
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        ClientPlayerEntity player = Minecraft.getInstance().player;
-        if (leftArrow.isMouseOver(mouseX, mouseY)) {
-            currentDate = DateUtils.addMonth(currentDate, -1);
-            updateLayout();
-            return true;
-        } else if (rightArrow.isMouseOver(mouseX, mouseY)) {
-            currentDate = DateUtils.addMonth(currentDate, 1);
-            updateLayout();
-            return true;
-        } else if (upArrow.isMouseOver(mouseX, mouseY)) {
-            currentDate = DateUtils.addYear(currentDate, -1);
-            updateLayout();
-            return true;
-        } else if (downArrow.isMouseOver(mouseX, mouseY)) {
-            currentDate = DateUtils.addYear(currentDate, 1);
-            updateLayout();
-            return true;
-        } else {
-            for (CalendarCell cell : calendarCells) {
-                if (cell.isMouseOver((int) mouseX, (int) mouseY)) {
-                    // 点击了该格子，执行对应操作
-                    if (player != null) {
-                        if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
-                            player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
-                            // TODO 领取奖励
-                            // ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
-                            // cell.itemStack.setCount(0);
-                            cell.status = ESignInStatus.REWARDED.getCode();
-                        } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
-                            player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
-                        } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
-                            player.sendMessage(new StringTextComponent("Cannot sign-in: " + cell.day), player.getUUID());
-                        } else {
-                            player.sendMessage(new StringTextComponent(ESignInStatus.fromCode(cell.status).getDescription() + ": " + cell.day), player.getUUID());
-                        }
-                    }
-                    return true;
+        if (button == 0) {
+            double mouseX1 = (mouseX - bgX) / this.scale;
+            double mouseY1 = (mouseY - bgY) / this.scale;
+            BUTTONS.forEach((key, value) -> {
+                if (value.isMouseOver(mouseX1, mouseY1)) {
+                    value.setPressed(true);
                 }
-            }
+            });
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    // 窗口缩放时重新计算布局
+    /**
+     * 检测鼠标松开事件
+     *
+     * @param button 0：左键
+     *               1：右键
+     *               2：中键
+     *               3 和 4：侧键（如果你的鼠标有更多按钮）
+     */
     @Override
-    public void resize(Minecraft mc, int width, int height) {
-        super.resize(mc, width, height);
-        this.width = width;
-        this.height = height;
-        // 在窗口大小变化时更新布局
-        updateLayout();
-        LOGGER.debug("{},{}", this.width, this.height);
-    }
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            double mouseX1 = (mouseX - bgX) / this.scale;
+            double mouseY1 = (mouseY - bgY) / this.scale;
+            ClientPlayerEntity player = Minecraft.getInstance().player;
+            AtomicBoolean flag = new AtomicBoolean(false);
+            BUTTONS.forEach((key, value) -> {
+                if (value.isMouseOver(mouseX1, mouseY1) && value.isPressed()) {
+                    if (value.getOperation() == LEFT_ARROW.getCode()) {
+                        currentDate = DateUtils.addMonth(currentDate, -1);
+                        this.updateLayout();
+                        flag.set(true);
+                    } else if (value.getOperation() == RIGHT_ARROW.getCode()) {
+                        currentDate = DateUtils.addMonth(currentDate, 1);
+                        this.updateLayout();
+                        flag.set(true);
+                    } else if (value.getOperation() == UP_ARROW.getCode()) {
+                        currentDate = DateUtils.addYear(currentDate, -1);
+                        this.updateLayout();
+                        flag.set(true);
+                    } else if (value.getOperation() == DOWN_ARROW.getCode()) {
+                        currentDate = DateUtils.addYear(currentDate, 1);
+                        this.updateLayout();
+                        flag.set(true);
+                    } else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
+                        ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
+                        this.updateTextureAndCoordinate();
+                        this.updateLayout();
+                        flag.set(true);
+                    } else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
+                        ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
+                        this.updateTextureAndCoordinate();
+                        this.updateLayout();
+                        flag.set(true);
+                    } else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
+                        ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
+                        this.updateTextureAndCoordinate();
+                        this.updateLayout();
+                    } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
+                    } else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
+
+                    }
+                }
+                value.setPressed(false);
+            });
+            if (!flag.get()) {
+                for (CalendarCell cell : calendarCells) {
+                    if (cell.isMouseOver((int) mouseX, (int) mouseY)) {
+                        // 点击了该格子，执行对应操作
+                        if (player != null) {
+                            if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
+                                player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
+                                // TODO 领取奖励
+                                // ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
+                                // cell.itemStack.setCount(0);
+                                cell.status = ESignInStatus.REWARDED.getCode();
+                            } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
+                                player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
+                            } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
+                                player.sendMessage(new StringTextComponent("Cannot sign-in: " + cell.day), player.getUUID());
+                            } else {
+                                player.sendMessage(new StringTextComponent(ESignInStatus.fromCode(cell.status).getDescription() + ": " + cell.day), player.getUUID());
+                            }
+                        }
+                        flag.set(true);
+                    }
+                }
+            }
+            return flag.get();
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     /**
@@ -336,8 +524,8 @@ public class CalendarScreen extends Screen {
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // 当按键等于CALENDAR_KEY键的值或E键时，调用onClose方法，并返回true，表示该按键事件已被消耗
-        if (keyCode == ClientEventHandler.CALENDAR_KEY.getKey().getValue() || keyCode == GLFW.GLFW_KEY_E) {
+        // 当按键等于CALENDAR_KEY键的值或Inventory键时，调用onClose方法，并返回true，表示该按键事件已被消耗
+        if (keyCode == ClientEventHandler.CALENDAR_KEY.getKey().getValue() || keyCode == Minecraft.getInstance().options.keyInventory.getKey().getValue()) {
             this.onClose();
             return true;
         } else {
@@ -368,5 +556,27 @@ public class CalendarScreen extends Screen {
             // 对于其他按键，交由父类处理，并返回父类的处理结果
             return super.keyReleased(keyCode, scanCode, modifiers);
         }
+    }
+
+    /**
+     * 窗口缩放时重新计算布局
+     */
+    @Override
+    @ParametersAreNonnullByDefault
+    public void resize(Minecraft mc, int width, int height) {
+        super.resize(mc, width, height);
+        this.width = width;
+        this.height = height;
+        // 在窗口大小变化时更新布局
+        updateLayout();
+        LOGGER.debug("{},{}", this.width, this.height);
+    }
+
+    /**
+     * 窗口打开时是否暂停游戏
+     */
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 }

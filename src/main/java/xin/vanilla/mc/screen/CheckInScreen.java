@@ -21,7 +21,7 @@ import xin.vanilla.mc.util.StringUtils;
 @OnlyIn(Dist.CLIENT)
 public class CheckInScreen extends Screen {
 
-    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_bg.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_sakura.png");
     private TextFieldWidget inputField;
     private Button submitButton;
 
