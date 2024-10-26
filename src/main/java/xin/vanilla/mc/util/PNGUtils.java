@@ -704,8 +704,8 @@ public class PNGUtils {
         }
     }
 
-    private static final File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_clover_source.png");
-    private static final File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_clover.png");
+    private static final File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_chaos_source.png");
+    private static final File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_chaos.png");
 
     private static void testWriteZTxt() {
         try {
@@ -754,6 +754,8 @@ public class PNGUtils {
             aDefault.getCellCoordinate().setX(80);
             aDefault.setTextColorNoActionCur(0xFF555555);
             aDefault.setTextColorNoAction(0xFFAAAAAA);
+        } else if (sourceFile.getPath().contains("chaos")) {
+            aDefault.setWeekStart(1);
         }
         writePrivateChunk(sourceFile, tempFile, "vacb", aDefault, true);
         writeZTxtByKey(tempFile, targetFile, "Software", "Minecraft SakuraSignIn");

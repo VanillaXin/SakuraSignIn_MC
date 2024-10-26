@@ -124,7 +124,8 @@ public class CalendarCell {
             int color;
             switch (ESignInStatus.fromCode(status)) {
                 case NO_ACTION:
-                    if (month == DateUtils.getMonthOfDate(new Date())) {
+                    Date date = new Date();
+                    if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
                         color = textureCoordinate.getTextColorNoActionCur();
                     } else {
                         color = textureCoordinate.getTextColorNoAction();

@@ -44,12 +44,6 @@ public class CalendarScreen extends Screen {
      */
     public static int nextOffset = 6;
 
-    /**
-     * 周起始日，默认为周日
-     * TODO 做成主题配置
-     */
-    public static int weekStart = 7;
-
     private ResourceLocation BACKGROUND_TEXTURE;
 
     private final List<CalendarCell> calendarCells = new ArrayList<>();
@@ -181,16 +175,12 @@ public class CalendarScreen extends Screen {
         // 清除原有格子，避免重复添加
         calendarCells.clear();
 
-        int itemIndex = 0;
         double startX = bgX + textureCoordinate.getCellCoordinate().getX() * this.scale;
         double startY = bgY + textureCoordinate.getCellCoordinate().getY() * this.scale;
         Date lastMonth = DateUtils.addMonth(current, -1);
         int daysOfLastMonth = DateUtils.getDaysOfMonth(lastMonth);
-        int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current) % weekStart;
+        int dayOfWeekOfMonthStart = DateUtils.getDayOfWeekOfMonthStart(current);
         int daysOfCurrentMonth = DateUtils.getDaysOfMonth(current);
-
-        // FIXME 日期不根据周起始日渲染的问题
-        // FIXME 本月第一天是周期起始日时会从第二行开始渲染
 
         // 获取奖励列表
         if (Minecraft.getInstance().player != null) {
@@ -202,27 +192,40 @@ public class CalendarScreen extends Screen {
             for (int row = 0; row < rows; row++) {
                 if (allCurrentDaysDisplayed && !showNextReward) break;
                 for (int col = 0; col < columns; col++) {
+                    // 计算当前格子的索引
+                    int itemIndex = row * columns + col;
                     // 检查是否已超过设置显示上限
                     if (itemIndex >= 40) break;
                     double x = startX + col * (textureCoordinate.getCellCoordinate().getWidth() + textureCoordinate.getCellHMargin()) * this.scale;
                     double y = startY + row * (textureCoordinate.getCellCoordinate().getHeight() + textureCoordinate.getCellVMargin()) * this.scale;
                     int year, month, day, status;
                     boolean showIcon, showText, showHover;
+                    // 计算本月第一天是第几(0为第一个)个格子
+                    int curPoint = (dayOfWeekOfMonthStart - (textureCoordinate.getWeekStart() - 1) + 6) % 7;
                     // 根据itemIndex确定日期和状态
-                    if (itemIndex >= dayOfWeekOfMonthStart + daysOfCurrentMonth) {
+                    if (itemIndex >= curPoint + daysOfCurrentMonth) {
                         // 属于下月的日期
                         year = DateUtils.getYearPart(DateUtils.addMonth(current, 1));
                         month = DateUtils.getMonthOfDate(DateUtils.addMonth(current, 1));
-                        day = itemIndex - dayOfWeekOfMonthStart - daysOfCurrentMonth + 1;
+                        day = itemIndex - curPoint - daysOfCurrentMonth + 1;
                         status = ESignInStatus.NO_ACTION.getCode();
                         showIcon = showNextReward && day < lastOffset;
-                        showText = row == 4 || showNextReward && day < lastOffset;
+                        showText = true;
                         showHover = showNextReward && day < lastOffset;
-                    } else if (itemIndex >= dayOfWeekOfMonthStart) {
+                    } else if (itemIndex < curPoint) {
+                        // 属于上月的日期
+                        year = DateUtils.getYearPart(lastMonth);
+                        month = DateUtils.getMonthOfDate(lastMonth);
+                        day = daysOfLastMonth - curPoint + itemIndex + 1;
+                        status = ESignInStatus.NO_ACTION.getCode();
+                        showIcon = showLastReward && day > daysOfLastMonth - lastOffset;
+                        showText = true;
+                        showHover = showLastReward && day > daysOfLastMonth - lastOffset;
+                    } else {
                         // 属于当前月的日期
                         year = DateUtils.getYearPart(current);
                         month = DateUtils.getMonthOfDate(current);
-                        day = itemIndex - dayOfWeekOfMonthStart + 1;
+                        day = itemIndex - curPoint + 1;
                         status = ESignInStatus.NO_ACTION.getCode();
                         // 如果是今天，则设置为未签到状态
                         if (year == DateUtils.getYearPart(new Date()) && day == DateUtils.getDayOfMonth(new Date()) && month == DateUtils.getMonthOfDate(new Date())) {
@@ -232,17 +235,7 @@ public class CalendarScreen extends Screen {
                         showText = true;
                         showHover = true;
                         allCurrentDaysDisplayed = day == daysOfCurrentMonth;
-                    } else {
-                        // 属于上月的日期
-                        year = DateUtils.getYearPart(lastMonth);
-                        month = DateUtils.getMonthOfDate(lastMonth);
-                        day = daysOfLastMonth - (dayOfWeekOfMonthStart - itemIndex) + 1;
-                        status = ESignInStatus.NO_ACTION.getCode();
-                        showIcon = showLastReward && day > daysOfLastMonth - lastOffset;
-                        showText = true;
-                        showHover = showLastReward && day > daysOfLastMonth - lastOffset;
                     }
-                    itemIndex++;
                     int key = year * 10000 + month * 100 + day;
                     RewardList rewards = monthRewardList.get(key);
                     if (CollectionUtils.isNullOrEmpty(rewards)) continue;
@@ -252,8 +245,6 @@ public class CalendarScreen extends Screen {
                     // 添加到列表
                     calendarCells.add(cell);
                 }
-                // 检查是否已超过设置显示上限
-                if (itemIndex >= 40) break;
             }
         }
     }

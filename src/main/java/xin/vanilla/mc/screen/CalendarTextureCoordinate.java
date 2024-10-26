@@ -153,6 +153,7 @@ public class CalendarTextureCoordinate implements Serializable {
         return new CalendarTextureCoordinate() {{
             setTotalWidth(500);
             setTotalHeight(784);
+            setWeekStart(7);
 
             setTextColorNoAction(0xFFAAAAAA);
             setTextColorNoActionCur(0xFFFFFFFF);
