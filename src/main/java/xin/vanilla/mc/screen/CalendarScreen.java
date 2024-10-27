@@ -23,6 +23,7 @@ import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -33,6 +34,8 @@ import static xin.vanilla.mc.screen.CalendarScreen.OperationButtonType.*;
 
 @OnlyIn(Dist.CLIENT)
 public class CalendarScreen extends Screen {
+
+    // region
 
     private static final Logger LOGGER = LogManager.getLogger();
     /**
@@ -76,6 +79,43 @@ public class CalendarScreen extends Screen {
      */
     private final Map<Integer, OperationButton> BUTTONS = new HashMap<>();
 
+    // region 主题选择相关
+    /**
+     * 主题选择器可视状态
+     */
+    private boolean themeSelectorVisible = false;
+    /**
+     * 主题文件列表
+     */
+    private List<File> themeFileList;
+    /**
+     * 当前滚动偏移量
+     */
+    private int themeSelectorScrollOffset = 0;
+    /**
+     * 当前鼠标悬停的文件索引，用于绘制高亮效果，初始为-1表示没有文件被悬停
+     */
+    private int themeSelectorHoveredIndex = -1;
+    /**
+     * 显示的最大文件数
+     */
+    private static final int THEME_SELECTOR_MAX_VISIBLE_ITEMS = 5;
+    /**
+     * 渲染坐标x
+     */
+    private int themeSelectorX = this.width / 2 - 50;
+    /**
+     * 渲染坐标y
+     */
+    private int themeSelectorY = 30;
+    /**
+     * 显示的最大宽度
+     */
+    private int themeSelectorMaxWidth;
+    // endregion 主题选择相关
+
+    // endregion
+
     /**
      * 操作按钮类型
      */
@@ -117,6 +157,7 @@ public class CalendarScreen extends Screen {
     protected void init() {
         super.init();
         currentDate = new Date();
+        themeSelectorMaxWidth = font.width("cal_text_width");
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
 
@@ -130,6 +171,9 @@ public class CalendarScreen extends Screen {
         BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
         BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
         BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
+
+        this.themeFileList = TextureUtils.getPngFilesInDirectory(TextureUtils.CUSTOM_THEME_DIR);
+
         // 初始化布局信息
         this.updateLayout();
     }
@@ -400,6 +444,28 @@ public class CalendarScreen extends Screen {
         for (CalendarCell cell : calendarCells) {
             cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
         }
+
+        // 渲染自定义背景文件列表，根据 scrollOffset 显示文件名
+        if (themeSelectorVisible) {
+            // 绘制背景
+            fill(matrixStack, themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
+            for (int i = 0; i < THEME_SELECTOR_MAX_VISIBLE_ITEMS; i++) {
+                int index = i + themeSelectorScrollOffset;
+                if (index >= 0 && index < themeFileList.size()) {
+                    int x = themeSelectorX;
+                    int y = themeSelectorY + i * (font.lineHeight + 2);
+
+                    // 检测鼠标悬停状态，高亮显示
+                    if (index == themeSelectorHoveredIndex) {
+                        fill(matrixStack, x - 2, y - 2, x + themeSelectorMaxWidth + 2, y + font.lineHeight + 2, 0xAAAAAAAA);
+                    }
+                    // 绘制文件名
+                    String name = themeFileList.get(index).getName();
+                    name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
+                    AbstractGuiUtils.drawLimitedString(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                }
+            }
+        }
     }
 
     /**
@@ -407,33 +473,33 @@ public class CalendarScreen extends Screen {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            double mouseX1 = (mouseX - bgX) / this.scale;
-            double mouseY1 = (mouseY - bgY) / this.scale;
+        double mouseX1 = (mouseX - bgX) / this.scale;
+        double mouseY1 = (mouseY - bgY) / this.scale;
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             BUTTONS.forEach((key, value) -> {
                 if (value.isMouseOver(mouseX1, mouseY1)) {
                     value.setPressed(true);
                 }
             });
+        } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            OperationButton chaosButton = BUTTONS.get(THEME_CHAOS_BUTTON.getCode());
+            if (chaosButton.isMouseOver(mouseX1, mouseY1)) {
+                chaosButton.setPressed(true);
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**
      * 检测鼠标松开事件
-     *
-     * @param button 0：左键
-     *               1：右键
-     *               2：中键
-     *               3 和 4：侧键（如果你的鼠标有更多按钮）
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            double mouseX1 = (mouseX - bgX) / this.scale;
-            double mouseY1 = (mouseY - bgY) / this.scale;
+        double mouseX1 = (mouseX - bgX) / this.scale;
+        double mouseY1 = (mouseY - bgY) / this.scale;
+        AtomicBoolean flag = new AtomicBoolean(false);
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             ClientPlayerEntity player = Minecraft.getInstance().player;
-            AtomicBoolean flag = new AtomicBoolean(false);
             BUTTONS.forEach((key, value) -> {
                 if (value.isMouseOver(mouseX1, mouseY1) && value.isPressed()) {
                     if (value.getOperation() == LEFT_ARROW.getCode()) {
@@ -498,10 +564,70 @@ public class CalendarScreen extends Screen {
                         flag.set(true);
                     }
                 }
+                // 检测是否单击了某个文件名
+                if (themeSelectorVisible && themeSelectorHoveredIndex != -1) {
+                    String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
+                    if (player != null) {
+                        player.sendMessage(new StringTextComponent("Selected Theme File: " + selectedFile), player.getUUID());
+                        ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
+                        if (TextureUtils.isTextureAvailable(resourceLocation)) {
+                            ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
+                            this.updateTextureAndCoordinate();
+                            this.updateLayout();
+                        }
+                    }
+                    flag.set(true);
+                } else {
+                    themeSelectorVisible = false;
+                }
+            } else {
+                themeSelectorVisible = false;
             }
-            return flag.get();
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            OperationButton chaosButton = BUTTONS.get(THEME_CHAOS_BUTTON.getCode());
+            if (chaosButton.isMouseOver(mouseX1, mouseY1) && chaosButton.isPressed()) {
+                chaosButton.setPressed(false);
+                themeSelectorVisible = true;
+                themeSelectorX = (int) mouseX - themeSelectorMaxWidth - 4;
+                themeSelectorY = (int) ((mouseY - THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) - (mouseY - chaosButton.getY() * this.scale) - 2);
+                flag.set(true);
+            } else {
+                themeSelectorVisible = false;
+            }
+        } else {
+            themeSelectorVisible = false;
+        }
+        return flag.get() ? flag.get() : super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (themeSelectorVisible) {
+            // 计算当前鼠标悬停的文件索引
+            themeSelectorHoveredIndex = -1;
+            int relativeY = (int) (mouseY - themeSelectorY);
+            if (themeSelectorX <= mouseX && mouseX <= themeSelectorX + themeSelectorMaxWidth) {
+                if (relativeY >= 0 && relativeY < THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) {
+                    int index = themeSelectorScrollOffset + relativeY / (font.lineHeight + 2);
+                    if (index < themeFileList.size()) {
+                        themeSelectorHoveredIndex = index;
+                    }
+                }
+            }
+        }
+        super.mouseMoved(mouseX, mouseY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        // 处理鼠标滚轮滚动
+        if (delta > 0) {
+            themeSelectorScrollOffset = Math.max(themeSelectorScrollOffset - 1, 0);
+        } else if (delta < 0) {
+            themeSelectorScrollOffset = Math.min(themeSelectorScrollOffset + 1, themeFileList.size() - THEME_SELECTOR_MAX_VISIBLE_ITEMS);
+        }
+        return true;
     }
 
     /**

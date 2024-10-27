@@ -746,10 +746,10 @@ public class PNGUtils {
     private static void testWriteChunk() throws IOException, ClassNotFoundException {
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
         CalendarTextureCoordinate aDefault = CalendarTextureCoordinate.getDefault();
-        if (sourceFile.getPath().contains("original")) {
-            aDefault.getCellCoordinate().setX(73).setY(134).setWidth(36).setHeight(36);
-            aDefault.setCellHMargin(18);
-            aDefault.setCellVMargin(26);
+        if (sourceFile.getPath().contains("sakura")) {
+            aDefault.getCellCoordinate().setX(70).setY(120).setWidth(34).setHeight(34);
+            aDefault.setCellHMargin(20);
+            aDefault.setCellVMargin(24);
         } else if (sourceFile.getPath().contains("clover")) {
             aDefault.getCellCoordinate().setX(80);
             aDefault.setTextColorNoActionCur(0xFF555555);

@@ -149,6 +149,11 @@ public class CalendarTextureCoordinate implements Serializable {
      */
     private TextureCoordinate themeTapUV;
 
+    /**
+     * 获取默认配置
+     *
+     * @return original主题配置
+     */
     public static CalendarTextureCoordinate getDefault() {
         return new CalendarTextureCoordinate() {{
             setTotalWidth(500);
@@ -166,9 +171,9 @@ public class CalendarTextureCoordinate implements Serializable {
             setYearCoordinate(new TextureCoordinate().setX(128).setY(60).setWidth(92).setHeight(16));
             setMonthCoordinate(new TextureCoordinate().setX(320).setY(60).setWidth(62).setHeight(16));
 
-            setCellCoordinate(new TextureCoordinate().setX(70).setY(120).setWidth(34).setHeight(34));
-            setCellHMargin(20);
-            setCellVMargin(24);
+            setCellCoordinate(new TextureCoordinate().setX(73).setY(134).setWidth(36).setHeight(36));
+            setCellHMargin(18);
+            setCellVMargin(26);
 
             setLeftArrowCoordinate(new TextureCoordinate().setX(320).setY(60).setWidth(62).setHeight(16));
             setRightArrowCoordinate(new TextureCoordinate().setX(320).setY(60).setWidth(62).setHeight(16));
