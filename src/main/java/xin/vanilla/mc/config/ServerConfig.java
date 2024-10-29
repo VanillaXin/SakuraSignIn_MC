@@ -32,6 +32,10 @@ public class ServerConfig {
      */
     public static final ForgeConfigSpec.BooleanValue SIGN_IN_CARD;
     /**
+     * 最大补签天数
+     */
+    public static final ForgeConfigSpec.IntValue RE_SIGN_IN_DAYS;
+    /**
      * 补签仅基础奖励
      */
     public static final ForgeConfigSpec.BooleanValue SIGN_IN_CARD_ONLY_BASE_REWARD;
@@ -86,11 +90,17 @@ public class ServerConfig {
 
         // 补签卡(不是签到卡哦)
         SIGN_IN_CARD = SERVER_BUILDER
-                .comment("Allow players to use a Make-up Sign-in Card for missed sign-ins? (SIGN_IN_CARD not a sign in card, it's a Make-up Sign-in Card.)"
-                        , String.format("To obtain a Make-up Sign-in Card, you can add the item [%s] to the sign-in rewards.", SIGN_IN_CARD_ITEM_NAME)
+                .comment("Allow players to use a Sign-in Card for missed sign-ins? (SIGN_IN_CARD not a sign in card, it's a Make-up Sign-in Card.)"
+                        , String.format("To obtain a Sign-in Card, you can add the item [%s] to the sign-in rewards.", SIGN_IN_CARD_ITEM_NAME)
                         , "是否允许玩家使用补签卡进行补签。(不是签到卡哦)"
                         , String.format("可以在签到奖励里面添加物品[%s]来获得补签卡。", SIGN_IN_CARD_ITEM_NAME))
                 .define("signInCard", true);
+
+        // 最大补签天数
+        RE_SIGN_IN_DAYS = SERVER_BUILDER
+                .comment("How many days can the Sign-in Card be renewed for."
+                        , "补签卡最远可补签多少天以前的漏签。")
+                .defineInRange("reSignInDays", 30, 1, 365);
 
         // 补签仅基础奖励
         SIGN_IN_CARD_ONLY_BASE_REWARD = SERVER_BUILDER

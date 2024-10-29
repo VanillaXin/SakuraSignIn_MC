@@ -16,6 +16,10 @@ public class ClientConfig {
      * 签到页面显示下月奖励
      */
     public static final ForgeConfigSpec.BooleanValue SHOW_NEXT_REWARD;
+    /**
+     * 自动领取
+     */
+    public static final ForgeConfigSpec.BooleanValue AUTO_REWARDED;
 
     static {
         ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
@@ -40,6 +44,12 @@ public class ClientConfig {
                 .comment("The sign-in page displays next month's rewards. Someone said it didn't look good on display."
                         , "签到页面是否显示下个月的奖励，有人说它显示出来不好看。")
                 .define("showNextReward", false);
+
+        // 自动领取
+        AUTO_REWARDED = CLIENT_BUILDER
+                .comment("Whether the rewards will be automatically claimed when you sign in or re-sign-in."
+                        , "签到或补签时是否自动领取奖励。")
+                .define("autoRewarded", false);
 
         CLIENT_BUILDER.pop();
 

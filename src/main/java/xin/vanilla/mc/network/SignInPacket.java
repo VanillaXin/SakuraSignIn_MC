@@ -14,24 +14,24 @@ import java.util.function.Supplier;
 @Getter
 public class SignInPacket {
     private final Date signInTime;
-    private final boolean autoClaim;
+    private final boolean autoRewarded;
     private final ESignInType signInType;
 
-    public SignInPacket(Date signInTime, boolean autoClaim, ESignInType signInType) {
+    public SignInPacket(Date signInTime, boolean autoRewarded, ESignInType signInType) {
         this.signInTime = signInTime;
-        this.autoClaim = autoClaim;
+        this.autoRewarded = autoRewarded;
         this.signInType = signInType;
     }
 
     public SignInPacket(PacketBuffer buf) {
         this.signInTime = buf.readDate();
-        this.autoClaim = buf.readBoolean();
+        this.autoRewarded = buf.readBoolean();
         this.signInType = ESignInType.valueOf(buf.readInt());
     }
 
     public void toBytes(PacketBuffer buf) {
         buf.writeDate(signInTime);
-        buf.writeBoolean(autoClaim);
+        buf.writeBoolean(autoRewarded);
         buf.writeInt(signInType.getCode());
     }
 

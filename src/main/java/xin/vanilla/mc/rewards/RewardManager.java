@@ -10,6 +10,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
@@ -65,14 +67,30 @@ public class RewardManager {
         return parser.serialize(reward);
     }
 
-    public static boolean isSignedIn(IPlayerSignInData signInData, Date date) {
-        return signInData.getSignInRecords().stream().anyMatch(record -> DateUtils.toDateInt(getCompensateDate(record.getSignInTime())) == DateUtils.toDateInt(getCompensateDate(date)));
+    /**
+     * 判断玩家是否签到
+     *
+     * @param signInData 玩家签到数据
+     * @param date       日期
+     * @param compensate 是否校准date
+     */
+    public static boolean isSignedIn(IPlayerSignInData signInData, Date date, boolean compensate) {
+        int dateInt = compensate ? DateUtils.toDateInt(getCompensateDate(date)) : DateUtils.toDateInt(date);
+        return signInData.getSignInRecords().stream().anyMatch(record -> DateUtils.toDateInt(getCompensateDate(record.getSignInTime())) == dateInt);
     }
 
-    public static boolean isClaimed(IPlayerSignInData signInData, Date date) {
+    /**
+     * 判断玩家是否领取奖励
+     *
+     * @param signInData 玩家签到数据
+     * @param date       日期
+     * @param compensate 是否校准date
+     */
+    public static boolean isRewarded(IPlayerSignInData signInData, Date date, boolean compensate) {
+        int dateInt = compensate ? DateUtils.toDateInt(getCompensateDate(date)) : DateUtils.toDateInt(date);
         return signInData.getSignInRecords().stream().anyMatch(record ->
-                DateUtils.toDateInt(getCompensateDate(record.getSignInTime())) == DateUtils.toDateInt(getCompensateDate(date))
-                        && record.isClaimed()
+                DateUtils.toDateInt(getCompensateDate(record.getSignInTime())) == dateInt
+                        && record.isRewarded()
         );
     }
 
@@ -123,17 +141,21 @@ public class RewardManager {
 
     /**
      * 获取服务器校准时间的签到时间
+     * <p>
+     * 服务器校准时间减去 签到冷却刷新时间
      */
     private static int getCompensateDateInt() {
-        return DateUtils.toDateInt(getCompensateDate(null));
+        return DateUtils.toDateInt(getCompensateDate(DateUtils.getServerDate()));
     }
 
     /**
-     * 获取校准时间的签到时间
+     * 获取签到时间的校准时间
+     * <p>
+     * 当前时间减去 签到冷却刷新时间
      *
      * @param date 若date为null, 则使用服务器当前时间
      */
-    private static Date getCompensateDate(Date date) {
+    public static Date getCompensateDate(Date date) {
         if (date == null) {
             date = DateUtils.getServerDate();
         }
@@ -149,7 +171,7 @@ public class RewardManager {
                 break;
         }
         // 校准后当前时间
-        return DateUtils.addDate(date, cooling);
+        return DateUtils.addDate(date, -cooling);
     }
 
     /**
@@ -184,14 +206,14 @@ public class RewardManager {
         // 已签到的奖励记录
         List<Reward> rewardRecords = null;
         // 如果日历日期小于当前日期, 则从签到记录中获取已签到的奖励记录
-        if (key < nowCompensate8) {
+        if (key <= nowCompensate8) {
             rewardRecords = playerData.getSignInRecords().stream()
                     .map(SignInRecord::clone)
                     // 若签到日期等于当前日期
                     .filter(record -> DateUtils.toDateInt(record.getCompensateTime()) == key)
                     .flatMap(record -> record.getRewardList().stream())
                     .peek(reward -> {
-                        reward.setClaimed(true);
+                        reward.setRewarded(true);
                         reward.setDisabled(true);
                     }).collect(Collectors.toList());
         }
@@ -281,6 +303,7 @@ public class RewardManager {
     /**
      * 签到or补签
      */
+    @OnlyIn(Dist.DEDICATED_SERVER)
     public static void signIn(ServerPlayerEntity player, SignInPacket packet) {
         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
         ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
@@ -293,7 +316,7 @@ public class RewardManager {
         } else if (serverDateInt > signInDateInt && ESignInType.SIGN_IN.equals(packet.getSignInType())) {
             player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
             return;
-        } else if (serverDateInt <= signInDateInt && ESignInType.REPAIR.equals(packet.getSignInType())) {
+        } else if (serverDateInt <= signInDateInt && ESignInType.RE_SIGN_IN.equals(packet.getSignInType())) {
             player.sendMessage(new StringTextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
             return;
         } else if (serverDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
@@ -309,25 +332,25 @@ public class RewardManager {
             }
         }
         // 判断补签
-        if (ESignInType.REPAIR.equals(packet.getSignInType()) && !ServerConfig.SIGN_IN_CARD.get()) {
+        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.SIGN_IN_CARD.get()) {
             player.sendMessage(new StringTextComponent("服务器未开启补签功能，补签失败"), player.getUUID());
             return;
-        } else if (ESignInType.REPAIR.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
+        } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
             player.sendMessage(new StringTextComponent("补签卡不足，补签失败"), player.getUUID());
             return;
         }
         RewardList rewardList = RewardManager.getRewardListByDate(packet.getSignInTime(), signInData);
-        if (ESignInType.REPAIR.equals(packet.getSignInType())) signInData.subSignInCard();
+        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType())) signInData.subSignInCard();
         SignInRecord signInRecord = new SignInRecord();
-        signInRecord.setClaimed(packet.isAutoClaim());
+        signInRecord.setRewarded(packet.isAutoRewarded());
         signInRecord.setRewardList(new RewardList());
         signInRecord.setSignInTime(packet.getSignInTime());
         signInRecord.setCompensateTime(DateUtils.getServerDate());
         signInRecord.setSignInUUID(player.getUUID().toString());
         // 是否自动领取
-        if (packet.isAutoClaim()) {
+        if (packet.isAutoRewarded()) {
             rewardList.forEach(reward -> {
-                reward.setClaimed(true);
+                reward.setRewarded(true);
                 Object object = deserializeReward(reward);
                 switch (reward.getType()) {
                     case ITEM:
@@ -382,6 +405,7 @@ public class RewardManager {
      * @param drop      若玩家背包空间不足, 是否以物品实体的形式生成在世界上
      * @return 是否添加成功
      */
+    @OnlyIn(Dist.DEDICATED_SERVER)
     public static boolean giveItemStack(ServerPlayerEntity player, ItemStack itemStack, boolean drop) {
         // 尝试将物品堆添加到玩家的库存中
         boolean added = player.inventory.add(itemStack);

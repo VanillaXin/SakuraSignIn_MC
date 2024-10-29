@@ -54,7 +54,7 @@ public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerial
      */
     @Override
     public CompoundNBT serializeNBT() {
-        return getOrCreateCapability().serializeNBT();
+        return this.getOrCreateCapability().serializeNBT();
         // return (CompoundNBT) PlayerSignInDataCapability.PLAYER_DATA.getStorage().writeNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null);
     }
 
@@ -67,7 +67,7 @@ public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerial
      */
     @Override
     public void deserializeNBT(CompoundNBT nbt) {
-        getOrCreateCapability().deserializeNBT(nbt);
+        this.getOrCreateCapability().deserializeNBT(nbt);
         // PlayerSignInDataCapability.PLAYER_DATA.getStorage().readNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null, nbt);
     }
 }

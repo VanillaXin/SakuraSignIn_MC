@@ -101,7 +101,8 @@ public class CalendarCell {
         boolean isHovered = isMouseOver(mouseX, mouseY);
         if (showIcon) {
             Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-            if (status == ESignInStatus.REWARDED.getCode()) {
+            // TODO 单独绘制已签到未领取奖励图标
+            if (status == ESignInStatus.REWARDED.getCode() || status == ESignInStatus.SIGNED_IN.getCode()) {
                 // 绘制已领取图标
                 TextureCoordinate signedInUV = textureCoordinate.getSignedInUV();
                 AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, (float) signedInUV.getU0(), (float) signedInUV.getV0(), (int) signedInUV.getUWidth(), (int) signedInUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());

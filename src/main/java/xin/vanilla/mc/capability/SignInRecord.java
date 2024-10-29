@@ -32,7 +32,7 @@ public class SignInRecord implements Serializable, Cloneable {
     /**
      * 奖励是否领取
      */
-    private boolean claimed;
+    private boolean rewarded;
     /**
      * 签到物品奖励
      */
@@ -53,7 +53,7 @@ public class SignInRecord implements Serializable, Cloneable {
         tag.putLong("compensateTime", compensateTime.getTime());
         tag.putLong("signInTime", signInTime.getTime());
         tag.putString("signInUUID", signInUUID);
-        tag.putBoolean("claimed", claimed);
+        tag.putBoolean("rewarded", rewarded);
         tag.putString("rewardList", JSON.toJSONString(rewardList));
         return tag;
     }
@@ -65,7 +65,7 @@ public class SignInRecord implements Serializable, Cloneable {
         record.compensateTime = new Date(tag.getLong("compensateTime"));
         record.signInTime = new Date(tag.getLong("signInTime"));
         record.signInUUID = tag.getString("signInUUID");
-        record.claimed = tag.getBoolean("claimed");
+        record.rewarded = tag.getBoolean("rewarded");
 
         // 反序列化奖励列表
         String rewardListString = tag.getString("rewardList");
@@ -80,7 +80,7 @@ public class SignInRecord implements Serializable, Cloneable {
             cloned.compensateTime = (Date) this.compensateTime.clone();
             cloned.signInTime = (Date) this.signInTime.clone();
             cloned.signInUUID = this.signInUUID;
-            cloned.claimed = this.claimed;
+            cloned.rewarded = this.rewarded;
             cloned.rewardList = this.rewardList.clone();
             return cloned;
         } catch (CloneNotSupportedException e) {

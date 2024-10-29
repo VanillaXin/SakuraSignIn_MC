@@ -16,7 +16,7 @@ public class Reward implements Cloneable, Serializable {
     /**
      * 奖励是否领取
      */
-    private boolean claimed;
+    private boolean rewarded;
     /**
      * 奖励是否禁用
      */
@@ -42,7 +42,7 @@ public class Reward implements Cloneable, Serializable {
     public Reward clone() {
         try {
             Reward cloned = (Reward) super.clone();
-            cloned.claimed = this.claimed;
+            cloned.rewarded = this.rewarded;
             cloned.disabled = this.disabled;
             cloned.type = this.type;
             cloned.content = this.content.clone();
@@ -52,7 +52,7 @@ public class Reward implements Cloneable, Serializable {
         }
     }
 
-    public static Reward getDefault(){
+    public static Reward getDefault() {
         return new Reward(RewardManager.serializeReward(new ItemStack(Items.AIR), ERewardType.ITEM), ERewardType.ITEM);
     }
 }
