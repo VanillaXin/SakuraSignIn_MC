@@ -3,6 +3,9 @@ package xin.vanilla.mc.config;
 import net.minecraftforge.common.ForgeConfigSpec;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ETimeCoolingMethod;
+import xin.vanilla.mc.util.DateUtils;
+
+import java.util.Date;
 
 public class ServerConfig {
     public static final String SIGN_IN_CARD_ITEM_NAME = SakuraSignIn.MODID + ":sign_in_card";
@@ -28,6 +31,20 @@ public class ServerConfig {
      * 是否启用补签卡
      */
     public static final ForgeConfigSpec.BooleanValue SIGN_IN_CARD;
+    /**
+     * 补签仅基础奖励
+     */
+    public static final ForgeConfigSpec.BooleanValue SIGN_IN_CARD_ONLY_BASE_REWARD;
+
+    /**
+     * 服务器时间
+     */
+    public static final ForgeConfigSpec.ConfigValue<String> SERVER_TIME;
+
+    /**
+     * 实际时间
+     */
+    public static final ForgeConfigSpec.ConfigValue<String> ACTUAL_TIME;
 
     static {
         ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
@@ -74,6 +91,24 @@ public class ServerConfig {
                         , "是否允许玩家使用补签卡进行补签。(不是签到卡哦)"
                         , String.format("可以在签到奖励里面添加物品[%s]来获得补签卡。", SIGN_IN_CARD_ITEM_NAME))
                 .define("signInCard", true);
+
+        // 补签仅基础奖励
+        SIGN_IN_CARD_ONLY_BASE_REWARD = SERVER_BUILDER
+                .comment("Whether the player only gets the base rewards when using the Sign-in Card."
+                        , "使用补签卡进行补签时是否仅获得基础奖励。")
+                .define("signInCardOnlyBaseReward", false);
+
+        // 服务器时间
+        SERVER_TIME = SERVER_BUILDER
+                .comment("Calculate the server time offset by matching the original time with the actual time to calibrate the server time."
+                        , "服务器原时间，与 实际时间 配合计算服务器时间偏移以校准服务器时间。")
+                .define("serverTime", DateUtils.toDateTimeString(new Date()));
+
+        // 实际时间
+        ACTUAL_TIME = SERVER_BUILDER
+                .comment("Calculate the server time offset by matching the original time with the actual time to calibrate the server time."
+                        , "实际时间，与 服务器原时间 配合计算服务器时间偏移以校准服务器时间。")
+                .define("serverCalibrationTime", DateUtils.toDateTimeString(new Date()));
 
         SERVER_BUILDER.pop();
 

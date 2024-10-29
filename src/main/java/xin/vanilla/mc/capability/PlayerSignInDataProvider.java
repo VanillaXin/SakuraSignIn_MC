@@ -17,7 +17,8 @@ import javax.annotation.Nullable;
 public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerializable<CompoundNBT> {
 
     // 玩家签到数据实例，使用PlayerSignInData类进行管理
-    private final IPlayerSignInData playerData = new PlayerSignInData();
+    private IPlayerSignInData playerData;
+    private final LazyOptional<IPlayerSignInData> instance = LazyOptional.of(this::getOrCreateCapability);
 
     /**
      * 获取指定能力的实例
@@ -33,7 +34,15 @@ public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerial
     @Nonnull
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
-        return cap == PlayerSignInDataCapability.PLAYER_DATA ? LazyOptional.of(() -> playerData).cast() : LazyOptional.empty();
+        return cap == PlayerSignInDataCapability.PLAYER_DATA ? instance.cast() : LazyOptional.empty();
+    }
+
+    @Nonnull
+    IPlayerSignInData getOrCreateCapability() {
+        if (playerData == null) {
+            this.playerData = new PlayerSignInData();
+        }
+        return this.playerData;
     }
 
     /**
@@ -45,7 +54,8 @@ public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerial
      */
     @Override
     public CompoundNBT serializeNBT() {
-        return (CompoundNBT) PlayerSignInDataCapability.PLAYER_DATA.getStorage().writeNBT(PlayerSignInDataCapability.PLAYER_DATA, playerData, null);
+        return getOrCreateCapability().serializeNBT();
+        // return (CompoundNBT) PlayerSignInDataCapability.PLAYER_DATA.getStorage().writeNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null);
     }
 
     /**
@@ -57,6 +67,7 @@ public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerial
      */
     @Override
     public void deserializeNBT(CompoundNBT nbt) {
-        PlayerSignInDataCapability.PLAYER_DATA.getStorage().readNBT(PlayerSignInDataCapability.PLAYER_DATA, playerData, null, nbt);
+        getOrCreateCapability().deserializeNBT(nbt);
+        // PlayerSignInDataCapability.PLAYER_DATA.getStorage().readNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null, nbt);
     }
 }

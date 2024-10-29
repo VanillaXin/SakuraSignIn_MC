@@ -19,7 +19,7 @@ public enum ESignInStatus {
         this.description = description;
     }
 
-    public static ESignInStatus fromCode(int code) {
+    public static ESignInStatus valueOf(int code) {
         for (ESignInStatus status : ESignInStatus.values()) {
             if (status.code == code) {
                 return status;

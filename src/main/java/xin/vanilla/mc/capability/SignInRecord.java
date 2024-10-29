@@ -54,7 +54,7 @@ public class SignInRecord implements Serializable, Cloneable {
         tag.putLong("signInTime", signInTime.getTime());
         tag.putString("signInUUID", signInUUID);
         tag.putBoolean("claimed", claimed);
-        tag.putString("reward", JSON.toJSONString(rewardList));
+        tag.putString("rewardList", JSON.toJSONString(rewardList));
         return tag;
     }
 
@@ -81,7 +81,7 @@ public class SignInRecord implements Serializable, Cloneable {
             cloned.signInTime = (Date) this.signInTime.clone();
             cloned.signInUUID = this.signInUUID;
             cloned.claimed = this.claimed;
-            cloned.rewardList = (RewardList) this.rewardList.clone();
+            cloned.rewardList = this.rewardList.clone();
             return cloned;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();

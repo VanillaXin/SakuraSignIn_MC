@@ -1,14 +1,14 @@
 package xin.vanilla.mc.util;
 
+import xin.vanilla.mc.config.ServerConfig;
+
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 public class DateUtils {
 
@@ -26,13 +26,6 @@ public class DateUtils {
     public DateUtils() {
     }
 
-    private static LocalDateTime getLocalDateTime(Date date) {
-        if (date == null) {
-            date = new Date();
-        }
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-    }
-
     private static Locale getLocalFromLanguageTag(String languageTag) {
         if (StringUtils.isNullOrEmpty(languageTag)) {
             languageTag = Locale.getDefault().getLanguage();
@@ -40,6 +33,61 @@ public class DateUtils {
             languageTag = languageTag.replace("-", "_").split("_")[0];
         }
         return Locale.forLanguageTag(languageTag);
+    }
+
+    private static Date formatEx(String dateStr, String pattern) {
+        if (StringUtils.isNullOrEmpty(dateStr)) {
+            return null;
+        } else {
+            try {
+                return (new SimpleDateFormat(pattern)).parse(dateStr);
+            } catch (ParseException e) {
+                return null;
+            }
+        }
+    }
+
+    private static List<String> getStrings(String pattern) {
+        List<String> formats = new ArrayList<>();
+        if (!StringUtils.isNullOrEmpty(pattern)) {
+            formats.add(pattern);
+        } else {
+            formats.add("HH:mm:ss");
+            formats.add("yyyy");
+            formats.add("yyyyMM");
+            formats.add("yyyyMMdd");
+            formats.add("yyyy-MM-dd");
+            formats.add("yyyy-MM-dd HH:mm");
+            formats.add("yyyy-MM-dd HH:mm:ss");
+            formats.add("yyyy年MM月dd日");
+            formats.add("yyyy/MM/ddHHmm");
+            formats.add("yyyy/MM/dd");
+            formats.add("yyyyMMddHHmmss");
+            formats.add("yyyy.MM.dd");
+        }
+        return formats;
+    }
+
+    public static Date format(String strTime) {
+        return format(strTime, null);
+    }
+
+    public static Date format(String strTime, String pattern) {
+        if (StringUtils.isNullOrEmpty(strTime)) {
+            return null;
+        } else {
+            Date date = null;
+            List<String> formats = getStrings(pattern);
+            for (String format : formats) {
+                if ((strTime.indexOf("-") <= 0 || format.contains("-")) && (strTime.contains("-") || format.indexOf("-") <= 0) && strTime.length() <= format.length()) {
+                    date = formatEx(strTime, format);
+                    if (date != null) {
+                        break;
+                    }
+                }
+            }
+            return date;
+        }
     }
 
     public static String toLocalStringYear(Date date, String languageTag) {
@@ -132,36 +180,42 @@ public class DateUtils {
      * 获取给定日期是当年的第几天
      */
     public static int getDayOfYear(Date date) {
-        if (date == null) {
-            date = new Date();
-        }
-
-        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        return localDate.getDayOfYear();
+        return getLocalDateTime(date).getDayOfYear();
     }
 
     /**
      * 获取给定日期是当月的第几天
      */
     public static int getDayOfMonth(Date date) {
-        if (date == null) {
-            date = new Date();
-        }
-
-        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        return localDate.getDayOfMonth();
+        return getLocalDateTime(date).getDayOfMonth();
     }
 
     /**
      * 获取给定日期是星期几
      */
     public static int getDayOfWeek(Date date) {
-        if (date == null) {
-            date = new Date();
-        }
+        return getLocalDateTime(date).getDayOfWeek().getValue();
+    }
 
-        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        return localDate.getDayOfWeek().getValue();
+    /**
+     * 获取给定日期的小时
+     */
+    public static int getHourOfDay(Date date) {
+        return getLocalDateTime(date).getHour();
+    }
+
+    /**
+     * 获取给定日期的分钟
+     */
+    public static int getMinuteOfHour(Date date) {
+        return getLocalDateTime(date).getMinute();
+    }
+
+    /**
+     * 获取给定日期的秒
+     */
+    public static int getSecondOfMinute(Date date) {
+        return getLocalDateTime(date).getSecond();
     }
 
     /**
@@ -189,6 +243,16 @@ public class DateUtils {
         Calendar ca = Calendar.getInstance();
         ca.setTime(date);
         return ca.getActualMaximum(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
+     * 将两个Date对象的时间相加
+     *
+     * @param date     基础日期
+     * @param duration 间隔时间
+     */
+    public static Date addDate(Date date, Duration duration) {
+        return getDate(getLocalDateTime(date).plus(duration));
     }
 
     public static Date addYear(Date current, int year) {
@@ -346,6 +410,28 @@ public class DateUtils {
         return calendar.getTime();
     }
 
+    public static LocalDateTime getLocalDateTime(Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    public static LocalDate getLocalDate(Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    public static Date getDate(LocalDate localDate) {
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
+
+    public static Date getDate(LocalDateTime localDateTime) {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
     public static Date getDate(int year, int month, int day, int hour, int minute, int second, int milliSecond) {
         Calendar cal = Calendar.getInstance();
         // cal.setLenient(false);
@@ -391,7 +477,104 @@ public class DateUtils {
         return getDate(yearStr, monthStr, dayStr, null, null, null, null);
     }
 
+    /**
+     * @param date yyyyMMdd 或 yyyyMMddHHmmss
+     */
+    public static Date getDate(long date) {
+        return format(String.valueOf(date));
+    }
+
+    /**
+     * 计算两个日期之间的年数间隔
+     */
+    public static long yearsOfTwo(Date startDate, Date endDate) {
+        return Period.between(getLocalDate(startDate), getLocalDate(endDate)).getYears();
+    }
+
+    /**
+     * 计算两个日期之间的月数间隔
+     */
+    public static long monthsOfTwo(Date startDate, Date endDate) {
+        return ChronoUnit.MONTHS.between(getLocalDateTime(startDate), getLocalDateTime(endDate));
+    }
+
+    /**
+     * 计算两个日期之间的天数间隔
+     */
+    public static long daysOfTwo(Date startDate, Date endDate) {
+        return ChronoUnit.DAYS.between(getLocalDateTime(startDate), getLocalDateTime(endDate));
+    }
+
+    /**
+     * 计算两个日期之间的周数间隔
+     */
+    public static long weeksOfTwo(Date startDate, Date endDate) {
+        return ChronoUnit.WEEKS.between(getLocalDateTime(startDate), getLocalDateTime(endDate));
+    }
+
+    /**
+     * 计算两个时间之间的小时数间隔
+     */
+    public static long hoursOfTwo(Date startDateTime, Date endDateTime) {
+        return ChronoUnit.HOURS.between(getLocalDateTime(startDateTime), getLocalDateTime(endDateTime));
+    }
+
+    /**
+     * 计算两个时间之间的分钟数间隔
+     */
+    public static long minutesOfTwo(Date startDateTime, Date endDateTime) {
+        return ChronoUnit.MINUTES.between(getLocalDateTime(startDateTime), getLocalDateTime(endDateTime));
+    }
+
+    /**
+     * 计算两个时间之间的秒数间隔
+     */
+    public static long secondsOfTwo(Date startDateTime, Date endDateTime) {
+        return ChronoUnit.SECONDS.between(getLocalDateTime(startDateTime), getLocalDateTime(endDateTime));
+    }
+
+    /**
+     * 计算两个时间之间的详细间隔日期
+     * 返回一个包含年月日时分秒毫秒的Date对象
+     */
+    public static Duration dateOfTwo(Date startDateTime, Date endDateTime) {
+        LocalDateTime localDateTime = getLocalDateTime(startDateTime);
+        return Duration.between(localDateTime, getLocalDateTime(endDateTime));
+    }
+
+    /**
+     * 添加时间
+     *
+     * @param date     被计算的时间
+     * @param duration 间隔时间(整数部分为小时, 小数部分为分钟)
+     */
+    public static Date addDate(Date date, double duration) {
+        int coolingHour = (int) Math.floor(duration);
+        int coolingMinute = (int) Math.floor((coolingHour - duration) * 100);
+        return DateUtils.addMinute(DateUtils.addHour(date, coolingHour), coolingMinute);
+    }
+
+    public static Date getServerDate() {
+        // 服务器当前时间
+        Date serverTime = new Date();
+        // 校准服务器时间
+        Date originalTime = DateUtils.format(ServerConfig.SERVER_TIME.get());
+        Date actualTime = DateUtils.format(ServerConfig.ACTUAL_TIME.get());
+        if (originalTime.compareTo(actualTime) != 0) {
+            serverTime = DateUtils.addDate(serverTime, DateUtils.dateOfTwo(originalTime, actualTime));
+        }
+        return serverTime;
+    }
+
     public static void main(String[] args) {
-        System.out.println(toLocalStringMonth(new Date(), "zh"));
+        Date originalDate = DateUtils.getDate(2018, 11, 1, 12, 30, 23);
+        Date calibrationDate = DateUtils.getDate(2018, 12, 1, 13, 30, 23);
+        Duration duration = DateUtils.dateOfTwo(originalDate, calibrationDate);
+
+        Date serverDate = DateUtils.getDate(2024, 1, 1, 0, 0, 0);
+        System.out.println("时间: " + DateUtils.toString(serverDate, DATETIME_FORMAT));
+
+        serverDate = DateUtils.addDate(serverDate, duration);
+        System.out.println("校准: " + DateUtils.toString(serverDate, DATETIME_FORMAT));
     }
 }

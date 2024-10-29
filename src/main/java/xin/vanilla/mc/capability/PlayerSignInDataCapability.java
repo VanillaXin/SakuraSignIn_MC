@@ -1,14 +1,19 @@
 package xin.vanilla.mc.capability;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.network.PacketDistributor;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.PlayerDataSyncPacket;
 
 public class PlayerSignInDataCapability {
     // 定义 Capability 实例
     @CapabilityInject(IPlayerSignInData.class)
-    public static Capability<IPlayerSignInData> PLAYER_DATA = null;
+    public static Capability<IPlayerSignInData> PLAYER_DATA;
 
     // 注册方法，用于在模组初始化期间注册 Capability
     public static void register() {
@@ -16,12 +21,36 @@ public class PlayerSignInDataCapability {
         CapabilityManager.INSTANCE.register(IPlayerSignInData.class, new PlayerSignInDataStorage(), PlayerSignInData::new);
     }
 
-    // 获取玩家签到数据的方法
-    // 通过此方法可以从玩家实体中获取签到数据，如果玩家实体尚未拥有该 Capability，则会抛出异常
-    // 参数: player - 玩家实体
-    // 返回值: 玩家的签到数据
-    // 异常: 如果玩家实体没有注册的 Capability，则抛出 IllegalArgumentException
+    /**
+     * 获取玩家签到数据
+     *
+     * @param player 玩家实体
+     * @return 玩家的签到数据
+     */
     public static IPlayerSignInData getData(PlayerEntity player) {
-        return player.getCapability(PLAYER_DATA).orElseThrow(() -> new IllegalArgumentException("Player data capability is missing"));
+        return player.getCapability(PLAYER_DATA).orElseThrow(() -> new IllegalArgumentException("Player data capability is missing."));
+    }
+
+    public static LazyOptional<IPlayerSignInData> getDataOptional(ServerPlayerEntity player) {
+        return player.getCapability(PLAYER_DATA);
+    }
+
+    /**
+     * 设置玩家签到数据
+     *
+     * @param player 玩家实体
+     * @param data   玩家签到数据
+     */
+    public static void setData(PlayerEntity player, IPlayerSignInData data) {
+        player.getCapability(PLAYER_DATA).ifPresent(data::copyFrom);
+    }
+
+    /**
+     * 同步玩家签到数据到客户端
+     */
+    public static void syncPlayerData(ServerPlayerEntity player) {
+        // 创建自定义包并发送到客户端
+        PlayerDataSyncPacket packet = new PlayerDataSyncPacket(player.getUUID(), PlayerSignInDataCapability.getData(player));
+        ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

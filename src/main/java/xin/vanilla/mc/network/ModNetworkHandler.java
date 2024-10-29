@@ -9,10 +9,10 @@ public class ModNetworkHandler {
     private static final String PROTOCOL_VERSION = "1";
     private static int ID = 0;
     public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(SakuraSignIn.MODID, "main"),
+            new ResourceLocation(SakuraSignIn.MODID, "main_network"),
             () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
+            clientVersion -> true,      // 客户端版本始终有效
+            serverVersion -> true       // 服务端版本始终有效
     );
 
     public static int nextID() {
@@ -20,6 +20,9 @@ public class ModNetworkHandler {
     }
 
     public static void registerPackets() {
+        INSTANCE.registerMessage(nextID(), PlayerDataSyncPacket.class, PlayerDataSyncPacket::toBytes, PlayerDataSyncPacket::new, PlayerDataSyncPacket::handle);
+        INSTANCE.registerMessage(nextID(), ConfigDataSyncPacket.class, ConfigDataSyncPacket::toBytes, ConfigDataSyncPacket::new, ConfigDataSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ItemStackPacket.class, ItemStackPacket::toBytes, ItemStackPacket::new, ItemStackPacket::handle);
+        INSTANCE.registerMessage(nextID(), SignInPacket.class, SignInPacket::toBytes, SignInPacket::new, SignInPacket::handle);
     }
 }

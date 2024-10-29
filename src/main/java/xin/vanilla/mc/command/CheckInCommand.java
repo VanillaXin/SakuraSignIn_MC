@@ -26,52 +26,53 @@ public class CheckInCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         // 注册"checkin"命令，当执行该命令时，会调用后面的lambda表达式
         dispatcher.register(Commands.literal("checkin")
-                .executes(context -> {
-                    // 获取执行命令的玩家实体
-                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                    // 尝试给玩家添加一个苹果到背包，如果成功则返回"签到成功"，否则返回"签到失败, 背包已满"
-                    String result = player.addItem(Items.APPLE.getDefaultInstance()) ? "签到成功" : "签到失败, 背包已满";
-                    // 给玩家发送签到结果消息
-                    player.sendMessage(new StringTextComponent(result), player.getUUID());
-                    // 命令执行成功，返回1
-                    return 1;
-                })
-                // 子命令 /checkin give <item>
-                .then(Commands.literal("give")
-                        .then(Commands.argument("item", StringArgumentType.word())
-                                .executes(context -> {
-                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                    String itemName = StringArgumentType.getString(context, "item");
-                                    Item item = getItemFromString(itemName);
-                                    if (item != null) {
-                                        ItemStack stack = new ItemStack(item);
-                                        player.addItem(stack);
-                                        player.sendMessage(new StringTextComponent("你获得了 " + itemName), player.getUUID());
-                                    } else {
-                                        player.sendMessage(new StringTextComponent("物品 " + itemName + " 不存在"), player.getUUID());
-                                    }
-                                    return 1;
-                                })
+                        .executes(context -> {
+                            // 获取执行命令的玩家实体
+                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                            // 尝试给玩家添加一个苹果到背包，如果成功则返回"签到成功"，否则返回"签到失败, 背包已满"
+                            String result = player.addItem(Items.APPLE.getDefaultInstance()) ? "签到成功" : "签到失败, 背包已满";
+                            // 给玩家发送签到结果消息
+                            player.sendMessage(new StringTextComponent(result), player.getUUID());
+                            // 命令执行成功，返回1
+                            return 1;
+                        })
+                        // 子命令 /checkin give <item>
+                        .then(Commands.literal("give")
+                                .then(Commands.argument("item", StringArgumentType.word())
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            String itemName = StringArgumentType.getString(context, "item");
+                                            Item item = getItemFromString(itemName);
+                                            if (item != null) {
+                                                ItemStack stack = new ItemStack(item);
+                                                player.addItem(stack);
+                                                player.sendMessage(new StringTextComponent("你获得了 " + itemName), player.getUUID());
+                                            } else {
+                                                player.sendMessage(new StringTextComponent("物品 " + itemName + " 不存在"), player.getUUID());
+                                            }
+                                            return 1;
+                                        })
+                                )
                         )
-                )
-                // 子命令 /checkin sethome <x> <y> <z>
-                .then(Commands.literal("sethome")
-                        .then(Commands.argument("x", IntegerArgumentType.integer())
-                                .then(Commands.argument("y", IntegerArgumentType.integer())
-                                        .then(Commands.argument("z", IntegerArgumentType.integer())
-                                                .executes(context -> {
-                                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                                    int x = IntegerArgumentType.getInteger(context, "x");
-                                                    int y = IntegerArgumentType.getInteger(context, "y");
-                                                    int z = IntegerArgumentType.getInteger(context, "z");
-                                                    // 将玩家的家设置到指定坐标
-                                                    BlockPos homePos = new BlockPos(x, y, z);
-                                                    player.setRespawnPosition(World.OVERWORLD, homePos, 0, true, false);
-                                                    player.sendMessage(new StringTextComponent("你的家已设置在 " + x + ", " + y + ", " + z), player.getUUID());
-                                                    return 1;
-                                                })
-                                        )))
-                )
+                        // 子命令 /checkin sethome <x> <y> <z>
+                        .then(Commands.literal("sethome")
+                                .then(Commands.argument("x", IntegerArgumentType.integer())
+                                        .then(Commands.argument("y", IntegerArgumentType.integer())
+                                                .then(Commands.argument("z", IntegerArgumentType.integer())
+                                                        .executes(context -> {
+                                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                                            int x = IntegerArgumentType.getInteger(context, "x");
+                                                            int y = IntegerArgumentType.getInteger(context, "y");
+                                                            int z = IntegerArgumentType.getInteger(context, "z");
+                                                            // 将玩家的家设置到指定坐标
+                                                            BlockPos homePos = new BlockPos(x, y, z);
+                                                            player.setRespawnPosition(World.OVERWORLD, homePos, 0, true, false);
+                                                            player.sendMessage(new StringTextComponent("你的家已设置在 " + x + ", " + y + ", " + z), player.getUUID());
+                                                            return 1;
+                                                        })
+                                                )))
+                        )
+                // TODO 提供设置服务器时间的管理员指令, 用于校准服务器时间
         );
     }
 

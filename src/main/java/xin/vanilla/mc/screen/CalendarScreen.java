@@ -14,10 +14,14 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
+import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.enums.ESignInStatus;
+import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.event.ClientEventHandler;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.*;
@@ -35,7 +39,7 @@ import static xin.vanilla.mc.screen.CalendarScreen.OperationButtonType.*;
 @OnlyIn(Dist.CLIENT)
 public class CalendarScreen extends Screen {
 
-    // region
+    // region 变量定义
 
     private static final Logger LOGGER = LogManager.getLogger();
     /**
@@ -52,11 +56,14 @@ public class CalendarScreen extends Screen {
     private final List<CalendarCell> calendarCells = new ArrayList<>();
     public CalendarTextureCoordinate textureCoordinate;
 
-    // 日历表格数量定义
-    // 列数
-    private final int columns = 7;
-    // 行数
-    private final int rows = 6;
+    /**
+     * 日历表格列数
+     */
+    private static final int columns = 7;
+    /**
+     * 日历表格行数
+     */
+    private static final int rows = 6;
 
     // 背景渲染坐标大小定义
     private int bgH = Math.max(this.height - 20, 120);
@@ -228,7 +235,8 @@ public class CalendarScreen extends Screen {
 
         // 获取奖励列表
         if (Minecraft.getInstance().player != null) {
-            Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, PlayerSignInDataCapability.getData(Minecraft.getInstance().player), lastOffset, nextOffset);
+            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(Minecraft.getInstance().player);
+            Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, signInData, lastOffset, nextOffset);
 
             boolean allCurrentDaysDisplayed = false;
             boolean showLastReward = ClientConfig.SHOW_LAST_REWARD.get();
@@ -283,6 +291,11 @@ public class CalendarScreen extends Screen {
                     int key = year * 10000 + month * 100 + day;
                     RewardList rewards = monthRewardList.get(key);
                     if (CollectionUtils.isNullOrEmpty(rewards)) continue;
+                    if (RewardManager.isClaimed(signInData, DateUtils.getDate(key))) {
+                        status = ESignInStatus.REWARDED.getCode();
+                    } else if (RewardManager.isSignedIn(signInData, DateUtils.getDate(key))) {
+                        status = ESignInStatus.SIGNED_IN.getCode();
+                    }
                     // 创建物品格子
                     CalendarCell cell = new CalendarCell(BACKGROUND_TEXTURE, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
                     cell.setShowIcon(showIcon).setShowText(showText).setShowHover(showHover);
@@ -495,49 +508,53 @@ public class CalendarScreen extends Screen {
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        AtomicBoolean updateLayout = new AtomicBoolean(false);
+        AtomicBoolean updateTextureAndCoordinate = new AtomicBoolean(false);
         double mouseX1 = (mouseX - bgX) / this.scale;
         double mouseY1 = (mouseY - bgY) / this.scale;
         AtomicBoolean flag = new AtomicBoolean(false);
+        // TODO 左键签到, 右键补签(如果服务器允许且有补签卡)
+        // TODO 添加服务器配置: 最大允许补签范围
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             ClientPlayerEntity player = Minecraft.getInstance().player;
             BUTTONS.forEach((key, value) -> {
                 if (value.isMouseOver(mouseX1, mouseY1) && value.isPressed()) {
                     if (value.getOperation() == LEFT_ARROW.getCode()) {
                         currentDate = DateUtils.addMonth(currentDate, -1);
-                        this.updateLayout();
+                        updateLayout.set(true);
                         flag.set(true);
                     } else if (value.getOperation() == RIGHT_ARROW.getCode()) {
                         currentDate = DateUtils.addMonth(currentDate, 1);
-                        this.updateLayout();
+                        updateLayout.set(true);
                         flag.set(true);
                     } else if (value.getOperation() == UP_ARROW.getCode()) {
                         currentDate = DateUtils.addYear(currentDate, -1);
-                        this.updateLayout();
+                        updateLayout.set(true);
                         flag.set(true);
                     } else if (value.getOperation() == DOWN_ARROW.getCode()) {
                         currentDate = DateUtils.addYear(currentDate, 1);
-                        this.updateLayout();
+                        updateLayout.set(true);
                         flag.set(true);
                     } else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
                         ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
-                        this.updateTextureAndCoordinate();
-                        this.updateLayout();
+                        updateLayout.set(true);
+                        updateTextureAndCoordinate.set(true);
                         flag.set(true);
                     } else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
                         ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
-                        this.updateTextureAndCoordinate();
-                        this.updateLayout();
+                        updateLayout.set(true);
+                        updateTextureAndCoordinate.set(true);
                         flag.set(true);
                     } else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
                         ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
-                        this.updateTextureAndCoordinate();
-                        this.updateLayout();
+                        updateLayout.set(true);
+                        updateTextureAndCoordinate.set(true);
                     } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
 
                     } else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
                         ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
-                        this.updateTextureAndCoordinate();
-                        this.updateLayout();
+                        updateLayout.set(true);
+                        updateTextureAndCoordinate.set(true);
                     }
                 }
                 value.setPressed(false);
@@ -549,16 +566,16 @@ public class CalendarScreen extends Screen {
                         if (player != null) {
                             if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
                                 player.sendMessage(new StringTextComponent("Successful sign-in : " + cell.day), player.getUUID());
-                                // TODO 领取奖励
+                                cell.status = ESignInStatus.REWARDED.getCode();
+                                ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), true, ESignInType.SIGN_IN));
                                 // ModNetworkHandler.INSTANCE.sendToServer(new ItemStackPacket(cell.itemStack));
                                 // cell.itemStack.setCount(0);
-                                cell.status = ESignInStatus.REWARDED.getCode();
                             } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
                                 player.sendMessage(new StringTextComponent("Signed in: " + cell.day), player.getUUID());
                             } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
                                 player.sendMessage(new StringTextComponent("Cannot sign-in: " + cell.day), player.getUUID());
                             } else {
-                                player.sendMessage(new StringTextComponent(ESignInStatus.fromCode(cell.status).getDescription() + ": " + cell.day), player.getUUID());
+                                player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + cell.day), player.getUUID());
                             }
                         }
                         flag.set(true);
@@ -572,8 +589,8 @@ public class CalendarScreen extends Screen {
                         ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
                         if (TextureUtils.isTextureAvailable(resourceLocation)) {
                             ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
-                            this.updateTextureAndCoordinate();
-                            this.updateLayout();
+                            updateTextureAndCoordinate.set(true);
+                            updateLayout.set(true);
                         }
                     }
                     flag.set(true);
@@ -598,6 +615,8 @@ public class CalendarScreen extends Screen {
         } else {
             themeSelectorVisible = false;
         }
+        if (updateTextureAndCoordinate.get()) this.updateTextureAndCoordinate();
+        if (updateLayout.get()) this.updateLayout();
         return flag.get() ? flag.get() : super.mouseReleased(mouseX, mouseY, button);
     }
 

@@ -122,7 +122,7 @@ public class CalendarCell {
             String dayStr = String.valueOf(day);
             float dayWidth = font.width(dayStr);
             int color;
-            switch (ESignInStatus.fromCode(status)) {
+            switch (ESignInStatus.valueOf(status)) {
                 case NO_ACTION:
                     Date date = new Date();
                     if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
