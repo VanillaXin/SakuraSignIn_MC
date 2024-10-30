@@ -313,18 +313,18 @@ public class RewardManager {
         if (serverDateInt < signInDateInt) {
             player.sendMessage(new StringTextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
             return;
-        } else if (serverDateInt > signInDateInt && ESignInType.SIGN_IN.equals(packet.getSignInType())) {
+        } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverDateInt > signInDateInt) {
             player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
             return;
-        } else if (serverDateInt <= signInDateInt && ESignInType.RE_SIGN_IN.equals(packet.getSignInType())) {
+        } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverDateInt <= signInDateInt) {
             player.sendMessage(new StringTextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
             return;
-        } else if (serverDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
+        } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
             player.sendMessage(new StringTextComponent("今天已经签过到啦"), player.getUUID());
             return;
         }
         // 判断签到CD
-        if (coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
+        if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
             Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.TIME_COOLING_INTERVAL.get());
             if (packet.getSignInTime().before(lastSignInTime)) {
                 player.sendMessage(new StringTextComponent("签到冷却中，签到失败，请稍后再试"), player.getUUID());
@@ -394,7 +394,8 @@ public class RewardManager {
         }
         signInData.setLastSignInTime(packet.getSignInTime());
         signInData.getSignInRecords().add(signInRecord);
-        PlayerSignInDataCapability.setData(player, signInData);
+        // PlayerSignInDataCapability.setData(player, signInData);
+        signInData.save(player);
     }
 
     /**

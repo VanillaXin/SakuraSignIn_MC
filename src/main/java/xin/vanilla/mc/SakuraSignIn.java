@@ -12,7 +12,7 @@ import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import xin.vanilla.mc.command.CheckInCommand;
+import xin.vanilla.mc.command.SignInCommand;
 import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.SignInDataManager;
@@ -82,6 +82,6 @@ public class SakuraSignIn {
     public void onRegisterCommands(RegisterCommandsEvent event) {
         // 注册签到命令到事件调度器
         LOGGER.debug("Registering commands");
-        CheckInCommand.register(event.getDispatcher());
+        SignInCommand.register(event.getDispatcher());
     }
 }

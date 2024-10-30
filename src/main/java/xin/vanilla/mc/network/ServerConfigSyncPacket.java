@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.function.Supplier;
 
 @Getter
-public class ConfigDataSyncPacket {
+public class ServerConfigSyncPacket {
     /**
      * 自动签到
      */
@@ -47,7 +47,7 @@ public class ConfigDataSyncPacket {
      */
     private final Date actualTime;
 
-    public ConfigDataSyncPacket() {
+    public ServerConfigSyncPacket() {
         this.autoSignIn = ServerConfig.AUTO_SIGN_IN.get();
         this.timeCoolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
         this.timeCoolingTime = ServerConfig.TIME_COOLING_TIME.get();
@@ -58,7 +58,7 @@ public class ConfigDataSyncPacket {
         this.actualTime = DateUtils.format(ServerConfig.ACTUAL_TIME.get());
     }
 
-    public ConfigDataSyncPacket(PacketBuffer buf) {
+    public ServerConfigSyncPacket(PacketBuffer buf) {
         this.autoSignIn = buf.readBoolean();
         this.timeCoolingMethod = ETimeCoolingMethod.valueOf(buf.readInt());
         this.timeCoolingTime = buf.readDouble();
@@ -80,7 +80,7 @@ public class ConfigDataSyncPacket {
         buf.writeDate(this.actualTime);
     }
 
-    public static void handle(ConfigDataSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
+    public static void handle(ServerConfigSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             ServerConfig.AUTO_SIGN_IN.set(packet.autoSignIn);
             ServerConfig.TIME_COOLING_METHOD.set(packet.timeCoolingMethod);

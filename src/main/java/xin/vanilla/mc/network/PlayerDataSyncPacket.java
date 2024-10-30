@@ -1,13 +1,12 @@
 package xin.vanilla.mc.network;
 
 import lombok.Getter;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInData;
-import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -35,12 +34,10 @@ public class PlayerDataSyncPacket {
 
     public static void handle(PlayerDataSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            // 在客户端更新 PlayerSignInDataCapability
-            // 获取玩家并更新 Capability 数据
-            ClientPlayerEntity player = Minecraft.getInstance().player;
-            if (player != null) {
-                IPlayerSignInData clientData = PlayerSignInDataCapability.getData(player);
-                PlayerSignInDataCapability.PLAYER_DATA.readNBT(clientData, null, packet.data.serializeNBT());
+            if (ctx.get().getDirection().getReceptionSide().isClient()) {
+                // 在客户端更新 PlayerSignInDataCapability
+                // 获取玩家并更新 Capability 数据
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleSynPlayerData(packet));
             }
         });
         ctx.get().setPacketHandled(true);

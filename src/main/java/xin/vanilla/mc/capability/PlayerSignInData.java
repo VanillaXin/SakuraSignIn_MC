@@ -1,6 +1,7 @@
 package xin.vanilla.mc.capability;
 
 import lombok.NonNull;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.PacketBuffer;
@@ -17,6 +18,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     private AtomicInteger continuousSignInDays = new AtomicInteger();
     private Date lastSignInTime;
     private final AtomicInteger signInCard = new AtomicInteger();
+    private boolean autoRewarded;
     private List<SignInRecord> signInRecords;
 
     @Override
@@ -70,6 +72,16 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     @Override
+    public boolean isAutoRewarded() {
+        return this.autoRewarded;
+    }
+
+    @Override
+    public void setAutoRewarded(boolean autoRewarded) {
+        this.autoRewarded = autoRewarded;
+    }
+
+    @Override
     public @NonNull List<SignInRecord> getSignInRecords() {
         return signInRecords = CollectionUtils.isNullOrEmpty(signInRecords) ? new ArrayList<>() : signInRecords;
     }
@@ -83,6 +95,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         buffer.writeInt(this.getContinuousSignInDays());
         buffer.writeDate(this.getLastSignInTime());
         buffer.writeInt(this.getSignInCard());
+        buffer.writeBoolean(this.isAutoRewarded());
         buffer.writeInt(this.getSignInRecords().size());
         for (SignInRecord record : this.getSignInRecords()) {
             buffer.writeNbt(record.writeToNBT());
@@ -93,6 +106,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         this.continuousSignInDays.set(buffer.readInt());
         this.lastSignInTime = buffer.readDate();
         this.signInCard.set(buffer.readInt());
+        this.autoRewarded = buffer.readBoolean();
         int size = buffer.readInt();
         this.signInRecords = new ArrayList<>();
         for (int i = 0; i < size; i++) {
@@ -104,6 +118,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         this.continuousSignInDays.set(capability.getContinuousSignInDays());
         this.lastSignInTime = capability.getLastSignInTime();
         this.signInCard.set(capability.getSignInCard());
+        this.autoRewarded = capability.isAutoRewarded();
         this.signInRecords = capability.getSignInRecords();
     }
 
@@ -114,6 +129,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         tag.putInt("continuousSignInDays", this.getContinuousSignInDays());
         tag.putString("lastSignInTime", DateUtils.toDateTimeString(this.getLastSignInTime()));
         tag.putInt("signInCard", this.getSignInCard());
+        tag.putBoolean("autoRewarded", this.isAutoRewarded());
         // 序列化签到记录
         ListNBT recordsNBT = new ListNBT();
         for (SignInRecord record : this.getSignInRecords()) {
@@ -129,6 +145,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         this.setContinuousSignInDays(nbt.getInt("continuousSignInDays"));
         this.setLastSignInTime(DateUtils.format(nbt.getString("lastSignInTime")));
         this.setSignInCard(nbt.getInt("signInCard"));
+        this.setAutoRewarded(nbt.getBoolean("autoRewarded"));
         // 反序列化签到记录
         ListNBT recordsNBT = nbt.getList("signInRecords", 10); // 10 是 CompoundNBT 的类型ID
         List<SignInRecord> records = new ArrayList<>();
@@ -136,5 +153,10 @@ public class PlayerSignInData implements IPlayerSignInData {
             records.add(SignInRecord.readFromNBT(recordsNBT.getCompound(i)));
         }
         this.setSignInRecords(records);
+    }
+
+    @Override
+    public void save(ServerPlayerEntity player) {
+        player.getCapability(PlayerSignInDataCapability.PLAYER_DATA).ifPresent(this::copyFrom);
     }
 }

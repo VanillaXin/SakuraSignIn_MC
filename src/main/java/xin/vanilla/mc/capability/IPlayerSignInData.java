@@ -1,6 +1,7 @@
 package xin.vanilla.mc.capability;
 
 import lombok.NonNull;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -62,6 +63,16 @@ public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
     void setSignInCard(int num);
 
     /**
+     * 是否自动领取奖励
+     */
+    boolean isAutoRewarded();
+
+    /**
+     * 设置是否自动领取奖励
+     */
+    void setAutoRewarded(boolean autoRewarded);
+
+    /**
      * 获取签到记录
      */
     @NonNull
@@ -77,4 +88,6 @@ public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
     void readFromBuffer(PacketBuffer buffer);
 
     void copyFrom(IPlayerSignInData capability);
+
+    void save(ServerPlayerEntity player);
 }

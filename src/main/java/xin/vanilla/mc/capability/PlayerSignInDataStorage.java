@@ -35,6 +35,7 @@ public class PlayerSignInDataStorage implements IStorage<IPlayerSignInData> {
         tag.putInt("continuousSignInDays", instance.getContinuousSignInDays());
         tag.putString("lastSignInTime", DateUtils.toDateTimeString(instance.getLastSignInTime()));
         tag.putInt("signInCard", instance.getSignInCard());
+        tag.putBoolean("autoRewarded", instance.isAutoRewarded());
         // 序列化签到记录
         ListNBT recordsNBT = new ListNBT();
         for (SignInRecord record : instance.getSignInRecords()) {
@@ -61,6 +62,7 @@ public class PlayerSignInDataStorage implements IStorage<IPlayerSignInData> {
             instance.setContinuousSignInDays(nbtTag.getInt("continuousSignInDays"));
             instance.setLastSignInTime(DateUtils.format(nbtTag.getString("lastSignInTime")));
             instance.setSignInCard(nbtTag.getInt("signInCard"));
+            instance.setAutoRewarded(nbtTag.getBoolean("autoRewarded"));
             // 反序列化签到记录
             ListNBT recordsNBT = nbtTag.getList("signInRecords", 10); // 10 是 CompoundNBT 的类型ID
             List<SignInRecord> records = new ArrayList<>();
