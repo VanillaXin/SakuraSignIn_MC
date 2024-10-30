@@ -10,8 +10,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
@@ -303,7 +301,6 @@ public class RewardManager {
     /**
      * 签到or补签
      */
-    @OnlyIn(Dist.DEDICATED_SERVER)
     public static void signIn(ServerPlayerEntity player, SignInPacket packet) {
         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
         ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
@@ -406,7 +403,6 @@ public class RewardManager {
      * @param drop      若玩家背包空间不足, 是否以物品实体的形式生成在世界上
      * @return 是否添加成功
      */
-    @OnlyIn(Dist.DEDICATED_SERVER)
     public static boolean giveItemStack(ServerPlayerEntity player, ItemStack itemStack, boolean drop) {
         // 尝试将物品堆添加到玩家的库存中
         boolean added = player.inventory.add(itemStack);
