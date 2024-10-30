@@ -1,9 +1,12 @@
 package xin.vanilla.mc.util;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * AbstractGui工具类
@@ -113,5 +116,38 @@ public class AbstractGuiUtils {
         }
 
         fontRenderer.draw(matrixStack, text, x, y, color);
+    }
+
+    /**
+     * 绘制效果图标
+     *
+     * @param matrixStack    用于变换绘制坐标系的矩阵堆栈
+     * @param fontRenderer   字体渲染器
+     * @param effectInstance 待绘制的效果实例
+     * @param x              矩形的左上角x坐标
+     * @param y              矩形的左上角y坐标
+     * @param width          目标矩形的宽度，决定了图像在屏幕上的宽度
+     * @param height         目标矩形的高度，决定了图像在屏幕上的高度
+     * @param showText       是否显示效果登记和持续时间
+     */
+    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, int x, int y, int width, int height, boolean showText) {
+        ResourceLocation registryName = effectInstance.getEffect().getRegistryName();
+        if (registryName != null) {
+            ResourceLocation effectIcon = new ResourceLocation(registryName.getNamespace(), "textures/mob_effect/" + registryName.getPath() + ".png");
+            Minecraft.getInstance().getTextureManager().bind(effectIcon);
+            AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
+            if (showText) {
+                if (effectInstance.getAmplifier() > 0) {
+                    String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier());
+                    int amplifierWidth = fontRenderer.width(amplifierString);
+                    fontRenderer.draw(matrixStack, amplifierString, x + width - (float) amplifierWidth / 2, y, 0xFFFFFF);
+                }
+                if (effectInstance.getDuration() > 0) {
+                    String durationString = DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1);
+                    int durationWidth = fontRenderer.width(durationString);
+                    fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 4, 0xFFFFFF);
+                }
+            }
+        }
     }
 }

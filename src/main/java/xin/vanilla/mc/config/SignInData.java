@@ -285,7 +285,7 @@ public class SignInData implements Serializable {
                 }});
                 add(new Reward() {{
                     setContent(new SignInCardRewardParser().serialize(1));
-                    setType(ERewardType.ITEM);
+                    setType(ERewardType.SIGN_IN_CARD);
                 }});
             }});
             setContinuousRewards(new LinkedHashMap<String, RewardList>() {{
@@ -298,7 +298,7 @@ public class SignInData implements Serializable {
                 put("2", new RewardList() {{
                     add(new Reward() {{
                         setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.LUCK, 300, 1)));
-                        setType(ERewardType.ITEM);
+                        setType(ERewardType.EFFECT);
                     }});
                 }});
                 put("4", new RewardList() {{
@@ -342,7 +342,14 @@ public class SignInData implements Serializable {
             }});
             setYearRewards(new LinkedHashMap<>());
             setMonthRewards(new LinkedHashMap<>());
-            setWeekRewards(new LinkedHashMap<>());
+            setWeekRewards(new LinkedHashMap<String, RewardList>() {{
+                put("6", new RewardList() {{
+                    add(new Reward() {{
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.LUCK, 6000, 1)));
+                        setType(ERewardType.EFFECT);
+                    }});
+                }});
+            }});
             setDateTimeRewards(new LinkedHashMap<String, RewardList>() {{
                 put("0000-10-06~1", new RewardList() {{
                     add(new Reward() {{

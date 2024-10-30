@@ -58,8 +58,13 @@ public class SignInCommand {
         };
         Command<CommandSource> helpCommand = context -> {
             // TODO 发送帮助信息
+            int page = 1;
+            try {
+                page = IntegerArgumentType.getInteger(context, "page");
+            } catch (IllegalArgumentException ignored) {
+            }
             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-            player.sendMessage(new StringTextComponent("help"), player.getUUID());
+            player.sendMessage(new StringTextComponent("help" + page), player.getUUID());
             // 命令执行成功，返回1
             return 1;
         };
@@ -78,6 +83,12 @@ public class SignInCommand {
         // 注册有前缀的指令
         dispatcher.register(Commands.literal("va")
                         .executes(helpCommand)
+                        .then(Commands.literal("help")
+                                .executes(helpCommand)
+                                .then(Commands.argument("page", IntegerArgumentType.integer(1, 4))
+                                        .executes(helpCommand)
+                                )
+                        )
                         // 签到 /va sign
                         .then(Commands.literal("sign").executes(signInCommand)
                                 // 补签 /va sign <year> <month> <day>
@@ -150,6 +161,7 @@ public class SignInCommand {
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
+                                                    player.sendMessage(new StringTextComponent(String.format("已增加%d张补签卡", num)), player.getUUID());
                                                     return 1;
                                                 })
                                                 .then(Commands.argument("player", EntityArgument.player())
@@ -158,6 +170,7 @@ public class SignInCommand {
                                                             ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                             signInData.setSignInCard(signInData.getSignInCard() + num);
+                                                            player.sendMessage(new StringTextComponent(String.format("已增加%d张补签卡", num)), player.getUUID());
                                                             return 1;
                                                         })
                                                 )
@@ -173,6 +186,7 @@ public class SignInCommand {
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(num);
+                                                    player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
                                                     return 1;
                                                 })
                                                 .then(Commands.argument("player", EntityArgument.player())
@@ -181,6 +195,7 @@ public class SignInCommand {
                                                             ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                             signInData.setSignInCard(num);
+                                                            player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
                                                             return 1;
                                                         })
                                                 )

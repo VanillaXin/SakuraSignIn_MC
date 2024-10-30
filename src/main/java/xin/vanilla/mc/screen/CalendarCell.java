@@ -10,6 +10,7 @@ import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import xin.vanilla.mc.enums.ERewardType;
@@ -85,7 +86,8 @@ public class CalendarCell {
                 itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, itemX, itemY, String.valueOf(itemStack.getCount()));
             }
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
-
+            EffectInstance effectInstance = RewardManager.deserializeReward(reward);
+            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, itemX, itemY, itemIconSize, itemIconSize, true);
         } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
 
         } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
