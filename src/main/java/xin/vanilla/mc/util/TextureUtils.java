@@ -2,8 +2,10 @@ package xin.vanilla.mc.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,6 +21,10 @@ import java.util.List;
 
 public class TextureUtils {
     /**
+     * 默认主题文件名
+     */
+    public static final String DEFAULT_THEME = "sign_in_calendar_original.png";
+    /**
      * 外部主题文件夹路径
      */
     public static final String CUSTOM_THEME_DIR = "config/sakura_sign_in/themes/";
@@ -26,6 +32,10 @@ public class TextureUtils {
      * 内部主题文件夹路径
      */
     public static final String INTERNAL_THEME_DIR = "textures/gui/";
+    /**
+     * 药水图标文件夹路径
+     */
+    public static final String DEFAULT_EFFECT_DIR = "textures/mob_effect/";
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -46,18 +56,18 @@ public class TextureUtils {
                 // 检查文件是否存在
                 if (!textureFile.exists()) {
                     LOGGER.warn("Texture file not found: {}", textureFile.getAbsolutePath());
-                    customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_sakura.png");
+                    customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
                 } else {
                     try (InputStream inputStream = Files.newInputStream(textureFile.toPath())) {
                         // 直接从InputStream创建NativeImage
-                        net.minecraft.client.renderer.texture.NativeImage nativeImage = net.minecraft.client.renderer.texture.NativeImage.read(inputStream);
+                        NativeImage nativeImage = NativeImage.read(inputStream);
                         // 创建DynamicTexture并注册到TextureManager
                         DynamicTexture dynamicTexture = new DynamicTexture(nativeImage);
                         textureManager.register(customTextureLocation, dynamicTexture);
                     } catch (IOException e) {
                         LOGGER.warn("Failed to load texture: {}", textureFile.getAbsolutePath());
                         LOGGER.error(e);
-                        customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_sakura.png");
+                        customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
                     }
                 }
             }
@@ -94,5 +104,20 @@ public class TextureUtils {
             }
         }
         return pngFiles;
+    }
+
+    /**
+     * 获取药水效果图标
+     */
+    public static ResourceLocation getEffectTexture(EffectInstance effectInstance) {
+        ResourceLocation registryName = effectInstance.getEffect().getRegistryName();
+        ResourceLocation effectIcon;
+        if (registryName != null) {
+            effectIcon = new ResourceLocation(registryName.getNamespace(), DEFAULT_EFFECT_DIR + registryName.getPath() + ".png");
+        } else {
+            // TODO 添加自定义效果图标
+            effectIcon = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
+        }
+        return effectIcon;
     }
 }

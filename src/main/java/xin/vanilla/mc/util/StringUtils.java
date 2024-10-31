@@ -397,6 +397,9 @@ public class StringUtils {
         return result;
     }
 
+    /**
+     * 整数转罗马数字
+     */
     public static String intToRoman(int num) {
         StringBuilder roman = new StringBuilder();
         int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};

@@ -4,14 +4,35 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import net.minecraft.util.ResourceLocation;
 
+/**
+ * 页面操作按钮
+ */
 @Data
 @Accessors(chain = true)
 public class OperationButton {
+    /**
+     * 按钮渲染坐标
+     */
     private double x, y, width, height, operation;
+    /**
+     * 按钮是否被按下
+     */
     private boolean pressed;
+    /**
+     * 按钮材质UV: 默认
+     */
     double normalU, normalV, normalWidth, normalHeight;
+    /**
+     * 按钮材质UV: 悬浮
+     */
     double hoverU, hoverV, hoverWidth, hoverHeight;
+    /**
+     * 按钮材质UV: 点击
+     */
     double tapU, tapV, tapWidth, tapHeight;
+    /**
+     * 按钮材质资源
+     */
     private ResourceLocation resourceLocation;
 
     public OperationButton(int operation) {
@@ -48,6 +69,9 @@ public class OperationButton {
         this.tapHeight = tap.getVHeight();
     }
 
+    /**
+     * 判断鼠标是否在按钮内
+     */
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }

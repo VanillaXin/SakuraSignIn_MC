@@ -18,15 +18,18 @@ import xin.vanilla.mc.network.ItemStackPacket;
 import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.util.StringUtils;
 
+/**
+ * 测试页面
+ */
 @OnlyIn(Dist.CLIENT)
-public class CheckInScreen extends Screen {
+public class TestScreen extends Screen {
 
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(SakuraSignIn.MODID, "textures/gui/sign_in_calendar_sakura.png");
     private TextFieldWidget inputField;
     private Button submitButton;
 
-    public CheckInScreen() {
-        super(new TranslationTextComponent("check_in.title"));
+    public TestScreen() {
+        super(new TranslationTextComponent("test.title"));
     }
 
     /**

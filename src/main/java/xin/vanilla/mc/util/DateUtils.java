@@ -610,16 +610,22 @@ public class DateUtils {
     }
 
     /**
-     * 将时间转换为最大单位
+     * 将时间转换为最大单位, 最小数值
+     * <p>
+     * 10000s显示出来太长了, 不如将单位放大, 数值缩小, decimalPlaces = 2, maxNineCount = 2, -> 166.67m<p>
+     * 166.67m这也太长了, 继续缩小数值 -> 2.78h<p>
+     * 还是长, 但是不能缩小单位了, 那就省略小数部分 decimalPlaces = 0, -> 3h<p>
      *
      * @param time          时间长度
      * @param curUnit       当前单位
-     * @param decimalPlaces 小数位数
-     * @param maxNineCount  最大整数位数
+     * @param decimalPlaces 小数位数, 不能小于0哦
+     * @param maxNineCount  最大整数位数, 不能小于1哦
      */
     public static String toMaxUnitString(double time, DateUnit curUnit, int decimalPlaces, int maxNineCount) {
         String formatPattern = "%." + decimalPlaces + "f";
         String result = String.format(formatPattern, time) + curUnit.getUnit();
+        if (decimalPlaces < 0) decimalPlaces = 0;
+        if (maxNineCount <= 0) maxNineCount = 1;
         if (String.valueOf((int) time).length() > maxNineCount) {
             int code = curUnit.getCode() + 1;
             if (code <= DateUnit.getMaxCode() && time > curUnit.getBase()) {

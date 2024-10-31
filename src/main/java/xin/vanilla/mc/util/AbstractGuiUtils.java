@@ -131,22 +131,21 @@ public class AbstractGuiUtils {
      * @param showText       是否显示效果登记和持续时间
      */
     public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, int x, int y, int width, int height, boolean showText) {
-        ResourceLocation registryName = effectInstance.getEffect().getRegistryName();
-        if (registryName != null) {
-            ResourceLocation effectIcon = new ResourceLocation(registryName.getNamespace(), "textures/mob_effect/" + registryName.getPath() + ".png");
-            Minecraft.getInstance().getTextureManager().bind(effectIcon);
-            AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
-            if (showText) {
-                if (effectInstance.getAmplifier() > 0) {
-                    String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier());
-                    int amplifierWidth = fontRenderer.width(amplifierString);
-                    fontRenderer.draw(matrixStack, amplifierString, x + width - (float) amplifierWidth / 2, y, 0xFFFFFF);
-                }
-                if (effectInstance.getDuration() > 0) {
-                    String durationString = DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1);
-                    int durationWidth = fontRenderer.width(durationString);
-                    fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 4, 0xFFFFFF);
-                }
+        ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
+        Minecraft.getInstance().getTextureManager().bind(effectIcon);
+        AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
+        if (showText) {
+            // 效果等级
+            if (effectInstance.getAmplifier() > 0) {
+                String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier());
+                int amplifierWidth = fontRenderer.width(amplifierString);
+                fontRenderer.draw(matrixStack, amplifierString, x + width - (float) amplifierWidth / 2, y, 0xFFFFFF);
+            }
+            // 效果持续时间
+            if (effectInstance.getDuration() > 0) {
+                String durationString = DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1);
+                int durationWidth = fontRenderer.width(durationString);
+                fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 4, 0xFFFFFF);
             }
         }
     }
