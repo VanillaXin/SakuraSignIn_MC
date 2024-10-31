@@ -4,7 +4,6 @@ import lombok.Getter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
-import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.rewards.RewardManager;
 
@@ -19,7 +18,7 @@ public class SignInPacket {
 
     public SignInPacket(Date signInTime, boolean autoRewarded, ESignInType signInType) {
         this.signInTime = signInTime;
-        this.autoRewarded = autoRewarded;
+        this.autoRewarded = signInType.equals(ESignInType.REWARD) || autoRewarded;
         this.signInType = signInType;
     }
 
@@ -40,7 +39,6 @@ public class SignInPacket {
             ServerPlayerEntity player = ctx.get().getSender();
             if (player != null) {
                 RewardManager.signIn(player, packet);
-                PlayerSignInDataCapability.syncPlayerData(player);
             }
         });
         ctx.get().setPacketHandled(true);

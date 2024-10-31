@@ -136,8 +136,8 @@ public class AbstractGuiUtils {
         AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
         if (showText) {
             // 效果等级
-            if (effectInstance.getAmplifier() > 0) {
-                String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier());
+            if (effectInstance.getAmplifier() >= 0) {
+                String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier() + 1);
                 int amplifierWidth = fontRenderer.width(amplifierString);
                 fontRenderer.draw(matrixStack, amplifierString, x + width - (float) amplifierWidth / 2, y, 0xFFFFFF);
             }

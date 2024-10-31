@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DateUtils {
 
@@ -651,7 +652,40 @@ public class DateUtils {
         return result;
     }
 
+    public static int calculateContinuousDays(List<Date> dateList, Date current) {
+        if (dateList == null || dateList.isEmpty()) {
+            return 0;
+        }
+        dateList.add(current);
+        dateList = dateList.stream()
+                .map(DateUtils::toDateInt)
+                .distinct()
+                .sorted(Comparator.reverseOrder())
+                .map(DateUtils::getDate)
+                .collect(Collectors.toList());
+        if (current == null) current = dateList.get(0);
+        int continuousDays = 0;
+        for (int i = 0; i < dateList.size(); i++) {
+            Date date = dateList.get(i);
+            if (i == 0 && DateUtils.toDateInt(current) == DateUtils.toDateInt(date))
+                continuousDays++;
+            else if (i - 1 >= 0 && DateUtils.toDateInt(DateUtils.addDay(dateList.get(i - 1), -1)) == DateUtils.toDateInt(date))
+                continuousDays++;
+            else break;
+        }
+        return continuousDays;
+    }
+
     public static void main(String[] args) {
-        System.out.println(toMaxUnitString(6000, DateUnit.SECOND, 0, 1));
+        System.out.println(calculateContinuousDays(new ArrayList<Date>() {{
+            add(DateUtils.getDate(2024, 10, 31));
+            add(DateUtils.getDate(2024, 10, 30));
+            add(DateUtils.getDate(2024, 10, 29));
+            add(DateUtils.getDate(2024, 10, 28));
+            add(DateUtils.getDate(2024, 10, 20));
+            add(DateUtils.getDate(2024, 10, 19));
+            add(DateUtils.getDate(2024, 10, 18));
+            add(DateUtils.getDate(2024, 10, 17));
+        }}, new Date()));
     }
 }

@@ -2,6 +2,9 @@ package xin.vanilla.mc.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
+/**
+ * 客户端配置
+ */
 public class ClientConfig {
     public static final ForgeConfigSpec CLIENT_CONFIG;
     /**

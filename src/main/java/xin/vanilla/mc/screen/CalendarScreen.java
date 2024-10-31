@@ -167,7 +167,7 @@ public class CalendarScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        currentDate = new Date();
+        currentDate = RewardManager.getCompensateDate(new Date());
         themeSelectorMaxWidth = font.width("cal_text_width");
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
@@ -305,7 +305,7 @@ public class CalendarScreen extends Screen {
                     if (ServerConfig.SIGN_IN_CARD.get()) {
                         // 最早能补签的日期
                         Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.RE_SIGN_IN_DAYS.get());
-                        if (minDate.compareTo(curDate) <= 0 && curDate.compareTo(compensateDate) < 0) {
+                        if (DateUtils.toDateInt(minDate) <= key && key <= DateUtils.toDateInt(compensateDate) && status != ESignInStatus.NOT_SIGNED_IN.getCode()) {
                             status = ESignInStatus.CAN_REPAIR.getCode();
                         }
                     }
@@ -535,112 +535,31 @@ public class CalendarScreen extends Screen {
         AtomicBoolean updateLayout = new AtomicBoolean(false);
         AtomicBoolean updateTextureAndCoordinate = new AtomicBoolean(false);
         AtomicBoolean flag = new AtomicBoolean(false);
-        // 左键签到, 右键补签(如果服务器允许且有补签卡)
+        // 左键签到, 右键补签(如果服务器允许且有补签卡), 右键领取奖励(如果是已签到未领取状态)
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             ClientPlayerEntity player = Minecraft.getInstance().player;
+            // 控制按钮
             BUTTONS.forEach((key, value) -> {
                 if (value.isMouseOver(mouseX1, mouseY1) && value.isPressed()) {
-                    if (value.getOperation() == LEFT_ARROW.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            currentDate = DateUtils.addMonth(currentDate, -1);
-                            updateLayout.set(true);
-                        }
-                    } else if (value.getOperation() == RIGHT_ARROW.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            currentDate = DateUtils.addMonth(currentDate, 1);
-                            updateLayout.set(true);
-                        }
-                    } else if (value.getOperation() == UP_ARROW.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            currentDate = DateUtils.addYear(currentDate, -1);
-                            updateLayout.set(true);
-                        }
-                    } else if (value.getOperation() == DOWN_ARROW.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            currentDate = DateUtils.addYear(currentDate, 1);
-                            updateLayout.set(true);
-                        }
-                    } else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
-                            updateLayout.set(true);
-                            updateTextureAndCoordinate.set(true);
-                        }
-                    } else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
-                            updateLayout.set(true);
-                            updateTextureAndCoordinate.set(true);
-                        }
-                    } else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
-                            updateLayout.set(true);
-                            updateTextureAndCoordinate.set(true);
-                        }
-                    } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-
-                        }
-                    } else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
-                            updateLayout.set(true);
-                            updateTextureAndCoordinate.set(true);
-                        } else {
-                            themeSelectorVisible = true;
-                            themeSelectorX = (int) mouseX - themeSelectorMaxWidth - 4;
-                            themeSelectorY = (int) ((mouseY - THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) - (mouseY - value.getY() * this.scale) - 2);
-                        }
-                    }
-                    flag.set(true);
+                    this.handleOperation(mouseX, mouseY, button, value, updateLayout, updateTextureAndCoordinate, flag);
                 }
                 value.setPressed(false);
             });
             if (!flag.get()) {
+                // 日历格子
                 for (CalendarCell cell : calendarCells) {
                     if (cell.isShowIcon() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
                         if (player != null) {
-                            if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
-                                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                                    cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
-                                }
-                            } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
-                                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                                    player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
-                                }
-                            } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
-                                if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                                    if (!ServerConfig.SIGN_IN_CARD.get()) {
-                                        player.sendMessage(new StringTextComponent("服务器未开启补签功能哦。"), player.getUUID());
-                                    } else {
-                                        if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                                            player.sendMessage(new StringTextComponent("补签卡不足了哦。"), player.getUUID());
-                                        } else {
-                                            cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                                            ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
-                                        }
-                                    }
-                                }
-                            } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
-                                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                                    player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
-                                }
-                            } else {
-                                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                                    player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + cell.day), player.getUUID());
-                                }
-                            }
+                            this.handleSignIn(button, cell, player);
                         }
                         flag.set(true);
                     }
                 }
-                // 检测是否单击了某个文件名
+                // 主题选择器
                 if (themeSelectorVisible && themeSelectorHoveredIndex != -1) {
                     String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
                     if (player != null) {
-                        player.sendMessage(new StringTextComponent("Selected Theme File: " + selectedFile), player.getUUID());
+                        player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
                         ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
                         if (TextureUtils.isTextureAvailable(resourceLocation)) {
                             ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
@@ -660,6 +579,125 @@ public class CalendarScreen extends Screen {
         if (updateLayout.get()) this.updateLayout();
         return flag.get() ? flag.get() : super.mouseReleased(mouseX, mouseY, button);
     }
+
+    /**
+     * 处理操作按钮事件
+     *
+     * @param mouseX        鼠标X坐标
+     * @param mouseY        鼠标Y坐标
+     * @param button        鼠标按键
+     * @param value         操作按钮
+     * @param updateLayout  是否更新布局
+     * @param updateTexture 是否更新纹理和坐标
+     * @param flag          是否处理过事件
+     */
+    private void handleOperation(double mouseX, double mouseY, int button, OperationButton value, AtomicBoolean updateLayout, AtomicBoolean updateTexture, AtomicBoolean flag) {
+        if (value.getOperation() == LEFT_ARROW.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                currentDate = DateUtils.addMonth(currentDate, -1);
+                updateLayout.set(true);
+            }
+        } else if (value.getOperation() == RIGHT_ARROW.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                currentDate = DateUtils.addMonth(currentDate, 1);
+                updateLayout.set(true);
+            }
+        } else if (value.getOperation() == UP_ARROW.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                currentDate = DateUtils.addYear(currentDate, -1);
+                updateLayout.set(true);
+            }
+        } else if (value.getOperation() == DOWN_ARROW.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                currentDate = DateUtils.addYear(currentDate, 1);
+                updateLayout.set(true);
+            }
+        } else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
+                updateLayout.set(true);
+                updateTexture.set(true);
+            }
+        } else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
+                updateLayout.set(true);
+                updateTexture.set(true);
+            }
+        } else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
+                updateLayout.set(true);
+                updateTexture.set(true);
+            }
+        } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+
+            }
+        } else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
+                updateLayout.set(true);
+                updateTexture.set(true);
+            } else {
+                themeSelectorVisible = true;
+                themeSelectorX = (int) (mouseX - themeSelectorMaxWidth - 4);
+                themeSelectorY = (int) ((mouseY - THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) - (mouseY - value.getY() * this.scale) - 2);
+            }
+        }
+        flag.set(true);
+    }
+
+    private void handleSignIn(int button, CalendarCell cell, ClientPlayerEntity player) {
+        Date cellDate = DateUtils.getDate(cell.year, cell.month, cell.day);
+        if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
+                    player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                } else {
+                    cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
+                }
+            }
+        } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                player.sendMessage(new StringTextComponent("已经签过到了哦。"), player.getUUID());
+            } else {
+                if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
+                    player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+                } else {
+                    cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
+                }
+            }
+        } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                if (!ServerConfig.SIGN_IN_CARD.get()) {
+                    player.sendMessage(new StringTextComponent("服务器未开启补签功能哦。"), player.getUUID());
+                } else {
+                    if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
+                        player.sendMessage(new StringTextComponent("补签卡不足了哦。"), player.getUUID());
+                    } else {
+                        cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                        ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
+                    }
+                }
+            }
+        } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
+            if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
+                player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+            } else {
+                player.sendMessage(new StringTextComponent("后面的的日期怎么想也回不去了吧。"), player.getUUID());
+            }
+        } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
+            player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+        } else {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());
+            }
+        }
+    }
+
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {

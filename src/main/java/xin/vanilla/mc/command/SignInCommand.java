@@ -37,23 +37,52 @@ public class SignInCommand {
             4 - 服务器所有者或控制台。
          */
         Command<CommandSource> signInCommand = context -> {
+            Date signInTime;
+            ESignInType signInType;
+            try {
+                int year = IntegerArgumentType.getInteger(context, "year");
+                int month = IntegerArgumentType.getInteger(context, "month");
+                int day = IntegerArgumentType.getInteger(context, "day");
+                signInTime = DateUtils.getDate(year, month, day);
+                signInType = ESignInType.RE_SIGN_IN;
+            } catch (IllegalArgumentException ignored) {
+                signInTime = DateUtils.getServerDate();
+                signInType = ESignInType.SIGN_IN;
+            }
             ServerPlayerEntity player = context.getSource().getPlayerOrException();
             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
-            RewardManager.signIn(player, new SignInPacket(DateUtils.getServerDate(), signInData.isAutoRewarded(), ESignInType.SIGN_IN));
+            RewardManager.signIn(player, new SignInPacket(signInTime, signInData.isAutoRewarded(), signInType));
             return 1;
         };
-        Command<CommandSource> reSignInCommand = context -> {
-            int year = IntegerArgumentType.getInteger(context, "year");
-            int month = IntegerArgumentType.getInteger(context, "month");
-            int day = IntegerArgumentType.getInteger(context, "day");
-            Date signInTime = DateUtils.getDate(year, month, day);
-            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-            if (!ServerConfig.SIGN_IN_CARD.get()) {
-                player.sendMessage(new StringTextComponent("服务器未开启补签功能，补签失败"), player.getUUID());
-            } else {
-                IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
-                RewardManager.signIn(player, new SignInPacket(signInTime, signInData.isAutoRewarded(), ESignInType.RE_SIGN_IN));
+        Command<CommandSource> rewardCommand = context -> {
+            Date signInTime;
+            try {
+                int year = IntegerArgumentType.getInteger(context, "year");
+                int month = IntegerArgumentType.getInteger(context, "month");
+                int day = IntegerArgumentType.getInteger(context, "day");
+                signInTime = DateUtils.getDate(year, month, day);
+            } catch (IllegalArgumentException ignored) {
+                signInTime = DateUtils.getServerDate();
             }
+            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+            RewardManager.signIn(player, new SignInPacket(signInTime, true, ESignInType.REWARD));
+            return 1;
+        };
+        Command<CommandSource> signAndRewardCommand = context -> {
+            Date signInTime;
+            ESignInType signInType;
+            try {
+                int year = IntegerArgumentType.getInteger(context, "year");
+                int month = IntegerArgumentType.getInteger(context, "month");
+                int day = IntegerArgumentType.getInteger(context, "day");
+                signInTime = DateUtils.getDate(year, month, day);
+                signInType = ESignInType.RE_SIGN_IN;
+            } catch (IllegalArgumentException ignored) {
+                signInTime = DateUtils.getServerDate();
+                signInType = ESignInType.SIGN_IN;
+            }
+            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+            RewardManager.signIn(player, new SignInPacket(signInTime, true, signInType));
             return 1;
         };
         Command<CommandSource> helpCommand = context -> {
@@ -69,17 +98,42 @@ public class SignInCommand {
             return 1;
         };
 
-        // 注册无前缀的快捷指令
+        // 签到 /sign
         dispatcher.register(Commands.literal("sign").executes(signInCommand)
                 // 带有日期参数 -> 补签
                 .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
                         .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
                                 .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
-                                        .executes(reSignInCommand)
+                                        .executes(signInCommand)
                                 )
                         )
                 )
         );
+
+        // 领取奖励 /reward
+        dispatcher.register(Commands.literal("reward").executes(rewardCommand)
+                // 带有日期参数 -> 补签
+                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
+                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
+                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                        .executes(rewardCommand)
+                                )
+                        )
+                )
+        );
+
+        // 签到并领取奖励 /signex
+        dispatcher.register(Commands.literal("signex").executes(signAndRewardCommand)
+                // 带有日期参数 -> 补签
+                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
+                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
+                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                        .executes(signAndRewardCommand)
+                                )
+                        )
+                )
+        );
+
         // 注册有前缀的指令
         dispatcher.register(Commands.literal("va")
                         .executes(helpCommand)
@@ -95,7 +149,29 @@ public class SignInCommand {
                                 .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
                                         .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
                                                 .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
-                                                        .executes(reSignInCommand)
+                                                        .executes(signInCommand)
+                                                )
+                                        )
+                                )
+                        )
+                        // 奖励 /va reward
+                        .then(Commands.literal("reward").executes(rewardCommand)
+                                // 补签 /va sign <year> <month> <day>
+                                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
+                                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
+                                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                                        .executes(rewardCommand)
+                                                )
+                                        )
+                                )
+                        )
+                        // 签到并领取奖励 /signex
+                        .then(Commands.literal("signex").executes(signAndRewardCommand)
+                                // 补签 /va signex <year> <month> <day>
+                                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
+                                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
+                                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                                        .executes(signAndRewardCommand)
                                                 )
                                         )
                                 )
@@ -162,6 +238,7 @@ public class SignInCommand {
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
                                                     player.sendMessage(new StringTextComponent(String.format("已增加%d张补签卡", num)), player.getUUID());
+                                                    PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
                                                 .then(Commands.argument("player", EntityArgument.player())
@@ -171,6 +248,7 @@ public class SignInCommand {
                                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                             signInData.setSignInCard(signInData.getSignInCard() + num);
                                                             player.sendMessage(new StringTextComponent(String.format("已增加%d张补签卡", num)), player.getUUID());
+                                                            PlayerSignInDataCapability.syncPlayerData(player);
                                                             return 1;
                                                         })
                                                 )
@@ -187,6 +265,7 @@ public class SignInCommand {
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(num);
                                                     player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                                    PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
                                                 .then(Commands.argument("player", EntityArgument.player())
@@ -196,6 +275,7 @@ public class SignInCommand {
                                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                             signInData.setSignInCard(num);
                                                             player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                                            PlayerSignInDataCapability.syncPlayerData(player);
                                                             return 1;
                                                         })
                                                 )

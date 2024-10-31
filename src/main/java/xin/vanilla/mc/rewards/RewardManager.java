@@ -27,6 +27,9 @@ import xin.vanilla.mc.util.DateUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 奖励管理器
+ */
 public class RewardManager {
     private static final Map<ERewardType, RewardParser<?>> rewardParsers = new HashMap<>();
 
@@ -74,7 +77,7 @@ public class RewardManager {
      */
     public static boolean isSignedIn(IPlayerSignInData signInData, Date date, boolean compensate) {
         int dateInt = compensate ? DateUtils.toDateInt(getCompensateDate(date)) : DateUtils.toDateInt(date);
-        return signInData.getSignInRecords().stream().anyMatch(record -> DateUtils.toDateInt(getCompensateDate(record.getSignInTime())) == dateInt);
+        return signInData.getSignInRecords().stream().anyMatch(record -> DateUtils.toDateInt(record.getCompensateTime()) == dateInt);
     }
 
     /**
@@ -87,9 +90,52 @@ public class RewardManager {
     public static boolean isRewarded(IPlayerSignInData signInData, Date date, boolean compensate) {
         int dateInt = compensate ? DateUtils.toDateInt(getCompensateDate(date)) : DateUtils.toDateInt(date);
         return signInData.getSignInRecords().stream().anyMatch(record ->
-                DateUtils.toDateInt(getCompensateDate(record.getSignInTime())) == dateInt
-                        && record.isRewarded()
+                DateUtils.toDateInt(record.getCompensateTime()) == dateInt && record.isRewarded()
         );
+    }
+
+    /**
+     * 获取玩家签到总天数
+     *
+     * @param signInData 玩家签到数据
+     */
+    public static int getTotalSignInDays(IPlayerSignInData signInData) {
+        return (int) signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).map(DateUtils::toDateInt).distinct().count();
+    }
+
+    /**
+     * 获取服务器校准时间的签到时间
+     * <p>
+     * 服务器校准时间减去 签到冷却刷新时间
+     */
+    public static int getCompensateDateInt() {
+        return DateUtils.toDateInt(getCompensateDate(DateUtils.getServerDate()));
+    }
+
+    /**
+     * 获取签到时间的校准时间
+     * <p>
+     * 当前时间减去 签到冷却刷新时间
+     *
+     * @param date 若date为null, 则使用服务器当前时间
+     */
+    public static Date getCompensateDate(Date date) {
+        if (date == null) {
+            date = DateUtils.getServerDate();
+        }
+        // 签到冷却刷新时间, 固定间隔不需要校准时间
+        double cooling;
+        switch (ServerConfig.TIME_COOLING_METHOD.get()) {
+            case MIXED:
+            case FIXED_TIME:
+                cooling = ServerConfig.TIME_COOLING_TIME.get();
+                break;
+            default:
+                cooling = 0;
+                break;
+        }
+        // 校准后当前时间
+        return DateUtils.addDate(date, -cooling);
     }
 
     /**
@@ -131,70 +177,36 @@ public class RewardManager {
                 day = i - daysOfCurrentMonth - nextOffset;
             }
             int key = year * 10000 + month * 100 + day;
-            RewardList rewardList = getRewardListByDate(DateUtils.getDate(year, month, day, DateUtils.getHourOfDay(currentMonth), DateUtils.getMinuteOfHour(currentMonth), DateUtils.getSecondOfMinute(currentMonth)), playerData);
+            RewardList rewardList = getRewardListByDate(DateUtils.getDate(year, month, day, DateUtils.getHourOfDay(currentMonth), DateUtils.getMinuteOfHour(currentMonth), DateUtils.getSecondOfMinute(currentMonth)), playerData, false);
             result.put(key, rewardList);
         }
         return result;
     }
 
     /**
-     * 获取服务器校准时间的签到时间
-     * <p>
-     * 服务器校准时间减去 签到冷却刷新时间
-     */
-    private static int getCompensateDateInt() {
-        return DateUtils.toDateInt(getCompensateDate(DateUtils.getServerDate()));
-    }
-
-    /**
-     * 获取签到时间的校准时间
-     * <p>
-     * 当前时间减去 签到冷却刷新时间
-     *
-     * @param date 若date为null, 则使用服务器当前时间
-     */
-    public static Date getCompensateDate(Date date) {
-        if (date == null) {
-            date = DateUtils.getServerDate();
-        }
-        // 签到冷却刷新时间, 固定间隔不需要校准时间
-        double cooling;
-        switch (ServerConfig.TIME_COOLING_METHOD.get()) {
-            case MIXED:
-            case FIXED_TIME:
-                cooling = ServerConfig.TIME_COOLING_TIME.get();
-                break;
-            default:
-                cooling = 0;
-                break;
-        }
-        // 校准后当前时间
-        return DateUtils.addDate(date, -cooling);
-    }
-
-    /**
      * 获取指定日期的奖励列表
      *
-     * @param currentMonth 当前日期
-     * @param playerData   玩家签到数据
+     * @param currentDay  日期
+     * @param playerData  玩家签到数据
+     * @param onlyHistory 是否仅获取玩家签到记录中的奖励
      */
     @NonNull
-    public static RewardList getRewardListByDate(Date currentMonth, IPlayerSignInData playerData) {
+    public static RewardList getRewardListByDate(Date currentDay, IPlayerSignInData playerData, boolean onlyHistory) {
         RewardList result = new RewardList();
         SignInData serverData = SignInDataManager.getSignInData();
         int nowCompensate8 = getCompensateDateInt();
         // long nowCompensate14 = DateUtils.toDateTimeInt(nowCompensate);
         // 本月总天数
-        int daysOfCurrentMonth = DateUtils.getDaysOfMonth(currentMonth);
+        int daysOfCurrentMonth = DateUtils.getDaysOfMonth(currentDay);
         // 本年总天数
-        int daysOfCurrentYear = DateUtils.getDaysOfYear(currentMonth);
+        int daysOfCurrentYear = DateUtils.getDaysOfYear(currentDay);
 
         // 计算本月+上月最后offset天+下月开始offset的奖励
         int month, day, year;
         // 属于当前月的日期
-        year = DateUtils.getYearPart(currentMonth);
-        month = DateUtils.getMonthOfDate(currentMonth);
-        day = DateUtils.getDayOfMonth(currentMonth);
+        year = DateUtils.getYearPart(currentDay);
+        month = DateUtils.getMonthOfDate(currentDay);
+        day = DateUtils.getDayOfMonth(currentDay);
         int key = year * 10000 + month * 100 + day;
         Date date = DateUtils.getDate(year, month, day);
         int curDayOfYear = DateUtils.getDayOfYear(date);
@@ -210,10 +222,11 @@ public class RewardManager {
                     // 若签到日期等于当前日期
                     .filter(record -> DateUtils.toDateInt(record.getCompensateTime()) == key)
                     .flatMap(record -> record.getRewardList().stream())
-                    .peek(reward -> {
-                        reward.setRewarded(true);
-                        reward.setDisabled(true);
-                    }).collect(Collectors.toList());
+                    // .peek(reward -> {
+                    //     reward.setRewarded(true);
+                    //     reward.setDisabled(true);
+                    // })
+                    .collect(Collectors.toList());
         }
 
         // 若签到记录存在，则添加签到奖励记录
@@ -221,10 +234,10 @@ public class RewardManager {
             result.addAll(rewardRecords);
         }
         // 若日期小于当前日期 且 补签仅计算基础奖励
-        else if (key < nowCompensate8 && ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get()) {
+        else if (!onlyHistory && key < nowCompensate8 && ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get()) {
             // 基础奖励
             result.addAll(serverData.getBaseRewards());
-        } else {
+        } else if (!onlyHistory) {
             // 基础奖励
             result.addAll(serverData.getBaseRewards());
             // 年度签到奖励(正数第几天)
@@ -240,7 +253,7 @@ public class RewardManager {
             // 自定义日期奖励
             result.addAll(
                     serverData.getDateTimeRewardsRelation().keySet().stream()
-                            .filter(getDateStringList(currentMonth)::contains)
+                            .filter(getDateStringList(currentDay)::contains)
                             .map(serverData.getDateTimeRewardsRelation()::get)
                             .distinct()
                             .map(serverData.getDateTimeRewards()::get)
@@ -335,64 +348,120 @@ public class RewardManager {
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
             player.sendMessage(new StringTextComponent("补签卡不足，补签失败"), player.getUUID());
             return;
+        } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && isSignedIn(signInData, packet.getSignInTime(), false)) {
+            player.sendMessage(new StringTextComponent("已经签过到了哦"), player.getUUID());
+            return;
         }
-        RewardList rewardList = RewardManager.getRewardListByDate(packet.getSignInTime(), signInData);
-        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType())) signInData.subSignInCard();
-        SignInRecord signInRecord = new SignInRecord();
-        signInRecord.setRewarded(packet.isAutoRewarded());
-        signInRecord.setRewardList(new RewardList());
-        signInRecord.setSignInTime(packet.getSignInTime());
-        signInRecord.setCompensateTime(DateUtils.getServerDate());
-        signInRecord.setSignInUUID(player.getUUID().toString());
-        // 是否自动领取
-        if (packet.isAutoRewarded()) {
-            rewardList.forEach(reward -> {
-                reward.setRewarded(true);
-                Object object = deserializeReward(reward);
-                switch (reward.getType()) {
-                    case ITEM:
-                        giveItemStack(player, (ItemStack) object, true);
-                        break;
-                    case SIGN_IN_CARD:
-                        for (int i = 0; i < (Integer) object; i++)
-                            signInData.plusSignInCard();
-                        break;
-                    case EFFECT:
-                        player.addEffect((EffectInstance) object);
-                        break;
-                    case EXP_LEVEL:
-                        player.giveExperienceLevels((Integer) object);
-                        break;
-                    case EXP_POINT:
-                        player.giveExperiencePoints((Integer) object);
-                        break;
-                    case ADVANCEMENT:
-                        // TODO 待研究成就解锁
-                        Advancement advancement = player.server.getAdvancements().getAdvancement((ResourceLocation) object);
-                        if (advancement != null) {
-                            player.getAdvancements().award(advancement, "impossible");
-                        }
-                        break;
-                    case MESSAGE:
-                        // TODO 使用 ITextComponent 而不是 String
-                        player.sendMessage(new StringTextComponent((String) object), player.getUUID());
-                        break;
-                    default:
+        // 判断领取奖励
+        if (ESignInType.REWARD.equals(packet.getSignInType())) {
+            if (isRewarded(signInData, packet.getSignInTime(), false)) {
+                player.sendMessage(new StringTextComponent(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"), player.getUUID());
+                return;
+            } else if (!isSignedIn(signInData, packet.getSignInTime(), false)) {
+                player.sendMessage(new StringTextComponent(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))), player.getUUID());
+                return;
+            } else {
+                signInData.getSignInRecords().stream()
+                        // 若签到日期等于当前日期
+                        .filter(record -> DateUtils.toDateInt(record.getCompensateTime()) == DateUtils.toDateInt(packet.getSignInTime()))
+                        // 若奖励未领取
+                        .filter(record -> !record.isRewarded())
+                        .forEach(record -> {
+                            // 设置奖励为已领取
+                            record.setRewarded(true);
+                            record.getRewardList().stream()
+                                    .filter(reward -> !reward.isDisabled())
+                                    .filter(reward -> !reward.isRewarded())
+                                    .forEach(reward -> {
+                                        reward.setDisabled(true);
+                                        reward.setRewarded(true);
+                                        giveRewardToPlayer(player, signInData, reward);
+                                    });
+                        });
+                player.sendMessage(new StringTextComponent("奖励领取成功"), player.getUUID());
+            }
+        }
+        // 签到/补签
+        else {
+            RewardList rewardList = RewardManager.getRewardListByDate(packet.getSignInTime(), signInData, false);
+            if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType())) signInData.subSignInCard();
+            SignInRecord signInRecord = new SignInRecord();
+            signInRecord.setRewarded(packet.isAutoRewarded());
+            signInRecord.setRewardList(new RewardList());
+            signInRecord.setSignInTime(packet.getSignInTime());
+            if (packet.getSignInType().equals(ESignInType.RE_SIGN_IN)) {
+                signInRecord.setCompensateTime(packet.getSignInTime());
+            } else {
+                signInRecord.setCompensateTime(getCompensateDate(null));
+            }
+            signInRecord.setSignInUUID(player.getUUID().toString());
+            // 是否自动领取
+            if (packet.isAutoRewarded()) {
+                rewardList.forEach(reward -> {
+                    giveRewardToPlayer(player, signInData, reward);
+                    signInRecord.getRewardList().add(reward);
+                });
+            } else {
+                signInRecord.getRewardList().addAll(rewardList);
+            }
+            signInData.setLastSignInTime(packet.getSignInTime());
+            signInData.getSignInRecords().add(signInRecord);
+            // 若为签到
+            if (packet.getSignInType().equals(ESignInType.SIGN_IN)) {
+                // 若签到时间大于最后签到时间一天, 则连续签到天数+1
+                if (serverDateInt == DateUtils.toDateInt(DateUtils.addDay(signInData.getLastSignInTime(), 1))) {
+                    signInData.plusContinuousSignInDays();
                 }
-                signInRecord.getRewardList().add(reward);
-            });
-        } else {
-            signInRecord.getRewardList().addAll(rewardList);
+                // 重置连续签到天数
+                else {
+                    signInData.resetContinuousSignInDays();
+                }
+            }
+            // 若为补签, 重新计算连续签到天数
+            else if (packet.getSignInType().equals(ESignInType.RE_SIGN_IN)) {
+                signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), getCompensateDate(null)));
+            }
+            player.sendMessage(new StringTextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
         }
-        if (serverDateInt == DateUtils.toDateInt(DateUtils.addDay(signInData.getLastSignInTime(), 1))) {
-            signInData.plusContinuousSignInDays();
-        } else {
-            signInData.resetContinuousSignInDays();
-        }
-        signInData.setLastSignInTime(packet.getSignInTime());
-        signInData.getSignInRecords().add(signInRecord);
         // PlayerSignInDataCapability.setData(player, signInData);
         signInData.save(player);
+        // 同步数据只客户端
+        PlayerSignInDataCapability.syncPlayerData(player);
+    }
+
+    private static void giveRewardToPlayer(ServerPlayerEntity player, IPlayerSignInData signInData, Reward reward) {
+        reward.setRewarded(true);
+        Object object = deserializeReward(reward);
+        switch (reward.getType()) {
+            case ITEM:
+                giveItemStack(player, (ItemStack) object, true);
+                break;
+            case SIGN_IN_CARD:
+                for (int i = 0; i < (Integer) object; i++)
+                    signInData.plusSignInCard();
+                break;
+            case EFFECT:
+                player.addEffect((EffectInstance) object);
+                break;
+            case EXP_LEVEL:
+                player.giveExperienceLevels((Integer) object);
+                break;
+            case EXP_POINT:
+                player.giveExperiencePoints((Integer) object);
+                break;
+            case ADVANCEMENT:
+                // TODO 待研究成就解锁
+                Advancement advancement = player.server.getAdvancements().getAdvancement((ResourceLocation) object);
+                if (advancement != null) {
+                    player.getAdvancements().award(advancement, "impossible");
+                }
+                break;
+            case MESSAGE:
+                // TODO 使用 ITextComponent 而不是 String
+                player.sendMessage(new StringTextComponent((String) object), player.getUUID());
+                break;
+            default:
+        }
     }
 
     /**

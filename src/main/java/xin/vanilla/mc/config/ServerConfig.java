@@ -7,6 +7,9 @@ import xin.vanilla.mc.util.DateUtils;
 
 import java.util.Date;
 
+/**
+ * 服务器配置
+ */
 public class ServerConfig {
     public static final String SIGN_IN_CARD_ITEM_NAME = SakuraSignIn.MODID + ":sign_in_card";
 
@@ -91,9 +94,9 @@ public class ServerConfig {
         // 补签卡(不是签到卡哦)
         SIGN_IN_CARD = SERVER_BUILDER
                 .comment("Allow players to use a Sign-in Card for missed sign-ins? (SIGN_IN_CARD not a sign in card, it's a Make-up Sign-in Card.)"
-                        , String.format("To obtain a Sign-in Card, you can add the item [%s] to the sign-in rewards.", SIGN_IN_CARD_ITEM_NAME)
+                        , "To obtain a Sign-in Card, you can add a reward of type SIGN_IN_CARD to the sign-in rewards."
                         , "是否允许玩家使用补签卡进行补签。(不是签到卡哦)"
-                        , String.format("可以在签到奖励里面添加物品[%s]来获得补签卡。", SIGN_IN_CARD_ITEM_NAME))
+                        , "可以在签到奖励里面添加类型为SIGN_IN_CARD的奖励来获得补签卡。")
                 .define("signInCard", true);
 
         // 最大补签天数
