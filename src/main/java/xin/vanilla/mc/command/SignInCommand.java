@@ -23,8 +23,6 @@ public class SignInCommand {
 
     /**
      * 注册命令到命令调度器
-     * 此方法用于注册一个特定的命令"checkin"到命令调度器当玩家执行这个命令时，
-     * 系统会尝试给玩家的一个空物品栏槽位中添加一个苹果如果玩家的背包已满，则会发送失败的消息
      *
      * @param dispatcher 命令调度器，用于管理服务器中的所有命令
      */
@@ -40,9 +38,9 @@ public class SignInCommand {
             Date signInTime;
             ESignInType signInType;
             try {
-                int year = IntegerArgumentType.getInteger(context, "year");
-                int month = IntegerArgumentType.getInteger(context, "month");
-                int day = IntegerArgumentType.getInteger(context, "day");
+                int year = RelativeDateArgument.getInteger(context, "year");
+                int month = RelativeDateArgument.getInteger(context, "month");
+                int day = RelativeDateArgument.getInteger(context, "day");
                 signInTime = DateUtils.getDate(year, month, day);
                 signInType = ESignInType.RE_SIGN_IN;
             } catch (IllegalArgumentException ignored) {
@@ -57,9 +55,9 @@ public class SignInCommand {
         Command<CommandSource> rewardCommand = context -> {
             Date signInTime;
             try {
-                int year = IntegerArgumentType.getInteger(context, "year");
-                int month = IntegerArgumentType.getInteger(context, "month");
-                int day = IntegerArgumentType.getInteger(context, "day");
+                int year = RelativeDateArgument.getInteger(context, "year");
+                int month = RelativeDateArgument.getInteger(context, "month");
+                int day = RelativeDateArgument.getInteger(context, "day");
                 signInTime = DateUtils.getDate(year, month, day);
             } catch (IllegalArgumentException ignored) {
                 signInTime = DateUtils.getServerDate();
@@ -72,9 +70,9 @@ public class SignInCommand {
             Date signInTime;
             ESignInType signInType;
             try {
-                int year = IntegerArgumentType.getInteger(context, "year");
-                int month = IntegerArgumentType.getInteger(context, "month");
-                int day = IntegerArgumentType.getInteger(context, "day");
+                int year = RelativeDateArgument.getInteger(context, "year");
+                int month = RelativeDateArgument.getInteger(context, "month");
+                int day = RelativeDateArgument.getInteger(context, "day");
                 signInTime = DateUtils.getDate(year, month, day);
                 signInType = ESignInType.RE_SIGN_IN;
             } catch (IllegalArgumentException ignored) {
@@ -101,9 +99,9 @@ public class SignInCommand {
         // 签到 /sign
         dispatcher.register(Commands.literal("sign").executes(signInCommand)
                 // 带有日期参数 -> 补签
-                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                .then(Commands.argument("year", RelativeDateArgument.year(1, 9999))
+                        .then(Commands.argument("month", RelativeDateArgument.month(1, 12))
+                                .then(Commands.argument("day", RelativeDateArgument.date(1, 31))
                                         .executes(signInCommand)
                                 )
                         )
@@ -113,9 +111,9 @@ public class SignInCommand {
         // 领取奖励 /reward
         dispatcher.register(Commands.literal("reward").executes(rewardCommand)
                 // 带有日期参数 -> 补签
-                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                .then(Commands.argument("year", RelativeDateArgument.year(1, 9999))
+                        .then(Commands.argument("month", RelativeDateArgument.month(1, 12))
+                                .then(Commands.argument("day", RelativeDateArgument.date(1, 31))
                                         .executes(rewardCommand)
                                 )
                         )
@@ -125,9 +123,9 @@ public class SignInCommand {
         // 签到并领取奖励 /signex
         dispatcher.register(Commands.literal("signex").executes(signAndRewardCommand)
                 // 带有日期参数 -> 补签
-                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
                                         .executes(signAndRewardCommand)
                                 )
                         )
@@ -146,9 +144,9 @@ public class SignInCommand {
                         // 签到 /va sign
                         .then(Commands.literal("sign").executes(signInCommand)
                                 // 补签 /va sign <year> <month> <day>
-                                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
                                                         .executes(signInCommand)
                                                 )
                                         )
@@ -157,9 +155,9 @@ public class SignInCommand {
                         // 奖励 /va reward
                         .then(Commands.literal("reward").executes(rewardCommand)
                                 // 补签 /va sign <year> <month> <day>
-                                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
                                                         .executes(rewardCommand)
                                                 )
                                         )
@@ -168,9 +166,9 @@ public class SignInCommand {
                         // 签到并领取奖励 /signex
                         .then(Commands.literal("signex").executes(signAndRewardCommand)
                                 // 补签 /va signex <year> <month> <day>
-                                .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                                        .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                                .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
+                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
                                                         .executes(signAndRewardCommand)
                                                 )
                                         )
@@ -189,19 +187,19 @@ public class SignInCommand {
                                 // 设置服务器时间 /va date set <year> <month> <day> <hour> <minute> <second>
                                 .then(Commands.literal("set")
                                         .requires(source -> source.hasPermission(3))
-                                        .then(Commands.argument("year", IntegerArgumentType.integer(1, 9999))
-                                                .then(Commands.argument("month", IntegerArgumentType.integer(1, 12))
-                                                        .then(Commands.argument("day", IntegerArgumentType.integer(1, 31))
-                                                                .then(Commands.argument("hour", IntegerArgumentType.integer(0, 23))
-                                                                        .then(Commands.argument("minute", IntegerArgumentType.integer(0, 59))
-                                                                                .then(Commands.argument("second", IntegerArgumentType.integer(0, 59))
+                                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
+                                                                .then(Commands.argument("hour", RelativeDateArgument.hour(-23, 23))
+                                                                        .then(Commands.argument("minute", RelativeDateArgument.minute(-59, 59))
+                                                                                .then(Commands.argument("second", RelativeDateArgument.second(-59, 59))
                                                                                         .executes(context -> {
-                                                                                            int year = IntegerArgumentType.getInteger(context, "year");
-                                                                                            int month = IntegerArgumentType.getInteger(context, "month");
-                                                                                            int day = IntegerArgumentType.getInteger(context, "day");
-                                                                                            int hour = IntegerArgumentType.getInteger(context, "hour");
-                                                                                            int minute = IntegerArgumentType.getInteger(context, "minute");
-                                                                                            int second = IntegerArgumentType.getInteger(context, "second");
+                                                                                            int year = RelativeDateArgument.getInteger(context, "year");
+                                                                                            int month = RelativeDateArgument.getInteger(context, "month");
+                                                                                            int day = RelativeDateArgument.getInteger(context, "day");
+                                                                                            int hour = RelativeDateArgument.getInteger(context, "hour");
+                                                                                            int minute = RelativeDateArgument.getInteger(context, "minute");
+                                                                                            int second = RelativeDateArgument.getInteger(context, "second");
                                                                                             Date date = DateUtils.getDate(year, month, day, hour, minute, second);
                                                                                             ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
                                                                                             ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));

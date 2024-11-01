@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 玩家签到数据
+ */
 public class PlayerSignInData implements IPlayerSignInData {
     private AtomicInteger continuousSignInDays = new AtomicInteger();
     private Date lastSignInTime;

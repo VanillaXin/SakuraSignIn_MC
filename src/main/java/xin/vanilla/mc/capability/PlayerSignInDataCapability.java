@@ -10,6 +10,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.network.PlayerDataSyncPacket;
 
+/**
+ * 玩家签到数据能力
+ */
 public class PlayerSignInDataCapability {
     // 定义 Capability 实例
     @CapabilityInject(IPlayerSignInData.class)

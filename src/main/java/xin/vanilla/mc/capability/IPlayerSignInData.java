@@ -9,6 +9,9 @@ import net.minecraftforge.common.util.INBTSerializable;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 玩家签到数据
+ */
 public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
     // TIPS 加完属性记得去 PlayerSignInDataStorage 里注册
 
