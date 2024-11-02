@@ -4,14 +4,22 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
+import xin.vanilla.mc.enums.ERewardType;
+import xin.vanilla.mc.rewards.Reward;
+import xin.vanilla.mc.rewards.RewardManager;
 
 /**
  * AbstractGui工具类
  */
 public class AbstractGuiUtils {
+
+    public final static int ITEM_ICON_SIZE = 16;
+
     public static void blit(MatrixStack matrixStack, int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
         AbstractGui.blit(matrixStack, x0, y0, z, destWidth, destHeight, sprite);
     }
@@ -128,7 +136,7 @@ public class AbstractGuiUtils {
      * @param y              矩形的左上角y坐标
      * @param width          目标矩形的宽度，决定了图像在屏幕上的宽度
      * @param height         目标矩形的高度，决定了图像在屏幕上的高度
-     * @param showText       是否显示效果登记和持续时间
+     * @param showText       是否显示效果等级和持续时间
      */
     public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, int x, int y, int width, int height, boolean showText) {
         ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
@@ -147,6 +155,37 @@ public class AbstractGuiUtils {
                 int durationWidth = fontRenderer.width(durationString);
                 fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 3, 0xFFFFFF);
             }
+        }
+    }
+
+    /**
+     * 渲染奖励图标
+     *
+     * @param matrixStack  用于变换绘制坐标系的矩阵堆栈
+     * @param itemRenderer 物品渲染器
+     * @param fontRenderer 字体渲染器
+     * @param reward       待绘制的奖励
+     * @param x            图标的x坐标
+     * @param y            图标的y坐标
+     * @param showText     是否显示物品数量等信息
+     */
+    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int x, int y, boolean showText) {
+        // TODO 根据奖励类型渲染
+        if (reward.getType().equals(ERewardType.ITEM)) {
+            ItemStack itemStack = RewardManager.deserializeReward(reward);
+            itemRenderer.renderGuiItem(itemStack, x, y);
+            if (showText) {
+                itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
+            }
+        } else if (reward.getType().equals(ERewardType.EFFECT)) {
+            EffectInstance effectInstance = RewardManager.deserializeReward(reward);
+            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
+        } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
+            AbstractGuiUtils.drawLimitedString(matrixStack, fontRenderer, "经验", x, y, 0xFFFFFFFF, fontRenderer.width("经验"));
+        } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
+            AbstractGuiUtils.drawLimitedString(matrixStack, fontRenderer, "等级", x, y, 0xFFFFFFFF, fontRenderer.width("等级"));
+        } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
+            AbstractGuiUtils.drawLimitedString(matrixStack, fontRenderer, "签卡", x, y, 0xFFFFFFFF, fontRenderer.width("签卡"));
         }
     }
 }

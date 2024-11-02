@@ -9,16 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.ItemRenderer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import xin.vanilla.mc.config.ClientConfig;
-import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
-import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.PNGUtils;
@@ -84,34 +80,11 @@ public class CalendarCell {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
 
-    // 渲染物品图标
-    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, double scale, boolean showNum) {
-        // TODO 缩放图标以适应格子大小
-        // TODO 根据奖励类型渲染
-        if (reward.getType().equals(ERewardType.ITEM)) {
-            ItemStack itemStack = RewardManager.deserializeReward(reward);
-            itemRenderer.renderGuiItem(itemStack, itemX, itemY);
-            if (showNum) {
-                itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, itemX, itemY, String.valueOf(itemStack.getCount()));
-            }
-        } else if (reward.getType().equals(ERewardType.EFFECT)) {
-            EffectInstance effectInstance = RewardManager.deserializeReward(reward);
-            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, itemX, itemY, itemIconSize, itemIconSize, true);
-        } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
-
-        } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
-
-        } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
-
-        }
-    }
-
     // 渲染格子
     public void render(MatrixStack matrixStack, FontRenderer font, ItemRenderer itemRenderer, int mouseX, int mouseY) {
         boolean isHovered = isMouseOver(mouseX, mouseY);
         if (showIcon) {
             Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-            // TODO 单独绘制已签到未领取奖励图标
             if (status == ESignInStatus.REWARDED.getCode()) {
                 // 绘制已领取图标
                 TextureCoordinate signedInUV = textureCoordinate.getRewardedUV();
@@ -234,7 +207,7 @@ public class CalendarCell {
                 // 物品图标在弹出层中的 y 位置
                 double itemY = tooltipY0 + cellCoordinate.getY() * tooltipScale;
                 // 渲染物品图标
-                this.renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, (int) itemX, (int) itemY, 1, true);
+                AbstractGuiUtils.renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, (int) itemX, (int) itemY, true);
             }
         }
         // 绘制文字
