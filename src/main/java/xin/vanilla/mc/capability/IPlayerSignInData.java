@@ -56,9 +56,19 @@ public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
     int plusSignInCard();
 
     /**
+     * 增加补签卡数量
+     */
+    int plusSignInCard(int num);
+
+    /**
      * 减少补签卡数量
      */
     int subSignInCard();
+
+    /**
+     * 减少补签卡数量
+     */
+    int subSignInCard(int num);
 
     /**
      * 设置补签卡数量

@@ -41,6 +41,7 @@ public class RewardManager {
         rewardParsers.put(ERewardType.EXP_LEVEL, new ExpLevelRewardParser());
         rewardParsers.put(ERewardType.SIGN_IN_CARD, new SignInCardRewardParser());
         rewardParsers.put(ERewardType.ADVANCEMENT, new AdvancementRewardParser());
+        rewardParsers.put(ERewardType.MESSAGE, new MessageRewardParser());
         // MORE ...
     }
 
@@ -500,14 +501,13 @@ public class RewardManager {
 
     private static void giveRewardToPlayer(ServerPlayerEntity player, IPlayerSignInData signInData, Reward reward) {
         reward.setRewarded(true);
-        Object object = deserializeReward(reward);
+        Object object = RewardManager.deserializeReward(reward);
         switch (reward.getType()) {
             case ITEM:
-                giveItemStack(player, (ItemStack) object, true);
+                RewardManager.giveItemStack(player, (ItemStack) object, true);
                 break;
             case SIGN_IN_CARD:
-                for (int i = 0; i < (Integer) object; i++)
-                    signInData.plusSignInCard();
+                signInData.plusSignInCard((Integer) object);
                 break;
             case EFFECT:
                 player.addEffect((EffectInstance) object);
@@ -526,8 +526,7 @@ public class RewardManager {
                 }
                 break;
             case MESSAGE:
-                // TODO 使用 ITextComponent 而不是 String
-                player.sendMessage(new StringTextComponent((String) object), player.getUUID());
+                player.sendMessage((StringTextComponent) object, player.getUUID());
                 break;
             default:
         }

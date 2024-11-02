@@ -64,9 +64,20 @@ public class PlayerSignInData implements IPlayerSignInData {
         return this.signInCard.incrementAndGet();
     }
 
+
+    @Override
+    public int plusSignInCard(int num) {
+        return this.signInCard.addAndGet(num);
+    }
+
     @Override
     public int subSignInCard() {
         return this.signInCard.decrementAndGet();
+    }
+
+    @Override
+    public int subSignInCard(int num) {
+        return this.signInCard.addAndGet(-num);
     }
 
     @Override

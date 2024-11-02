@@ -32,33 +32,25 @@ public class CalendarTextureCoordinate implements Serializable {
     private int weekStart;
 
     /**
-     * 文本颜色: 无法操作
+     * 文本颜色: 默认
      */
-    private int textColorNoAction;
+    private int textColorDefault;
     /**
-     * 文本颜色: 无法操作(本月日期)
+     * 文本颜色: 本月日期
      */
-    private int textColorNoActionCur;
+    private int textColorCurrent;
     /**
      * 文本颜色: 可补签
      */
     private int textColorCanRepair;
     /**
-     * 文本颜色: 未签到
+     * 文本颜色: 今天
      */
-    private int textColorNotSignedIn;
+    private int textColorToday;
     /**
-     * 文本颜色: 已签到
+     * 文本颜色: 日期
      */
-    private int textColorSignedIn;
-    /**
-     * 文本颜色: 已领取
-     */
-    private int textColorRewarded;
-    /**
-     * 文本颜色: 默认
-     */
-    private int textColorDefault;
+    private int textColorDate;
 
     /**
      * 年份区域坐标
@@ -186,13 +178,11 @@ public class CalendarTextureCoordinate implements Serializable {
             setTotalHeight(880);
             setWeekStart(7);
 
-            setTextColorNoAction(0xFFAAAAAA);
-            setTextColorNoActionCur(0xFFFFFFFF);
-            setTextColorCanRepair(0xFF0000FF);
-            setTextColorNotSignedIn(0xFFF27690);
-            setTextColorSignedIn(0xFF00FF00);
-            setTextColorRewarded(0xFF00AAAA);
-            setTextColorDefault(0xFF000000);
+            setTextColorDefault(0xFFDBDBDB);
+            setTextColorCurrent(0xFFFFFFFF);
+            setTextColorCanRepair(0xFFFFFFBB);
+            setTextColorToday(0xFF474747);
+            setTextColorDate(0xFF000000);
 
             setYearCoordinate(new TextureCoordinate().setX(128).setY(60).setWidth(92).setHeight(16));
             setMonthCoordinate(new TextureCoordinate().setX(320).setY(60).setWidth(62).setHeight(16));

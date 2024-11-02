@@ -390,13 +390,13 @@ public class CalendarScreen extends Screen {
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDefault());
+        this.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDefault());
+        this.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -478,6 +478,12 @@ public class CalendarScreen extends Screen {
         // 渲染所有格子
         for (CalendarCell cell : calendarCells) {
             cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
+        }
+        // 渲染格子弹出层
+        for (CalendarCell cell : calendarCells) {
+            if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
+                cell.renderTooltip(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
+            }
         }
 
         // 渲染自定义背景文件列表，根据 scrollOffset 显示文件名
@@ -600,56 +606,84 @@ public class CalendarScreen extends Screen {
      * @param flag          是否处理过事件
      */
     private void handleOperation(double mouseX, double mouseY, int button, OperationButton value, AtomicBoolean updateLayout, AtomicBoolean updateTexture, AtomicBoolean flag) {
+        // 上个月
         if (value.getOperation() == LEFT_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addMonth(currentDate, -1);
                 updateLayout.set(true);
                 flag.set(true);
             }
-        } else if (value.getOperation() == RIGHT_ARROW.getCode()) {
+        }
+        // 下个月
+        else if (value.getOperation() == RIGHT_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addMonth(currentDate, 1);
                 updateLayout.set(true);
                 flag.set(true);
             }
-        } else if (value.getOperation() == UP_ARROW.getCode()) {
+        }
+        // 上一年
+        else if (value.getOperation() == UP_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addYear(currentDate, -1);
                 updateLayout.set(true);
                 flag.set(true);
             }
-        } else if (value.getOperation() == DOWN_ARROW.getCode()) {
+        }
+        // 下一年
+        else if (value.getOperation() == DOWN_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addYear(currentDate, 1);
                 updateLayout.set(true);
                 flag.set(true);
             }
-        } else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
+        }
+        // 类原版主题
+        else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
                 flag.set(true);
+            } else {
+                // TODO 添加新版样式
             }
-        } else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
+        }
+        // 樱花粉主题
+        else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
                 flag.set(true);
+            } else {
+                // TODO 添加新版样式
             }
-        } else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
+        }
+        // 四叶草主题
+        else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
                 flag.set(true);
+            } else {
+                // TODO 添加新版样式
             }
-        } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
+        }
+        // 枫叶主题
+        else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-
+                ClientConfig.THEME.set(THEME_MAPLE_BUTTON.getPath());
+                updateLayout.set(true);
+                updateTexture.set(true);
+                flag.set(true);
+            } else {
+                // TODO 添加新版样式
             }
-        } else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
+        }
+        // 混沌主题
+        else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
                 updateLayout.set(true);
@@ -714,7 +748,6 @@ public class CalendarScreen extends Screen {
             }
         }
     }
-
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {

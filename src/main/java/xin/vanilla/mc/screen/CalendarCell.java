@@ -108,51 +108,32 @@ public class CalendarCell {
 
         if (showText) {
             // 绘制日期
-            String dayStr = String.valueOf(day);
-            float dayWidth = font.width(dayStr);
-            int color;
-            switch (ESignInStatus.valueOf(status)) {
-                case NO_ACTION:
-                    Date date = new Date();
-                    if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
-                        color = textureCoordinate.getTextColorNoActionCur();
-                    } else {
-                        color = textureCoordinate.getTextColorNoAction();
-                    }
-                    break;
-                case CAN_REPAIR:
-                    color = textureCoordinate.getTextColorCanRepair();
-                    break;
-                case NOT_SIGNED_IN:
-                    color = textureCoordinate.getTextColorNotSignedIn();
-                    break;
-                case SIGNED_IN:
-                    color = textureCoordinate.getTextColorSignedIn();
-                    break;
-                case REWARDED:
-                    color = textureCoordinate.getTextColorRewarded();
-                    break;
-                default:
-                    color = textureCoordinate.getTextColorDefault();
+            Date date = new Date();
+            int color = textureCoordinate.getTextColorDefault();
+            StringTextComponent dayStr = new StringTextComponent(String.valueOf(day));
+            if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
+                if (day == DateUtils.getDayOfMonth(date)) {
+                    color = textureCoordinate.getTextColorToday();
+                    dayStr.setStyle(dayStr.getStyle().setUnderlined(true));
+                } else {
+                    color = textureCoordinate.getTextColorCurrent();
+                }
+            } else if (status == ESignInStatus.CAN_REPAIR.getCode()) {
+                color = textureCoordinate.getTextColorCanRepair();
             }
+            float dayWidth = font.width(dayStr);
             font.draw(matrixStack, dayStr, (float) (x + (width - dayWidth) / 2), (float) (y + height + 0.1f), color);
-        }
-
-        // 绘制弹出层
-        if (showHover && isHovered) {
-            renderTooltip(matrixStack, itemRenderer, font, mouseX, mouseY);
         }
     }
 
     // 绘制奖励详情弹出层
-    private void renderTooltip(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, int mouseX, int mouseY) {
+    public void renderTooltip(MatrixStack matrixStack, FontRenderer fontRenderer, ItemRenderer itemRenderer, int mouseX, int mouseY) {
         // 禁用深度测试
         RenderSystem.disableDepthTest();
         matrixStack.pushPose();
         // 提升Z坐标以确保弹出层在最上层
         matrixStack.translate(0, 0, 200.0F);
 
-        // FIXME 弹出层深度问题
         TextureCoordinate tooltipUV = textureCoordinate.getTooltipUV();
         TextureCoordinate cellCoordinate = textureCoordinate.getTooltipCellCoordinate();
         // 物品图标之间的间距

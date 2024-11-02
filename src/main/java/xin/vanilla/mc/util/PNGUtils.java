@@ -761,14 +761,29 @@ public class PNGUtils {
         CalendarTextureCoordinate aDefault = CalendarTextureCoordinate.getDefault();
         switch (fileName) {
             case "sakura":
-                aDefault.getCellCoordinate().setX(70).setY(120).setWidth(34).setHeight(34);
+                aDefault.getCellCoordinate().setX(70).setY(128).setWidth(34).setHeight(34);
                 aDefault.setCellHMargin(20);
                 aDefault.setCellVMargin(24);
+                aDefault.setTextColorDefault(0xFFFFD9E2);
+                aDefault.setTextColorCurrent(0xFFF27690);
+                aDefault.setTextColorCanRepair(0xFFFFFFBB);
+                aDefault.setTextColorToday(0xFFE03D63);
+                aDefault.setTextColorDate(0xFF000000);
                 break;
             case "clover":
                 aDefault.getCellCoordinate().setX(80);
-                aDefault.setTextColorNoActionCur(0xFF555555);
-                aDefault.setTextColorNoAction(0xFFAAAAAA);
+                aDefault.setTextColorDefault(0xFFEFCE8B);
+                aDefault.setTextColorCurrent(0xFF426812);
+                aDefault.setTextColorCanRepair(0xFFEFCE8B);
+                aDefault.setTextColorToday(0xFFB2D87C);
+                aDefault.setTextColorDate(0xFF000000);
+                break;
+            case "maple":
+                aDefault.setTextColorDefault(0xFFFFAA85);
+                aDefault.setTextColorCurrent(0xFFCE4906);
+                aDefault.setTextColorCanRepair(0xFFFFFCD2);
+                aDefault.setTextColorToday(0xFFFF4E00);
+                aDefault.setTextColorDate(0xFF000000);
                 break;
             case "chaos":
                 aDefault.setWeekStart(1);
@@ -787,5 +802,6 @@ public class PNGUtils {
         testWriteChunk("sakura");
         testWriteChunk("clover");
         testWriteChunk("chaos");
+        testWriteChunk("maple");
     }
 }
