@@ -2,6 +2,7 @@ package xin.vanilla.mc.rewards;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
+import lombok.experimental.Accessors;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import xin.vanilla.mc.enums.ERewardType;
@@ -12,6 +13,7 @@ import java.io.Serializable;
  * 奖励实体
  */
 @Data
+@Accessors(chain = true)
 public class Reward implements Cloneable, Serializable {
     /**
      * 奖励是否领取

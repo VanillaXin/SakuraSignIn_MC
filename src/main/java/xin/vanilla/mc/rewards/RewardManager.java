@@ -289,8 +289,76 @@ public class RewardManager {
                 );
             }
         }
-        // TODO 合并重复奖励
-        return result;
+        return RewardManager.mergeRewards(result);
+    }
+
+    /**
+     * 合并重复类型的奖励
+     */
+    public static RewardList mergeRewards(RewardList rewardList) {
+        // return rewardList;
+        List<Reward> rewards = rewardList.stream()
+                .collect(Collectors.groupingBy(reward -> {
+                            ERewardType type = reward.getType();
+                            String key = type.name();
+                            // 分组时基于type和内容字段进行分组键
+                            switch (type) {
+                                case ITEM:
+                                    ItemStack itemStack = RewardManager.deserializeReward(reward);
+                                    key = itemStack.getItem().getRegistryName().toString();
+                                    if (itemStack.hasTag()) {
+                                        key += itemStack.getTag().toString();
+                                    }
+                                    break;
+                                case EFFECT:
+                                    EffectInstance effectInstance = RewardManager.deserializeReward(reward);
+                                    key = effectInstance.getEffect().getRegistryName().toString() + " " + effectInstance.getAmplifier();
+                                    break;
+                                case EXP_POINT:
+                                    break;
+                                case EXP_LEVEL:
+                                    break;
+                                case SIGN_IN_CARD:
+                                    break;
+                                case ADVANCEMENT:
+                                case MESSAGE:
+                                default:
+                                    key = reward.getContent().toJSONString();
+                                    break;
+                            }
+                            return key;
+                        },
+                        Collectors.reducing(null, (reward1, reward2) -> {
+                            if (reward1 == null) return reward2;
+                            if (reward2 == null) return reward1;
+
+                            ERewardType type = reward1.getType();
+                            Object content1 = RewardManager.deserializeReward(reward1);
+                            Object content2 = RewardManager.deserializeReward(reward2);
+                            switch (type) {
+                                case ITEM:
+                                    content1 = new ItemStack(((ItemStack) content1).getItem(), ((ItemStack) content1).getCount() + ((ItemStack) content2).getCount());
+                                    ((ItemStack) content1).setTag(((ItemStack) content2).getTag());
+                                    break;
+                                case EFFECT:
+                                    content1 = new EffectInstance(((EffectInstance) content1).getEffect(), ((EffectInstance) content1).getDuration() + ((EffectInstance) content2).getDuration(), ((EffectInstance) content1).getAmplifier());
+                                    break;
+                                case EXP_POINT:
+                                case SIGN_IN_CARD:
+                                case EXP_LEVEL:
+                                    content1 = ((Integer) content1) + ((Integer) content2);
+                                    break;
+                                case ADVANCEMENT:
+                                case MESSAGE:
+                                default:
+                                    break;
+                            }
+                            return new Reward().setRewarded(reward1.isRewarded()).setType(type).setDisabled(reward1.isDisabled()).setContent(RewardManager.serializeReward(content1, type));
+                        })))
+                .values().stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return new RewardList(rewards);
     }
 
     public static List<String> getDateStringList(Date date) {
