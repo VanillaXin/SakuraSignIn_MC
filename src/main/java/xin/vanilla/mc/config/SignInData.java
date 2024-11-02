@@ -329,13 +329,13 @@ public class SignInData implements Serializable {
                 }});
                 put("4", new RewardList() {{
                     add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.BREAD, 1)));
+                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.BREAD, 3)));
                         setType(ERewardType.ITEM);
                     }});
                 }});
                 put("8", new RewardList() {{
                     add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.CAKE, 1)));
+                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.CAKE, 5)));
                         setType(ERewardType.ITEM);
                     }});
                 }});
@@ -347,6 +347,20 @@ public class SignInData implements Serializable {
                     add(new Reward() {{
                         setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.LUCK, 6000, 1)));
                         setType(ERewardType.EFFECT);
+                    }});
+                }});
+                put("7", new RewardList() {{
+                    add(new Reward() {{
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.DIG_SPEED, 6000, 0)));
+                        setType(ERewardType.EFFECT);
+                    }});
+                    add(new Reward() {{
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.JUMP, 6000, 0)));
+                        setType(ERewardType.EFFECT);
+                    }});
+                    add(new Reward() {{
+                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 1)));
+                        setType(ERewardType.ITEM);
                     }});
                 }});
             }});

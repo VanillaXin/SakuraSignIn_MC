@@ -145,7 +145,7 @@ public class AbstractGuiUtils {
             if (effectInstance.getDuration() > 0) {
                 String durationString = DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1);
                 int durationWidth = fontRenderer.width(durationString);
-                fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 4, 0xFFFFFF);
+                fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 3, 0xFFFFFF);
             }
         }
     }

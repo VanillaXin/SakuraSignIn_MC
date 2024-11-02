@@ -556,18 +556,26 @@ public class CalendarScreen extends Screen {
                     }
                 }
                 // 主题选择器
-                if (themeSelectorVisible && themeSelectorHoveredIndex != -1) {
-                    String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
-                    if (player != null) {
-                        player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
-                        ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
-                        if (TextureUtils.isTextureAvailable(resourceLocation)) {
-                            ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
-                            updateTextureAndCoordinate.set(true);
-                            updateLayout.set(true);
+                if (!flag.get()) {
+                    if (themeSelectorVisible && themeSelectorHoveredIndex >= 0) {
+                        String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
+                        if (player != null) {
+                            player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
+                            ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
+                            if (TextureUtils.isTextureAvailable(resourceLocation)) {
+                                ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
+                                updateTextureAndCoordinate.set(true);
+                                updateLayout.set(true);
+                            }
                         }
+                        flag.set(true);
                     }
-                    flag.set(true);
+                    // 若为首次显示
+                    else if (themeSelectorHoveredIndex == -2) {
+                        themeSelectorHoveredIndex = -1;
+                    } else {
+                        themeSelectorVisible = false;
+                    }
                 } else {
                     themeSelectorVisible = false;
                 }
@@ -596,39 +604,46 @@ public class CalendarScreen extends Screen {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addMonth(currentDate, -1);
                 updateLayout.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == RIGHT_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addMonth(currentDate, 1);
                 updateLayout.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == UP_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addYear(currentDate, -1);
                 updateLayout.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == DOWN_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 currentDate = DateUtils.addYear(currentDate, 1);
                 updateLayout.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
+                flag.set(true);
             }
         } else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -639,13 +654,15 @@ public class CalendarScreen extends Screen {
                 ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
+                flag.set(true);
             } else {
                 themeSelectorVisible = true;
+                // 设置为-2, 表示首次显示, 用于此次事件的后续判断
+                themeSelectorHoveredIndex = -2;
                 themeSelectorX = (int) (mouseX - themeSelectorMaxWidth - 4);
                 themeSelectorY = (int) ((mouseY - THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) - (mouseY - value.getY() * this.scale) - 2);
             }
         }
-        flag.set(true);
     }
 
     private void handleSignIn(int button, CalendarCell cell, ClientPlayerEntity player) {
@@ -719,12 +736,26 @@ public class CalendarScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        // 处理鼠标滚轮滚动
-        if (delta > 0) {
-            themeSelectorScrollOffset = Math.max(themeSelectorScrollOffset - 1, 0);
-        } else if (delta < 0) {
-            themeSelectorScrollOffset = Math.min(themeSelectorScrollOffset + 1, themeFileList.size() - THEME_SELECTOR_MAX_VISIBLE_ITEMS);
+        // 主题选择器
+        if (themeSelectorVisible) {
+            if (delta > 0) {
+                themeSelectorScrollOffset = Math.max(themeSelectorScrollOffset - 1, 0);
+            } else if (delta < 0) {
+                themeSelectorScrollOffset = Math.min(themeSelectorScrollOffset + 1, themeFileList.size() - THEME_SELECTOR_MAX_VISIBLE_ITEMS);
+            }
         }
+
+        // 奖励悬浮层
+        for (CalendarCell cell : calendarCells) {
+            if (cell.isShowIcon() && cell.isShowHover() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
+                if (delta > 0) {
+                    cell.setTooltipScrollOffset(Math.max(cell.getTooltipScrollOffset() - 1, 0));
+                } else if (delta < 0) {
+                    cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - CalendarCell.TOOLTIP_MAX_VISIBLE_ITEMS));
+                }
+            }
+        }
+
         return true;
     }
 

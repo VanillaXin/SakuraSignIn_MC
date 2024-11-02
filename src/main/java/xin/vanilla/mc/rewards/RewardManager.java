@@ -289,6 +289,7 @@ public class RewardManager {
                 );
             }
         }
+        // TODO 合并重复奖励
         return result;
     }
 

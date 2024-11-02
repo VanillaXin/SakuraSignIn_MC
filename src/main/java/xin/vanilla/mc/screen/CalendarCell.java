@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
+import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.rewards.Reward;
@@ -33,6 +34,16 @@ import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
 public class CalendarCell {
     private final ResourceLocation BACKGROUND_TEXTURE;
     private final CalendarTextureCoordinate textureCoordinate;
+
+    /**
+     * 当前滚动偏移量
+     */
+    private int tooltipScrollOffset = 0;
+    /**
+     * 显示的最大项目数
+     */
+    public static final int TOOLTIP_MAX_VISIBLE_ITEMS = 5;
+
     // 物品图标的大小
     private final int itemIconSize = 16;
     public double x, y, width, height, scale;
@@ -74,10 +85,8 @@ public class CalendarCell {
     }
 
     // 渲染物品图标
-    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, double scale, int zLevel, boolean showNum) {
+    public void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int itemX, int itemY, double scale, boolean showNum) {
         // TODO 缩放图标以适应格子大小
-        float blitOffset = itemRenderer.blitOffset;
-        itemRenderer.blitOffset = zLevel;
         // TODO 根据奖励类型渲染
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
@@ -95,7 +104,6 @@ public class CalendarCell {
         } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
 
         }
-        itemRenderer.blitOffset = blitOffset;
     }
 
     // 渲染格子
@@ -104,13 +112,18 @@ public class CalendarCell {
         if (showIcon) {
             Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
             // TODO 单独绘制已签到未领取奖励图标
-            if (status == ESignInStatus.REWARDED.getCode() || status == ESignInStatus.SIGNED_IN.getCode()) {
+            if (status == ESignInStatus.REWARDED.getCode()) {
                 // 绘制已领取图标
-                TextureCoordinate signedInUV = textureCoordinate.getSignedInUV();
+                TextureCoordinate signedInUV = textureCoordinate.getRewardedUV();
                 AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, (float) signedInUV.getU0(), (float) signedInUV.getV0(), (int) signedInUV.getUWidth(), (int) signedInUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
             } else {
+                TextureCoordinate rewardUV;
                 // 绘制奖励图标
-                TextureCoordinate rewardUV = textureCoordinate.getRewardUV();
+                if (status == ESignInStatus.SIGNED_IN.getCode() || ClientConfig.AUTO_REWARDED.get()) {
+                    rewardUV = textureCoordinate.getSignedInUV();
+                } else {
+                    rewardUV = textureCoordinate.getNotSignedInUV();
+                }
                 // 绘制格子背景
                 if (isHovered) {
                     AbstractGuiUtils.blit(matrixStack, (int) x - 2, (int) y - 2, (int) width + 4, (int) height + 4, (float) rewardUV.getU0(), (float) rewardUV.getV0(), (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
@@ -166,43 +179,75 @@ public class CalendarCell {
         // 提升Z坐标以确保弹出层在最上层
         matrixStack.translate(0, 0, 200.0F);
 
-        // 弹出层文字
-        StringTextComponent title = new StringTextComponent(month + "月" + day + "日");
-        int fontWidth = fontRenderer.width(title);
-
+        // FIXME 弹出层深度问题
+        TextureCoordinate tooltipUV = textureCoordinate.getTooltipUV();
+        TextureCoordinate cellCoordinate = textureCoordinate.getTooltipCellCoordinate();
         // 物品图标之间的间距
-        int padding = 5;
-        // 弹出层物品图标集合总宽度
-        int iconsWidth = rewardList.size() * (itemIconSize + padding) - padding;
-        // 弹出层宽度
-        int tooltipWidth = Math.max(fontWidth, iconsWidth) + padding * 2;
-        int tooltipHeight = itemIconSize + padding * 4 + fontRenderer.lineHeight;
+        double margin = textureCoordinate.getTooltipCellHMargin();
+        // 弹出层宽高
+        double tooltipWidth = margin + (itemIconSize + margin) * TOOLTIP_MAX_VISIBLE_ITEMS;
+        double tooltipHeight = (tooltipWidth * tooltipUV.getVHeight() / tooltipUV.getUWidth());
+        // 弹出层缩放比例
+        double tooltipScale = tooltipWidth / tooltipUV.getUWidth();
 
+        // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         // 在鼠标位置左上角绘制弹出层背景
-        fill(matrixStack, mouseX - tooltipWidth, mouseY - tooltipHeight, mouseX, mouseY, 0xCC000000);
+        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
+        double tooltipX0 = mouseX - tooltipWidth / 2;
+        double tooltipY0 = mouseY - tooltipHeight - 1;
+        AbstractGuiUtils.blit(matrixStack, (int) tooltipX0, (int) tooltipY0, (int) tooltipWidth, (int) tooltipHeight, (float) tooltipUV.getU0(), (float) tooltipUV.getV0(), (int) tooltipUV.getUWidth(), (int) tooltipUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        // 关闭 OpenGL 的混合模式
+        RenderSystem.disableBlend();
 
-        for (int i = 0; i < rewardList.size(); i++) {
-            Reward reward = rewardList.get(i);
-            // 物品图标在弹出层中的 x 位置
-            int itemX = mouseX + padding + i * (itemIconSize + padding) - tooltipWidth;
-            // 物品图标在弹出层中的 y 位置
-            int itemY = mouseY + padding - tooltipHeight;
+        // 绘制滚动条
+        TextureCoordinate scrollCoordinate = textureCoordinate.getTooltipScrollCoordinate();
+        double outScrollX0 = tooltipX0 + scrollCoordinate.getX() * tooltipScale;
+        double outScrollX1 = outScrollX0 + scrollCoordinate.getWidth() * tooltipScale;
+        double outScrollY0 = tooltipY0 + scrollCoordinate.getY() * tooltipScale;
+        double outScrollY1 = outScrollY0 + scrollCoordinate.getHeight() * tooltipScale;
+        AbstractGui.fill(matrixStack, (int) outScrollX0, (int) outScrollY0, (int) outScrollX1, (int) outScrollY1, 0xCC232323);
+        // 滚动条百分比
+        double inScrollWidthScale = rewardList.size() > TOOLTIP_MAX_VISIBLE_ITEMS ? (double) TOOLTIP_MAX_VISIBLE_ITEMS / rewardList.size() : 1;
+        // 多出来的格子数量
+        int outCell = Math.max(rewardList.size() - TOOLTIP_MAX_VISIBLE_ITEMS, 0);
+        // 多出来的每个格子所占的空余条长度
+        double outCellWidth = outCell == 0 ? 0 : (1 - inScrollWidthScale) * scrollCoordinate.getWidth() * tooltipScale / outCell;
+        // 滚动条左边距长度
+        double inScrollLeftWidth = tooltipScrollOffset * outCellWidth;
+        // 滚动条长度
+        double inScrollWidth = scrollCoordinate.getWidth() * tooltipScale * inScrollWidthScale;
 
-            // 渲染物品图标
-            renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, itemX, itemY, width / itemIconSize, 200, true);
+        double inScrollX0 = outScrollX0 + inScrollLeftWidth;
+        double inScrollX1 = inScrollX0 + inScrollWidth;
+        double inScrollY0 = outScrollY0;
+        double inScrollY1 = outScrollY1;
+        AbstractGui.fill(matrixStack, (int) inScrollX0 + 1, (int) inScrollY0, (int) inScrollX1 - 1, (int) inScrollY1, 0xCCCCCCCC);
+
+        for (int i = 0; i < TOOLTIP_MAX_VISIBLE_ITEMS; i++) {
+            int index = i + (rewardList.size() > TOOLTIP_MAX_VISIBLE_ITEMS ? tooltipScrollOffset : 0);
+            if (index >= 0 && index < rewardList.size()) {
+                Reward reward = rewardList.get(index);
+                // 物品图标在弹出层中的 x 位置
+                double itemX = (tooltipX0 + cellCoordinate.getX() * tooltipScale) + i * (itemIconSize + margin);
+                // 物品图标在弹出层中的 y 位置
+                double itemY = tooltipY0 + cellCoordinate.getY() * tooltipScale;
+                // 渲染物品图标
+                this.renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, (int) itemX, (int) itemY, 1, true);
+            }
         }
         // 绘制文字
-        fontRenderer.draw(matrixStack, title, mouseX + padding - tooltipWidth, mouseY + padding + itemIconSize + padding * 2 - tooltipHeight, 0xFFFFFF);
+        StringTextComponent title = new StringTextComponent(month + "月" + day + "日");
+        double fontWidth = fontRenderer.width(title);
+        TextureCoordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
+        double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;
+        double tooltipDateY = tooltipY0 + (dateCoordinate.getY() * tooltipScale);
+        fontRenderer.draw(matrixStack, title, (int) tooltipDateX, (int) tooltipDateY, 0xFFFFFF);
 
         // 恢复原来的矩阵状态
         matrixStack.popPose();
         // 恢复深度测试
         RenderSystem.enableDepthTest();
-    }
-
-    // 绘制背景
-    public static void fill(MatrixStack matrixStack, int x1, int y1, int x2, int y2, int color) {
-        // TODO 样式优化
-        AbstractGui.fill(matrixStack, x1, y1, x2, y2, color);
     }
 }

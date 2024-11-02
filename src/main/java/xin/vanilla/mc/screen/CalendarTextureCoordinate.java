@@ -116,10 +116,36 @@ public class CalendarTextureCoordinate implements Serializable {
      * 背景纹理坐标
      */
     private TextureCoordinate bgUV;
+
     /**
-     * 奖励纹理坐标
+     * 奖励弹出层纹理坐标
      */
-    private TextureCoordinate rewardUV;
+    private TextureCoordinate tooltipUV;
+    /**
+     * 弹出层单元格坐标
+     */
+    private TextureCoordinate tooltipCellCoordinate;
+    /**
+     * 弹出层单元格左右边距
+     */
+    private int tooltipCellHMargin;
+    /**
+     * 弹出层日期坐标
+     */
+    private TextureCoordinate tooltipDateCoordinate;
+    /**
+     * 弹出层滚动条坐标
+     */
+    private TextureCoordinate tooltipScrollCoordinate;
+
+    /**
+     * 未签到纹理坐标
+     */
+    private TextureCoordinate notSignedInUV;
+    /**
+     * 已领奖纹理坐标
+     */
+    private TextureCoordinate rewardedUV;
     /**
      * 已签到纹理坐标
      */
@@ -157,7 +183,7 @@ public class CalendarTextureCoordinate implements Serializable {
     public static CalendarTextureCoordinate getDefault() {
         return new CalendarTextureCoordinate() {{
             setTotalWidth(500);
-            setTotalHeight(784);
+            setTotalHeight(880);
             setWeekStart(7);
 
             setTextColorNoAction(0xFFAAAAAA);
@@ -185,9 +211,15 @@ public class CalendarTextureCoordinate implements Serializable {
 
             setBgUV(new TextureCoordinate().setU0(0).setV0(0).setUWidth(500).setVHeight(600));
 
-            setRewardUV(new TextureCoordinate().setU0(120).setV0(600).setUWidth(40).setVHeight(40));
+            setTooltipCellHMargin(5);
+            setTooltipUV(new TextureCoordinate().setU0(0).setV0(784).setUWidth(300).setVHeight(96));
+            setTooltipCellCoordinate(new TextureCoordinate().setX(15).setY(10).setWidth(42).setHeight(42));
+            setTooltipDateCoordinate(new TextureCoordinate().setX(110).setY(64).setWidth(50).setHeight(19));
+            setTooltipScrollCoordinate(new TextureCoordinate().setX(10).setY(93).setWidth(280).setHeight(1));
 
-            setSignedInUV(new TextureCoordinate().setU0(80).setV0(600).setUWidth(40).setVHeight(40));
+            setNotSignedInUV(new TextureCoordinate().setU0(80).setV0(600).setUWidth(40).setVHeight(40));
+            setSignedInUV(new TextureCoordinate().setU0(120).setV0(600).setUWidth(40).setVHeight(40));
+            setRewardedUV(new TextureCoordinate().setU0(160).setV0(600).setUWidth(40).setVHeight(40));
 
             setArrowUV(new TextureCoordinate().setU0(0).setV0(600).setUWidth(40).setVHeight(40));
             setArrowHoverUV(new TextureCoordinate().setU0(0).setV0(600).setUWidth(40).setVHeight(40));

@@ -704,11 +704,17 @@ public class PNGUtils {
         }
     }
 
-    private static final File sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_chaos_source.png");
-    private static final File targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_chaos.png");
+    private static final String themeName = "clover";
 
-    private static void testWriteZTxt() {
+    private static void testWriteZTxt(String fileName) {
         try {
+            File sourceFile;
+            File targetFile;
+            if (StringUtils.isNullOrEmpty(fileName)) {
+                fileName = themeName;
+            }
+            sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + "_source.png");
+            targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + ".png");
             PNGUtils.writeZTxt(sourceFile, targetFile, new LinkedHashMap<String, String>() {{
                 put("titleStartX", "20");
                 put("titleStartY", "20");
@@ -743,19 +749,30 @@ public class PNGUtils {
 
     }
 
-    private static void testWriteChunk() throws IOException, ClassNotFoundException {
+    private static void testWriteChunk(String fileName) throws IOException, ClassNotFoundException {
+        File sourceFile;
+        File targetFile;
+        if (StringUtils.isNullOrEmpty(fileName)) {
+            fileName = themeName;
+        }
+        sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + "_source.png");
+        targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + ".png");
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
         CalendarTextureCoordinate aDefault = CalendarTextureCoordinate.getDefault();
-        if (sourceFile.getPath().contains("sakura")) {
-            aDefault.getCellCoordinate().setX(70).setY(120).setWidth(34).setHeight(34);
-            aDefault.setCellHMargin(20);
-            aDefault.setCellVMargin(24);
-        } else if (sourceFile.getPath().contains("clover")) {
-            aDefault.getCellCoordinate().setX(80);
-            aDefault.setTextColorNoActionCur(0xFF555555);
-            aDefault.setTextColorNoAction(0xFFAAAAAA);
-        } else if (sourceFile.getPath().contains("chaos")) {
-            aDefault.setWeekStart(1);
+        switch (fileName) {
+            case "sakura":
+                aDefault.getCellCoordinate().setX(70).setY(120).setWidth(34).setHeight(34);
+                aDefault.setCellHMargin(20);
+                aDefault.setCellVMargin(24);
+                break;
+            case "clover":
+                aDefault.getCellCoordinate().setX(80);
+                aDefault.setTextColorNoActionCur(0xFF555555);
+                aDefault.setTextColorNoAction(0xFFAAAAAA);
+                break;
+            case "chaos":
+                aDefault.setWeekStart(1);
+                break;
         }
         writePrivateChunk(sourceFile, tempFile, "vacb", aDefault, true);
         writeZTxtByKey(tempFile, targetFile, "Software", "Minecraft SakuraSignIn");
@@ -765,7 +782,10 @@ public class PNGUtils {
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        // testWriteZTxt();
-        testWriteChunk();
+        // testWriteZTxt("original");
+        testWriteChunk("original");
+        testWriteChunk("sakura");
+        testWriteChunk("clover");
+        testWriteChunk("chaos");
     }
 }
