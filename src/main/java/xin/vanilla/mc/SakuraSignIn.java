@@ -69,6 +69,8 @@ public class SakuraSignIn {
         // 注册键绑定
         LOGGER.debug("Registering key bindings");
         ClientEventHandler.registerKeyBindings();
+        // 创建配置文件目录
+        ClientEventHandler.createConfigPath();
     }
 
     /**

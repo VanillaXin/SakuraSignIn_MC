@@ -7,12 +7,15 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.screen.CalendarScreen;
 import xin.vanilla.mc.screen.TestScreen;
+
+import java.io.File;
 
 /**
  * 客户端事件处理器
@@ -35,6 +38,16 @@ public class ClientEventHandler {
     public static void registerKeyBindings() {
         ClientRegistry.registerKeyBinding(SIGN_IN_KEY);
         ClientRegistry.registerKeyBinding(CALENDAR_KEY);
+    }
+
+    /**
+     * 创建配置文件目录
+     */
+    public static void createConfigPath() {
+        File themesPath = new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes");
+        if (!themesPath.exists()) {
+            themesPath.mkdirs();
+        }
     }
 
     /**
