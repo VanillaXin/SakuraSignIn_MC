@@ -1,6 +1,7 @@
 package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -350,9 +351,14 @@ public class CalendarScreen extends Screen {
      * 绘制背景纹理
      */
     private void renderBackgroundTexture(MatrixStack matrixStack) {
+        // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         // 绘制背景纹理，使用缩放后的宽度和高度
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         AbstractGuiUtils.blit(matrixStack, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        // 关闭 OpenGL 的混合模式
+        RenderSystem.disableBlend();
     }
 
     /**

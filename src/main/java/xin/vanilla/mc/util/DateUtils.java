@@ -675,17 +675,4 @@ public class DateUtils {
         }
         return continuousDays;
     }
-
-    public static void main(String[] args) {
-        System.out.println(calculateContinuousDays(new ArrayList<Date>() {{
-            add(DateUtils.getDate(2024, 10, 31));
-            add(DateUtils.getDate(2024, 10, 30));
-            add(DateUtils.getDate(2024, 10, 29));
-            add(DateUtils.getDate(2024, 10, 28));
-            add(DateUtils.getDate(2024, 10, 20));
-            add(DateUtils.getDate(2024, 10, 19));
-            add(DateUtils.getDate(2024, 10, 18));
-            add(DateUtils.getDate(2024, 10, 17));
-        }}, new Date()));
-    }
 }
