@@ -69,7 +69,7 @@ public class CalendarScreen extends Screen {
      */
     public CalendarTextureCoordinate textureCoordinate;
     /**
-     * 是否为特殊版本主题
+     * 是否使用内置主题特殊图标
      */
     private boolean specialVersion;
 
@@ -217,10 +217,13 @@ public class CalendarScreen extends Screen {
             // 使用默认配置
             textureCoordinate = CalendarTextureCoordinate.getDefault();
         }
-        // 特殊版本内置主题
+        // 设置内置主题特殊图标UV的偏移量
         if (specialVersion) {
-            textureCoordinate.getNotSignedInUV().setU0(400);
-            textureCoordinate.getSignedInUV().setU0(440);
+            textureCoordinate.getNotSignedInUV().setX(320);
+            textureCoordinate.getSignedInUV().setX(320);
+        } else {
+            textureCoordinate.getNotSignedInUV().setX(0);
+            textureCoordinate.getSignedInUV().setX(0);
         }
     }
 

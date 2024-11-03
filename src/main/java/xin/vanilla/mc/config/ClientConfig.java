@@ -12,7 +12,7 @@ public class ClientConfig {
      */
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     /**
-     * 特殊版本内置主题
+     * 是否使用内置主题特殊图标
      */
     public static final ForgeConfigSpec.BooleanValue SPECIAL_THEME;
     /**
@@ -40,10 +40,10 @@ public class ClientConfig {
                         , "主题材质路径，可为外部路径： config/sakura_sign_in/themes/your_theme.png")
                 .define("theme", "textures/gui/sign_in_calendar_sakura.png");
 
-        // 特殊版本内置主题
+        // 内置主题特殊图标
         SPECIAL_THEME = CLIENT_BUILDER
-                .comment("Special version built-in themes."
-                        , "特殊版本内置主题。")
+                .comment("Whether or not to use the built-in theme special icons."
+                        , "是否使用内置主题特殊图标。")
                 .define("specialTheme", false);
 
         // 签到页面显示上月奖励

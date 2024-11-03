@@ -208,7 +208,7 @@ public class AbstractGuiUtils {
      * @param y            图标的y坐标
      * @param showText     是否显示物品数量等信息
      */
-    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, Reward reward, int x, int y, boolean showText) {
+    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             itemRenderer.renderGuiItem(itemStack, x, y);
@@ -217,16 +217,16 @@ public class AbstractGuiUtils {
             }
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
             EffectInstance effectInstance = RewardManager.deserializeReward(reward);
-            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureCoordinate, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
+            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
         } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getPointUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getPointUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getLevelUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getLevelUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getCardUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getCardUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.MESSAGE)) {
             // 这玩意不是Integer类型也没有数量, 不能showText
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getMessageUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), false);
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
         }
     }
 }

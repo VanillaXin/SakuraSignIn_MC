@@ -85,11 +85,13 @@ public class CalendarCell {
                 } else {
                     rewardUV = textureCoordinate.getNotSignedInUV();
                 }
-                // 绘制格子背景
+                // x 与 y 为内置主题特殊图标UV的偏移量
+                float u0 = (float) (rewardUV.getU0() + rewardUV.getX());
+                float v0 = (float) (rewardUV.getV0() + rewardUV.getY());
                 if (isHovered) {
-                    AbstractGuiUtils.blit(matrixStack, (int) x - 2, (int) y - 2, (int) width + 4, (int) height + 4, (float) rewardUV.getU0(), (float) rewardUV.getV0(), (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+                    AbstractGuiUtils.blit(matrixStack, (int) x - 2, (int) y - 2, (int) width + 4, (int) height + 4, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
                 } else {
-                    AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, (float) rewardUV.getU0(), (float) rewardUV.getV0(), (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+                    AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
                 }
             }
         }
