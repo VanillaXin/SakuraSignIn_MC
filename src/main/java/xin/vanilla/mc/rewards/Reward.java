@@ -1,6 +1,6 @@
 package xin.vanilla.mc.rewards;
 
-import com.alibaba.fastjson2.JSONObject;
+import com.google.gson.JsonObject;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import net.minecraft.item.ItemStack;
@@ -8,6 +8,8 @@ import net.minecraft.item.Items;
 import xin.vanilla.mc.enums.ERewardType;
 
 import java.io.Serializable;
+
+import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
 
 /**
  * 奖励实体
@@ -30,12 +32,12 @@ public class Reward implements Cloneable, Serializable {
     /**
      * 奖励内容
      */
-    private JSONObject content;
+    private JsonObject content;
 
     public Reward() {
     }
 
-    public Reward(JSONObject content, ERewardType type) {
+    public Reward(JsonObject content, ERewardType type) {
         this.content = content;
         this.type = type;
     }
@@ -47,7 +49,7 @@ public class Reward implements Cloneable, Serializable {
             cloned.rewarded = this.rewarded;
             cloned.disabled = this.disabled;
             cloned.type = this.type;
-            cloned.content = this.content.clone();
+            cloned.content = GSON.fromJson(GSON.toJson(this.content), JsonObject.class);
             return cloned;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
@@ -56,5 +58,14 @@ public class Reward implements Cloneable, Serializable {
 
     public static Reward getDefault() {
         return new Reward(RewardManager.serializeReward(new ItemStack(Items.AIR), ERewardType.ITEM), ERewardType.ITEM);
+    }
+
+    public JsonObject toJsonObject() {
+        JsonObject json = new JsonObject();
+        json.addProperty("rewarded", this.rewarded);
+        json.addProperty("disabled", this.disabled);
+        json.addProperty("type", this.type.name());
+        json.add("content", this.content);
+        return json;
     }
 }

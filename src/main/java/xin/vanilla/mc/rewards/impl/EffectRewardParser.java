@@ -1,7 +1,7 @@
 package xin.vanilla.mc.rewards.impl;
 
-import com.alibaba.fastjson2.JSONException;
-import com.alibaba.fastjson2.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
@@ -11,24 +11,24 @@ import xin.vanilla.mc.rewards.RewardParser;
 public class EffectRewardParser implements RewardParser<EffectInstance> {
 
     @Override
-    public EffectInstance deserialize(JSONObject json) {
-        String effectId = json.getString("effect");
-        int duration = json.getIntValue("duration", 0);
-        int amplifier = json.getIntValue("amplifier", 0);
+    public EffectInstance deserialize(JsonObject json) {
+        String effectId = json.get("effect").getAsString();
+        int duration = json.get("duration").getAsInt();
+        int amplifier = json.get("amplifier").getAsInt();
 
         Effect effect = ForgeRegistries.POTIONS.getValue(new ResourceLocation(effectId));
         if (effect == null) {
-            throw new JSONException("Unknown potion effect ID: " + effectId);
+            throw new JsonParseException("Unknown potion effect ID: " + effectId);
         }
         return new EffectInstance(effect, duration, amplifier);
     }
 
     @Override
-    public JSONObject serialize(EffectInstance reward) {
-        JSONObject json = new JSONObject();
-        json.put("effect", reward.getEffect().getRegistryName().toString());
-        json.put("duration", reward.getDuration());
-        json.put("amplifier", reward.getAmplifier());
+    public JsonObject serialize(EffectInstance reward) {
+        JsonObject json = new JsonObject();
+        json.addProperty("effect", reward.getEffect().getRegistryName().toString());
+        json.addProperty("duration", reward.getDuration());
+        json.addProperty("amplifier", reward.getAmplifier());
         return json;
     }
 }

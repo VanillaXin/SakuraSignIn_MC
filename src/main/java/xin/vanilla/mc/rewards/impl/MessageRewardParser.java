@@ -1,6 +1,6 @@
 package xin.vanilla.mc.rewards.impl;
 
-import com.alibaba.fastjson2.JSONObject;
+import com.google.gson.JsonObject;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.StringTextComponent;
@@ -10,38 +10,38 @@ import xin.vanilla.mc.rewards.RewardParser;
 public class MessageRewardParser implements RewardParser<StringTextComponent> {
 
     @Override
-    public StringTextComponent deserialize(JSONObject json) {
-        StringTextComponent message = new StringTextComponent(json.getString("contents"));
-        JSONObject styleJson = json.getJSONObject("style");
+    public StringTextComponent deserialize(JsonObject json) {
+        StringTextComponent message = new StringTextComponent(json.get("contents").getAsString());
+        JsonObject styleJson = json.getAsJsonObject("style");
         Style style = Style.EMPTY;
-        if (styleJson.containsKey("color"))
-            style.withColor(Color.parseColor(styleJson.getString("color")));
-        style.withBold(styleJson.getBoolean("bold"));
-        style.withItalic(styleJson.getBoolean("italic"));
-        style.withUnderlined(styleJson.getBoolean("underlined"));
-        style.setStrikethrough(styleJson.getBoolean("strikethrough"));
-        style.setObfuscated(styleJson.getBoolean("obfuscated"));
-        style.withFont(new ResourceLocation(styleJson.getString("font")));
+        if (styleJson.has("color"))
+            style.withColor(Color.parseColor(styleJson.get("color").getAsString()));
+        style.withBold(styleJson.get("bold").getAsBoolean());
+        style.withItalic(styleJson.get("italic").getAsBoolean());
+        style.withUnderlined(styleJson.get("underlined").getAsBoolean());
+        style.setStrikethrough(styleJson.get("strikethrough").getAsBoolean());
+        style.setObfuscated(styleJson.get("obfuscated").getAsBoolean());
+        style.withFont(new ResourceLocation(styleJson.get("font").getAsString()));
         message.setStyle(style);
         return message;
     }
 
     @Override
-    public JSONObject serialize(StringTextComponent reward) {
-        JSONObject result = new JSONObject();
-        JSONObject styleJson = new JSONObject();
+    public JsonObject serialize(StringTextComponent reward) {
+        JsonObject result = new JsonObject();
+        JsonObject styleJson = new JsonObject();
         Style style = reward.getStyle();
         if (style.getColor() != null) {
-            styleJson.put("color", style.getColor().serialize());
+            styleJson.addProperty("color", style.getColor().serialize());
         }
-        styleJson.put("bold", style.isBold());
-        styleJson.put("italic", style.isItalic());
-        styleJson.put("underlined", style.isUnderlined());
-        styleJson.put("strikethrough", style.isStrikethrough());
-        styleJson.put("obfuscated", style.isObfuscated());
-        styleJson.put("font", style.getFont().toString());
-        result.put("contents", reward.getContents());
-        result.put("style", styleJson);
+        styleJson.addProperty("bold", style.isBold());
+        styleJson.addProperty("italic", style.isItalic());
+        styleJson.addProperty("underlined", style.isUnderlined());
+        styleJson.addProperty("strikethrough", style.isStrikethrough());
+        styleJson.addProperty("obfuscated", style.isObfuscated());
+        styleJson.addProperty("font", style.getFont().toString());
+        result.addProperty("contents", reward.getContents());
+        result.add("style", styleJson);
         return result;
     }
 }

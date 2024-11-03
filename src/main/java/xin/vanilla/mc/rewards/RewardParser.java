@@ -1,15 +1,16 @@
 package xin.vanilla.mc.rewards;
 
-import com.alibaba.fastjson2.JSONObject;
+
+import com.google.gson.JsonObject;
 
 public interface RewardParser<T> {
     /**
      * 反序列化奖励对象
      */
-    T deserialize(JSONObject json);
+    T deserialize(JsonObject json);
 
     /**
      * 序列化奖励对象
      */
-    JSONObject serialize(T reward);
+    JsonObject serialize(T reward);
 }

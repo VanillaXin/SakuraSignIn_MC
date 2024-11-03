@@ -1,5 +1,7 @@
 package xin.vanilla.mc.rewards;
 
+import com.google.gson.JsonArray;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,5 +25,13 @@ public class RewardList extends ArrayList<Reward> implements Serializable, Clone
         cloned.clear();
         cloned.addAll(clonedRewards);
         return cloned;
+    }
+
+    public JsonArray toJsonArray() {
+        JsonArray jsonArray = new JsonArray();
+        for (Reward reward : this) {
+            jsonArray.add(reward.toJsonObject());
+        }
+        return jsonArray;
     }
 }

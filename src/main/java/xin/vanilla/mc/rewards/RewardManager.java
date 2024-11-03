@@ -1,7 +1,7 @@
 package xin.vanilla.mc.rewards;
 
-import com.alibaba.fastjson2.JSONException;
-import com.alibaba.fastjson2.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import lombok.NonNull;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.entity.item.ItemEntity;
@@ -52,7 +52,7 @@ public class RewardManager {
     public static <T> T deserializeReward(Reward reward) {
         RewardParser<T> parser = (RewardParser<T>) rewardParsers.get(reward.getType());
         if (parser == null) {
-            throw new JSONException("Unknown reward type: " + reward.getType());
+            throw new JsonParseException("Unknown reward type: " + reward.getType());
         }
         return parser.deserialize(reward.getContent());
     }
@@ -61,10 +61,10 @@ public class RewardManager {
      * 序列化奖励
      */
     @SuppressWarnings("unchecked")
-    public static <T> JSONObject serializeReward(T reward, ERewardType type) {
+    public static <T> JsonObject serializeReward(T reward, ERewardType type) {
         RewardParser<T> parser = (RewardParser<T>) rewardParsers.get(type);
         if (parser == null) {
-            throw new JSONException("Unknown reward type: " + type);
+            throw new JsonParseException("Unknown reward type: " + type);
         }
         return parser.serialize(reward);
     }
@@ -324,7 +324,7 @@ public class RewardManager {
                                 case ADVANCEMENT:
                                 case MESSAGE:
                                 default:
-                                    key = reward.getContent().toJSONString();
+                                    key = reward.getContent().toString();
                                     break;
                             }
                             return key;

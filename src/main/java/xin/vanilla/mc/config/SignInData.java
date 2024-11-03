@@ -1,6 +1,7 @@
 package xin.vanilla.mc.config;
 
-import com.alibaba.fastjson2.annotation.JSONField;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
 import lombok.Data;
 import lombok.NonNull;
 import net.minecraft.item.ItemStack;
@@ -45,7 +46,7 @@ public class SignInData implements Serializable {
      * 连续签到奖励映射关系
      */
     @NonNull
-    @JSONField(deserialize = false)
+    @Expose(deserialize = false)
     private Map<String, String> continuousRewardsRelation;
 
     /**
@@ -66,7 +67,7 @@ public class SignInData implements Serializable {
      * 连续签到周期奖励映射关系
      */
     @NonNull
-    @JSONField(deserialize = false)
+    @Expose(deserialize = false)
     private Map<String, String> cycleRewardsRelation;
 
     /**
@@ -121,7 +122,7 @@ public class SignInData implements Serializable {
      * 日期时间奖励映射关系
      */
     @NonNull
-    @JSONField(deserialize = false)
+    @Expose(deserialize = false)
     private Map<String, String> dateTimeRewardsRelation;
 
     public SignInData() {
@@ -452,5 +453,65 @@ public class SignInData implements Serializable {
             }
         }
         return result;
+    }
+
+    public JsonObject toJsonObject() {
+        JsonObject json = new JsonObject();
+        json.add("baseRewards", baseRewards.toJsonArray());
+
+        JsonObject continuousRewardsJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : continuousRewards.entrySet()) {
+            continuousRewardsJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("continuousRewards", continuousRewardsJson);
+
+        JsonObject continuousRewardsRelationJson = new JsonObject();
+        for (Map.Entry<String, String> entry : continuousRewardsRelation.entrySet()) {
+            continuousRewardsRelationJson.addProperty(entry.getKey(), entry.getValue());
+        }
+        json.add("continuousRewardsRelation", continuousRewardsRelationJson);
+
+        JsonObject cycleRewardsJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : cycleRewards.entrySet()) {
+            cycleRewardsJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("cycleRewards", cycleRewardsJson);
+
+        JsonObject cycleRewardsRelationJson = new JsonObject();
+        for (Map.Entry<String, String> entry : cycleRewardsRelation.entrySet()) {
+            cycleRewardsRelationJson.addProperty(entry.getKey(), entry.getValue());
+        }
+        json.add("cycleRewardsRelation", cycleRewardsRelationJson);
+
+        JsonObject yearRewardsJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : yearRewards.entrySet()) {
+            yearRewardsJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("yearRewards", yearRewardsJson);
+
+        JsonObject monthRewardsJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : monthRewards.entrySet()) {
+            monthRewardsJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("monthRewards", monthRewardsJson);
+
+        JsonObject weekRewardsJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : weekRewards.entrySet()) {
+            weekRewardsJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("weekRewards", weekRewardsJson);
+
+        JsonObject dateTimeRewardsJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : dateTimeRewards.entrySet()) {
+            dateTimeRewardsJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("dateTimeRewards", dateTimeRewardsJson);
+
+        JsonObject dateTimeRewardsRelationJson = new JsonObject();
+        for (Map.Entry<String, String> entry : dateTimeRewardsRelation.entrySet()) {
+            dateTimeRewardsRelationJson.addProperty(entry.getKey(), entry.getValue());
+        }
+        json.add("dateTimeRewardsRelation", dateTimeRewardsRelationJson);
+        return json;
     }
 }

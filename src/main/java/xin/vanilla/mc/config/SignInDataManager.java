@@ -1,6 +1,7 @@
 package xin.vanilla.mc.config;
 
-import com.alibaba.fastjson2.*;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +15,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.LinkedHashMap;
+
+import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
 
 public class SignInDataManager {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -39,28 +42,28 @@ public class SignInDataManager {
             try {
                 String jsonString = new String(Files.readAllBytes(Paths.get(file.getPath())));
                 signInData = new SignInData();
-                JSONObject jsonObject = JSON.parseObject(jsonString);
-                signInData.setBaseRewards(jsonObject.getObject("baseRewards", new TypeReference<RewardList>() {
-                }));
-                signInData.setContinuousRewards(jsonObject.getObject("continuousRewards", new TypeReference<Map<String, RewardList>>() {
-                }));
-                signInData.setCycleRewards(jsonObject.getObject("cycleRewards", new TypeReference<Map<String, RewardList>>() {
-                }));
-                signInData.setYearRewards(jsonObject.getObject("yearRewards", new TypeReference<Map<String, RewardList>>() {
-                }));
-                signInData.setMonthRewards(jsonObject.getObject("monthRewards", new TypeReference<Map<String, RewardList>>() {
-                }));
-                signInData.setWeekRewards(jsonObject.getObject("weekRewards", new TypeReference<Map<String, RewardList>>() {
-                }));
-                signInData.setDateTimeRewards(jsonObject.getObject("dateTimeRewards", new TypeReference<Map<String, RewardList>>() {
-                }));
-            } catch (IOException | JSONException e) {
+                JsonObject jsonObject = GSON.fromJson(jsonString, JsonObject.class);
+                signInData.setBaseRewards(GSON.fromJson(jsonObject.get("baseRewards"), new TypeToken<RewardList>() {
+                }.getType()));
+                signInData.setContinuousRewards(GSON.fromJson(jsonObject.get("continuousRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+                signInData.setCycleRewards(GSON.fromJson(jsonObject.get("cycleRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+                signInData.setYearRewards(GSON.fromJson(jsonObject.get("yearRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+                signInData.setMonthRewards(GSON.fromJson(jsonObject.get("monthRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+                signInData.setWeekRewards(GSON.fromJson(jsonObject.get("weekRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+                signInData.setDateTimeRewards(GSON.fromJson(jsonObject.get("dateTimeRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+            } catch (IOException | JsonSyntaxException | JsonIOException e) {
                 LOGGER.error("Error loading sign-in data: ", e);
             }
         } else {
             // 如果文件不存在，初始化默认值
             signInData = SignInData.getDefault();
-            saveSignInData();
+            SignInDataManager.saveSignInData();
         }
     }
 
@@ -75,7 +78,8 @@ public class SignInDataManager {
         File file = new File(dir, FILE_NAME);
         try (FileWriter writer = new FileWriter(file)) {
             // 格式化输出
-            writer.write(JSON.toJSONString(signInData, JSONWriter.Feature.PrettyFormat));
+            Gson gson = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
+            writer.write(gson.toJson(signInData.toJsonObject()));
         } catch (IOException e) {
             LOGGER.error("Error saving sign-in data: ", e);
         }

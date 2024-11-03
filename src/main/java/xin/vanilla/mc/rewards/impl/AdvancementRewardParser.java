@@ -1,23 +1,21 @@
 package xin.vanilla.mc.rewards.impl;
 
-import com.alibaba.fastjson2.JSONObject;
+import com.google.gson.JsonObject;
 import net.minecraft.util.ResourceLocation;
 import xin.vanilla.mc.rewards.RewardParser;
 
 public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
 
     @Override
-    public ResourceLocation deserialize(JSONObject json) {
-        String advancementId = json.getString("advancement");
+    public ResourceLocation deserialize(JsonObject json) {
+        String advancementId = json.get("advancement").getAsString();
         return new ResourceLocation(advancementId);
     }
 
     @Override
-    public JSONObject serialize(ResourceLocation reward) {
-        JSONObject json = new JSONObject();
-        json.put("advancement", reward.toString());
+    public JsonObject serialize(ResourceLocation reward) {
+        JsonObject json = new JsonObject();
+        json.addProperty("advancement", reward.toString());
         return json;
     }
-
-    // server.getAdvancements().getAdvancement((ResourceLocation) content);
 }

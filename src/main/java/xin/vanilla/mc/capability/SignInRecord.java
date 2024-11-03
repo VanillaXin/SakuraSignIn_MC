@@ -1,6 +1,5 @@
 package xin.vanilla.mc.capability;
 
-import com.alibaba.fastjson2.JSON;
 import lombok.Data;
 import lombok.NonNull;
 import net.minecraft.nbt.CompoundNBT;
@@ -8,6 +7,8 @@ import xin.vanilla.mc.rewards.RewardList;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
 
 /**
  * 签到记录
@@ -54,7 +55,7 @@ public class SignInRecord implements Serializable, Cloneable {
         tag.putLong("signInTime", signInTime.getTime());
         tag.putString("signInUUID", signInUUID);
         tag.putBoolean("rewarded", rewarded);
-        tag.putString("rewardList", JSON.toJSONString(rewardList));
+        tag.putString("rewardList", GSON.toJson(rewardList));
         return tag;
     }
 
@@ -69,7 +70,7 @@ public class SignInRecord implements Serializable, Cloneable {
 
         // 反序列化奖励列表
         String rewardListString = tag.getString("rewardList");
-        record.rewardList = JSON.parseObject(rewardListString, RewardList.class);
+        record.rewardList = GSON.fromJson(rewardListString, RewardList.class);
         return record;
     }
 

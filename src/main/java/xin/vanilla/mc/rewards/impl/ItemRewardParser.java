@@ -1,7 +1,7 @@
 package xin.vanilla.mc.rewards.impl;
 
-import com.alibaba.fastjson2.JSONException;
-import com.alibaba.fastjson2.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,37 +14,38 @@ import xin.vanilla.mc.rewards.RewardParser;
 public class ItemRewardParser implements RewardParser<ItemStack> {
 
     @Override
-    public ItemStack deserialize(JSONObject json) {
-        String itemId = json.getString("item");
-        int count = json.getIntValue("count", 1);
+    public ItemStack deserialize(JsonObject json) {
+        String itemId = json.get("item").getAsString();
+        int count = json.get("count").getAsInt();
+        count = Math.max(count, 1);
         Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));
         if (item == null) {
-            throw new JSONException("Unknown item ID: " + itemId);
+            throw new JsonParseException("Unknown item ID: " + itemId);
         }
         ItemStack itemStack = new ItemStack(item, count);
 
         // 如果存在NBT数据，则解析
-        if (json.containsKey("nbt")) {
+        if (json.has("nbt")) {
             try {
-                CompoundNBT nbt = JsonToNBT.parseTag(json.getString("nbt"));
+                CompoundNBT nbt = JsonToNBT.parseTag(json.get("nbt").getAsString());
                 itemStack.setTag(nbt);
             } catch (CommandSyntaxException e) {
-                throw new JSONException("Failed to parse NBT data", e);
+                throw new JsonParseException("Failed to parse NBT data", e);
             }
         }
         return itemStack;
     }
 
     @Override
-    public JSONObject serialize(ItemStack reward) {
-        JSONObject json = new JSONObject();
-        json.put("item", reward.getItem().getRegistryName().toString());
-        json.put("count", reward.getCount());
+    public JsonObject serialize(ItemStack reward) {
+        JsonObject json = new JsonObject();
+        json.addProperty("item", reward.getItem().getRegistryName().toString());
+        json.addProperty("count", reward.getCount());
 
         // 如果物品有NBT数据，则序列化
         if (reward.hasTag()) {
             if (reward.getTag() != null) {
-                json.put("nbt", reward.getTag().toString());
+                json.addProperty("nbt", reward.getTag().toString());
             }
         }
         return json;
