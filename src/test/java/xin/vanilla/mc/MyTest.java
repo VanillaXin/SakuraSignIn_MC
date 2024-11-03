@@ -37,7 +37,7 @@ public class MyTest {
             if (StringUtils.isNullOrEmpty(fileName)) {
                 fileName = themeName;
             }
-            sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + "_source.png");
+            sourceFile = new File("F:\\Design\\PS\\樱花签\\sign_in_calendar_" + fileName + "_source.png");
             targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + ".png");
             PNGUtils.writeZTxt(sourceFile, targetFile, new LinkedHashMap<String, String>() {{
                 put("titleStartX", "20");
@@ -79,7 +79,7 @@ public class MyTest {
         if (StringUtils.isNullOrEmpty(fileName)) {
             fileName = themeName;
         }
-        sourceFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + "_source.png");
+        sourceFile = new File("F:\\Design\\PS\\樱花签\\sign_in_calendar_" + fileName + "_source.png");
         targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + ".png");
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
         CalendarTextureCoordinate aDefault = CalendarTextureCoordinate.getDefault();
@@ -127,6 +127,6 @@ public class MyTest {
         testWriteChunk("sakura");
         testWriteChunk("clover");
         testWriteChunk("maple");
-        testWriteChunk("chaos");
+        // testWriteChunk("chaos");
     }
 }
