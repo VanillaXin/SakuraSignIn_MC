@@ -129,6 +129,18 @@ public class CalendarTextureCoordinate implements Serializable {
      * 弹出层滚动条坐标
      */
     private TextureCoordinate tooltipScrollCoordinate;
+    /**
+     * 箭头纹理坐标
+     */
+    private TextureCoordinate arrowUV;
+    /**
+     * 箭头焦点纹理坐标
+     */
+    private TextureCoordinate arrowHoverUV;
+    /**
+     * 箭头按下纹理坐标
+     */
+    private TextureCoordinate arrowTapUV;
 
     /**
      * 未签到纹理坐标
@@ -142,18 +154,28 @@ public class CalendarTextureCoordinate implements Serializable {
      * 已签到纹理坐标
      */
     private TextureCoordinate signedInUV;
+
     /**
-     * 箭头纹理坐标
+     * BUFF纹理坐标
      */
-    private TextureCoordinate arrowUV;
+    private TextureCoordinate buffUV;
     /**
-     * 箭头焦点纹理坐标
+     * 经验纹理坐标
      */
-    private TextureCoordinate arrowHoverUV;
+    private TextureCoordinate pointUV;
     /**
-     * 箭头按下纹理坐标
+     * 等级纹理坐标
      */
-    private TextureCoordinate arrowTapUV;
+    private TextureCoordinate levelUV;
+    /**
+     * 签到卡纹理坐标
+     */
+    private TextureCoordinate cardUV;
+    /**
+     * 消息纹理坐标
+     */
+    private TextureCoordinate messageUV;
+
     /**
      * 主题纹理坐标
      */
@@ -207,13 +229,19 @@ public class CalendarTextureCoordinate implements Serializable {
             setTooltipDateCoordinate(new TextureCoordinate().setX(110).setY(64).setWidth(50).setHeight(19));
             setTooltipScrollCoordinate(new TextureCoordinate().setX(10).setY(93).setWidth(280).setHeight(1));
 
+            setArrowUV(new TextureCoordinate().setU0(0).setV0(600).setUWidth(40).setVHeight(40));
+            setArrowHoverUV(new TextureCoordinate().setU0(0).setV0(600).setUWidth(40).setVHeight(40));
+            setArrowTapUV(new TextureCoordinate().setU0(40).setV0(600).setUWidth(40).setVHeight(40));
+
             setNotSignedInUV(new TextureCoordinate().setU0(80).setV0(600).setUWidth(40).setVHeight(40));
             setSignedInUV(new TextureCoordinate().setU0(120).setV0(600).setUWidth(40).setVHeight(40));
             setRewardedUV(new TextureCoordinate().setU0(160).setV0(600).setUWidth(40).setVHeight(40));
 
-            setArrowUV(new TextureCoordinate().setU0(0).setV0(600).setUWidth(40).setVHeight(40));
-            setArrowHoverUV(new TextureCoordinate().setU0(0).setV0(600).setUWidth(40).setVHeight(40));
-            setArrowTapUV(new TextureCoordinate().setU0(40).setV0(600).setUWidth(40).setVHeight(40));
+            setBuffUV(new TextureCoordinate().setU0(200).setV0(600).setUWidth(40).setVHeight(40));
+            setPointUV(new TextureCoordinate().setU0(240).setV0(600).setUWidth(40).setVHeight(40));
+            setLevelUV(new TextureCoordinate().setU0(280).setV0(600).setUWidth(40).setVHeight(40));
+            setCardUV(new TextureCoordinate().setU0(320).setV0(600).setUWidth(40).setVHeight(40));
+            setMessageUV(new TextureCoordinate().setU0(360).setV0(600).setUWidth(40).setVHeight(40));
 
             setThemeUV(new TextureCoordinate().setU0(0).setV0(640).setUWidth(40).setVHeight(48));
             setThemeHoverUV(new TextureCoordinate().setU0(0).setV0(688).setUWidth(40).setVHeight(48));

@@ -55,10 +55,22 @@ public class CalendarScreen extends Screen {
      */
     public static int nextOffset = 6;
 
-    private ResourceLocation BACKGROUND_TEXTURE;
-
+    /**
+     * 日历单元格集合
+     */
     private final List<CalendarCell> calendarCells = new ArrayList<>();
+    /**
+     * 背景材质
+     */
+    private ResourceLocation BACKGROUND_TEXTURE;
+    /**
+     * 背景材质坐标
+     */
     public CalendarTextureCoordinate textureCoordinate;
+    /**
+     * 是否为特殊版本主题
+     */
+    private boolean specialVersion;
 
     /**
      * 日历表格列数
@@ -195,6 +207,7 @@ public class CalendarScreen extends Screen {
     private void updateTextureAndCoordinate() {
         try {
             BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.THEME.get());
+            specialVersion = Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get());
             InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
             textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
         } catch (IOException | ClassNotFoundException ignored) {
@@ -202,6 +215,11 @@ public class CalendarScreen extends Screen {
         if (textureCoordinate == null) {
             // 使用默认配置
             textureCoordinate = CalendarTextureCoordinate.getDefault();
+        }
+        // 特殊版本内置主题
+        if (specialVersion) {
+            textureCoordinate.getNotSignedInUV().setU0(400);
+            textureCoordinate.getSignedInUV().setU0(440);
         }
     }
 
@@ -319,7 +337,7 @@ public class CalendarScreen extends Screen {
                     }
 
                     // 创建物品格子
-                    CalendarCell cell = new CalendarCell(BACKGROUND_TEXTURE, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
+                    CalendarCell cell = new CalendarCell(BACKGROUND_TEXTURE, textureCoordinate, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
                     cell.setShowIcon(showIcon).setShowText(showText).setShowHover(showHover);
                     // 添加到列表
                     calendarCells.add(cell);
@@ -339,12 +357,22 @@ public class CalendarScreen extends Screen {
 
     /**
      * 绘制旋转的纹理
+     *
+     * @param matrixStack    矩阵栈
+     * @param coordinate     纹理坐标
+     * @param angle          旋转角度
+     * @param flipHorizontal 水平翻转
+     * @param flipVertical   垂直翻转
      */
-    private void renderRotatedTexture(MatrixStack matrixStack, float angle, TextureCoordinate coordinate) {
+    private void renderRotatedTexture(MatrixStack matrixStack, TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
         double x = bgX + coordinate.getX() * this.scale;
         double y = bgY + coordinate.getY() * this.scale;
         int width = (int) (coordinate.getWidth() * this.scale);
         int height = (int) (coordinate.getHeight() * this.scale);
+        float u0 = (float) coordinate.getU0();
+        float v0 = (float) coordinate.getV0();
+        int uWidth = (int) coordinate.getUWidth();
+        int vHeight = (int) coordinate.getVHeight();
         // 绑定纹理
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         // 保存当前矩阵状态
@@ -353,10 +381,20 @@ public class CalendarScreen extends Screen {
         matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
         // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
         matrixStack.mulPose(Vector3f.ZP.rotationDegrees(angle));
+        // 左右翻转
+        if (flipHorizontal) {
+            u0 += uWidth;
+            uWidth = -uWidth;
+        }
+        // 上下翻转
+        if (flipVertical) {
+            v0 += vHeight;
+            vHeight = -vHeight;
+        }
         // 平移回原点
         matrixStack.translate(-width / 2.0, -height / 2.0, 0);
         // 绘制纹理
-        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, (float) coordinate.getU0(), (float) coordinate.getV0(), (int) coordinate.getUWidth(), (int) coordinate.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 恢复矩阵状态
         matrixStack.popPose();
     }
@@ -402,7 +440,12 @@ public class CalendarScreen extends Screen {
         for (Integer op : BUTTONS.keySet()) {
             OperationButton button = BUTTONS.get(op);
             TextureCoordinate coordinate = this.getCoordinate(button, mouseX, mouseY);
+            // 旋转角度
             int angle;
+            // 水平翻转
+            boolean flipHorizontal = false;
+            // 垂直翻转
+            boolean flipVertical = false;
             switch (valueOf(op)) {
                 case RIGHT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
@@ -425,6 +468,7 @@ public class CalendarScreen extends Screen {
                         coordinate.setX((yearX - bgX + font.width(yearTitle) + 1) / this.scale);
                     }
                     angle = 90;
+                    flipVertical = true;
                     break;
                 case LEFT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
@@ -435,7 +479,8 @@ public class CalendarScreen extends Screen {
                     if (coordinate.getX() == textureCoordinate.getMonthCoordinate().getX() && coordinate.getY() == textureCoordinate.getMonthCoordinate().getY()) {
                         coordinate.setX((monthX - bgX - 1) / this.scale - coordinate.getWidth());
                     }
-                    angle = 180;
+                    angle = 0;
+                    flipHorizontal = true;
                     break;
                 case UP_ARROW:
                     // 如果宽度和高度与年份相同，则将大小设置为字体行高
@@ -446,7 +491,9 @@ public class CalendarScreen extends Screen {
                     if (coordinate.getX() == textureCoordinate.getYearCoordinate().getX() && coordinate.getY() == textureCoordinate.getYearCoordinate().getY()) {
                         coordinate.setX((yearX - bgX - 1) / this.scale - coordinate.getWidth());
                     }
-                    angle = 270;
+                    angle = 90;
+                    flipHorizontal = true;
+                    flipVertical = true;
                     break;
                 case THEME_ORIGINAL_BUTTON:
                 case THEME_SAKURA_BUTTON:
@@ -471,7 +518,7 @@ public class CalendarScreen extends Screen {
             }
             button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
             button.setX(coordinate.getX()).setY(coordinate.getY());
-            this.renderRotatedTexture(matrixStack, angle, coordinate);
+            this.renderRotatedTexture(matrixStack, coordinate, angle, flipHorizontal, flipVertical);
         }
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -523,9 +570,16 @@ public class CalendarScreen extends Screen {
                 }
             });
         } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            OperationButton chaosButton = BUTTONS.get(THEME_CHAOS_BUTTON.getCode());
-            if (chaosButton.isMouseOver(mouseX1, mouseY1)) {
-                chaosButton.setPressed(true);
+            if (BUTTONS.get(THEME_ORIGINAL_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
+                BUTTONS.get(THEME_ORIGINAL_BUTTON.getCode()).setPressed(true);
+            } else if (BUTTONS.get(THEME_SAKURA_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
+                BUTTONS.get(THEME_SAKURA_BUTTON.getCode()).setPressed(true);
+            } else if (BUTTONS.get(THEME_CLOVER_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
+                BUTTONS.get(THEME_CLOVER_BUTTON.getCode()).setPressed(true);
+            } else if (BUTTONS.get(THEME_MAPLE_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
+                BUTTONS.get(THEME_MAPLE_BUTTON.getCode()).setPressed(true);
+            } else if (BUTTONS.get(THEME_CHAOS_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
+                BUTTONS.get(THEME_CHAOS_BUTTON.getCode()).setPressed(true);
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -640,47 +694,39 @@ public class CalendarScreen extends Screen {
         }
         // 类原版主题
         else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
-                updateLayout.set(true);
-                updateTexture.set(true);
-                flag.set(true);
-            } else {
-                // TODO 添加新版样式
-            }
+            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
+            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            updateLayout.set(true);
+            updateTexture.set(true);
+            flag.set(true);
         }
         // 樱花粉主题
         else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
-                updateLayout.set(true);
-                updateTexture.set(true);
-                flag.set(true);
-            } else {
-                // TODO 添加新版样式
-            }
+            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
+            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            updateLayout.set(true);
+            updateTexture.set(true);
+            flag.set(true);
         }
         // 四叶草主题
         else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
-                updateLayout.set(true);
-                updateTexture.set(true);
-                flag.set(true);
-            } else {
-                // TODO 添加新版样式
-            }
+            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
+            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            updateLayout.set(true);
+            updateTexture.set(true);
+            flag.set(true);
         }
         // 枫叶主题
         else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                ClientConfig.THEME.set(THEME_MAPLE_BUTTON.getPath());
-                updateLayout.set(true);
-                updateTexture.set(true);
-                flag.set(true);
-            } else {
-                // TODO 添加新版样式
-            }
+            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            ClientConfig.THEME.set(THEME_MAPLE_BUTTON.getPath());
+            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            updateLayout.set(true);
+            updateTexture.set(true);
+            flag.set(true);
         }
         // 混沌主题
         else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {

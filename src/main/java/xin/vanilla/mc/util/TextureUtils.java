@@ -110,13 +110,12 @@ public class TextureUtils {
      * 获取药水效果图标
      */
     public static ResourceLocation getEffectTexture(EffectInstance effectInstance) {
-        ResourceLocation registryName = effectInstance.getEffect().getRegistryName();
         ResourceLocation effectIcon;
+        ResourceLocation registryName = effectInstance.getEffect().getRegistryName();
         if (registryName != null) {
             effectIcon = new ResourceLocation(registryName.getNamespace(), DEFAULT_EFFECT_DIR + registryName.getPath() + ".png");
         } else {
-            // TODO 添加自定义效果图标
-            effectIcon = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
+            effectIcon = null;
         }
         return effectIcon;
     }

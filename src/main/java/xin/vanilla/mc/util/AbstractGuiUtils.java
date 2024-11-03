@@ -9,9 +9,12 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
+import xin.vanilla.mc.screen.CalendarTextureCoordinate;
+import xin.vanilla.mc.screen.TextureCoordinate;
 
 /**
  * AbstractGui工具类
@@ -138,23 +141,59 @@ public class AbstractGuiUtils {
      * @param height         目标矩形的高度，决定了图像在屏幕上的高度
      * @param showText       是否显示效果等级和持续时间
      */
-    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, int x, int y, int width, int height, boolean showText) {
+    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
         ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
-        Minecraft.getInstance().getTextureManager().bind(effectIcon);
-        AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
+        if (effectIcon == null) {
+            Minecraft.getInstance().getTextureManager().bind(textureLocation);
+            TextureCoordinate buffUV = textureCoordinate.getBuffUV();
+            AbstractGuiUtils.blit(matrixStack, x, y, width, height, (float) buffUV.getU0(), (float) buffUV.getV0(), (int) buffUV.getUWidth(), (int) buffUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        } else {
+            Minecraft.getInstance().getTextureManager().bind(effectIcon);
+            AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
+        }
         if (showText) {
             // 效果等级
             if (effectInstance.getAmplifier() >= 0) {
-                String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier() + 1);
+                StringTextComponent amplifierString = new StringTextComponent(StringUtils.intToRoman(effectInstance.getAmplifier() + 1));
                 int amplifierWidth = fontRenderer.width(amplifierString);
-                fontRenderer.draw(matrixStack, amplifierString, x + width - (float) amplifierWidth / 2, y, 0xFFFFFF);
+                float fontX = x + width - (float) amplifierWidth / 2;
+                float fontY = y - 1;
+                fontRenderer.drawShadow(matrixStack, amplifierString, fontX, fontY, 0xFFFFFF);
             }
             // 效果持续时间
             if (effectInstance.getDuration() > 0) {
-                String durationString = DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1);
+                StringTextComponent durationString = new StringTextComponent(DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
                 int durationWidth = fontRenderer.width(durationString);
-                fontRenderer.draw(matrixStack, durationString, x + width - (float) durationWidth / 2 - 2, y + (float) height / 2 + 3, 0xFFFFFF);
+                float fontX = x + width - (float) durationWidth / 2 - 2;
+                float fontY = y + (float) height / 2 + 1;
+                fontRenderer.drawShadow(matrixStack, durationString, fontX, fontY, 0xFFFFFF);
             }
+        }
+    }
+
+    /**
+     * 绘制自定义图标
+     *
+     * @param matrixStack     用于变换绘制坐标系的矩阵堆栈
+     * @param fontRenderer    字体渲染器
+     * @param reward          待绘制的奖励
+     * @param textureLocation 纹理位置
+     * @param textureUV       纹理坐标
+     * @param x               矩形的左上角x坐标
+     * @param y               矩形的左上角y坐标
+     * @param totalWidth      纹理总宽度
+     * @param totalHeight     纹理总高度
+     * @param showText        是否显示物品数量等信息
+     */
+    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer fontRenderer, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
+        Minecraft.getInstance().getTextureManager().bind(textureLocation);
+        AbstractGuiUtils.blit(matrixStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
+        if (showText) {
+            StringTextComponent num = new StringTextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
+            int numWidth = fontRenderer.width(num);
+            float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
+            float fontY = y + (float) ITEM_ICON_SIZE - fontRenderer.lineHeight + 2;
+            fontRenderer.drawShadow(matrixStack, num, fontX, fontY, 0xFFFFFF);
         }
     }
 
@@ -169,8 +208,7 @@ public class AbstractGuiUtils {
      * @param y            图标的y坐标
      * @param showText     是否显示物品数量等信息
      */
-    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, Reward reward, int x, int y, boolean showText) {
-        // TODO 根据奖励类型渲染
+    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, Reward reward, int x, int y, boolean showText) {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             itemRenderer.renderGuiItem(itemStack, x, y);
@@ -179,13 +217,16 @@ public class AbstractGuiUtils {
             }
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
             EffectInstance effectInstance = RewardManager.deserializeReward(reward);
-            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
+            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureCoordinate, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
         } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
-            AbstractGuiUtils.drawLimitedString(matrixStack, fontRenderer, "经验", x, y, 0xFFFFFFFF, fontRenderer.width("经验"));
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getPointUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
-            AbstractGuiUtils.drawLimitedString(matrixStack, fontRenderer, "等级", x, y, 0xFFFFFFFF, fontRenderer.width("等级"));
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getLevelUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
-            AbstractGuiUtils.drawLimitedString(matrixStack, fontRenderer, "签卡", x, y, 0xFFFFFFFF, fontRenderer.width("签卡"));
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getCardUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), showText);
+        } else if (reward.getType().equals(ERewardType.MESSAGE)) {
+            // 这玩意不是Integer类型也没有数量, 不能showText
+            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureCoordinate.getMessageUV(), x, y, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), false);
         }
     }
 }

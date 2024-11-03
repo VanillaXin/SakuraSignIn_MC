@@ -17,13 +17,8 @@ import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.DateUtils;
-import xin.vanilla.mc.util.PNGUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
-
-import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
 
 @Data
 @Accessors(chain = true)
@@ -53,16 +48,9 @@ public class CalendarCell {
     private boolean showText;
     private boolean showHover;
 
-    public CalendarCell(ResourceLocation resourceLocation, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
+    public CalendarCell(ResourceLocation resourceLocation, CalendarTextureCoordinate textureCoordinate, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
         BACKGROUND_TEXTURE = resourceLocation;
-        CalendarTextureCoordinate textureCoordinate1;
-        try {
-            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
-            textureCoordinate1 = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
-        } catch (IOException | ClassNotFoundException ignored) {
-            textureCoordinate1 = CalendarTextureCoordinate.getDefault();
-        }
-        textureCoordinate = textureCoordinate1;
+        this.textureCoordinate = textureCoordinate;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -188,7 +176,7 @@ public class CalendarCell {
                 // 物品图标在弹出层中的 y 位置
                 double itemY = tooltipY0 + cellCoordinate.getY() * tooltipScale;
                 // 渲染物品图标
-                AbstractGuiUtils.renderCustomReward(matrixStack, itemRenderer, fontRenderer, reward, (int) itemX, (int) itemY, true);
+                AbstractGuiUtils.renderCustomReward(matrixStack, itemRenderer, fontRenderer, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) itemX, (int) itemY, true);
             }
         }
         // 绘制文字
