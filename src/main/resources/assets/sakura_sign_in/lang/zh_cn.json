@@ -1,8 +1,19 @@
 {
-  "key.categories.sakura_sign_in": "樱花签到",
+  "key.sakura_sign_in.categories": "樱花签到",
   "key.sakura_sign_in.sign_in": "打开签到页面",
   "key.sakura_sign_in.calendar": "打开日历页面",
-  "calendar.title": "日历",
-  "test.title": "测试",
-  "screen.sakura_sign_in.theme_selector.empty": "未找到主题文件！\n鼠标右键点击\n以打开文件夹"
+  "screen.sakura_sign_in.calendar_title": "日历",
+  "screen.sakura_sign_in.test_title": "测试",
+  "screen.sakura_sign_in.theme_selector.empty": "未找到主题文件！\n鼠标右键点击\n以打开文件夹",
+  "command.sakura_sign_in.va_help": "获取帮助信息",
+  "command.sakura_sign_in.sign": "详见/va sign",
+  "command.sakura_sign_in.reward": "详见/va reward",
+  "command.sakura_sign_in.signex": "详见/va signex",
+  "command.sakura_sign_in.va_sign": "签到或补签指定的日期",
+  "command.sakura_sign_in.va_reward": "领取指定日期的奖励",
+  "command.sakura_sign_in.va_signex": "签到或补签指定日期并领取奖励",
+  "command.sakura_sign_in.va_card_give": "给予玩家指定数量的补签卡",
+  "command.sakura_sign_in.va_card_set": "设置玩家的补签卡数量",
+  "command.sakura_sign_in.va_date_get": "获取服务器的时间",
+  "command.sakura_sign_in.va_date_set": "设置服务器的时间"
 }

@@ -9,17 +9,40 @@ import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
+import xin.vanilla.mc.config.KeyValue;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.DateUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class SignInCommand {
+
+    public static int HELP_INFO_NUM_PER_PAGE = 5;
+
+    public static final List<KeyValue<String, String>> HELP_MESSAGE = new ArrayList<KeyValue<String, String>>() {{
+        add(new KeyValue<>("/va help[ <page>]", "va_help"));                                                 // 获取帮助信息
+        add(new KeyValue<>("/sign[ <year> <month> <day>]", "sign"));                                         // 签到简洁版本
+        add(new KeyValue<>("/reward[ <year> <month> <day>]", "reward"));                                     // 领取今天的奖励简洁版本
+        add(new KeyValue<>("/signex[ <year> <month> <day>]", "signex"));                                     // 签到并领取奖励简洁版本
+        add(new KeyValue<>("/va sign <year> <month> <day>", "va_sign"));                                     // 签到/补签指定日期
+        add(new KeyValue<>("/va reward[ <year> <month> <day>]", "va_reward"));                               // 领取指定日期奖励
+        add(new KeyValue<>("/va signex[ <year> <month> <day>]", "va_signex"));                               // 签到/补签并领取指定日期奖励
+        add(new KeyValue<>("/va card give <num>[ <player>]", "va_card_give"));                               // 给予玩家补签卡
+        add(new KeyValue<>("/va card set <num>[ <player>]", "va_card_set"));                                 // 设置玩家补签卡
+        add(new KeyValue<>("/va date get", "va_date_get"));                                                  // 获取服务器时间
+        add(new KeyValue<>("/va date set <year> <month> <day> <hour> <minute> <second>", "va_date_set"));    // 设置服务器时间
+    }};
 
     /**
      * 注册命令到命令调度器
@@ -84,15 +107,29 @@ public class SignInCommand {
             return 1;
         };
         Command<CommandSource> helpCommand = context -> {
-            // TODO 发送帮助信息
             int page = 1;
             try {
                 page = IntegerArgumentType.getInteger(context, "page");
             } catch (IllegalArgumentException ignored) {
             }
+            int pages = (int) Math.ceil((double) HELP_MESSAGE.size() / HELP_INFO_NUM_PER_PAGE);
+            if (page < 1 || page > pages) {
+                throw new IllegalArgumentException("page must be between 1 and " + (HELP_MESSAGE.size() / HELP_INFO_NUM_PER_PAGE));
+            }
+            StringTextComponent helpInfo = new StringTextComponent("-----==== Sakura Sign In Help (" + page + "/" + pages + ") ====-----\n");
+            for (int i = 0; (page - 1) * HELP_INFO_NUM_PER_PAGE + i < HELP_MESSAGE.size() && i < HELP_INFO_NUM_PER_PAGE; i++) {
+                KeyValue<String, String> keyValue = HELP_MESSAGE.get((page - 1) * HELP_INFO_NUM_PER_PAGE + i);
+                TranslationTextComponent commandTips = new TranslationTextComponent("command." + SakuraSignIn.MODID + "." + keyValue.getValue());
+                commandTips.withStyle(Style.EMPTY.withColor(TextFormatting.GRAY));
+                helpInfo.append(keyValue.getKey())
+                        .append(new StringTextComponent(" -> ").withStyle(Style.EMPTY.withColor(TextFormatting.YELLOW)))
+                        .append(commandTips);
+                if (i != HELP_MESSAGE.size() - 1) {
+                    helpInfo.append("\n");
+                }
+            }
             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-            player.sendMessage(new StringTextComponent("help" + page), player.getUUID());
-            // 命令执行成功，返回1
+            player.sendMessage(helpInfo, player.getUUID());
             return 1;
         };
 
@@ -226,8 +263,8 @@ public class SignInCommand {
                                     }
                                     return 1;
                                 })
-                                // 增加/减少补签卡 /va card add <num> [<player>]
-                                .then(Commands.literal("add")
+                                // 增加/减少补签卡 /va card give <num> [<player>]
+                                .then(Commands.literal("give")
                                         .requires(source -> source.hasPermission(2))
                                         .then(Commands.argument("num", IntegerArgumentType.integer())
                                                 .executes(context -> {
@@ -235,7 +272,7 @@ public class SignInCommand {
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                    player.sendMessage(new StringTextComponent(String.format("已增加%d张补签卡", num)), player.getUUID());
+                                                    player.sendMessage(new StringTextComponent(String.format("给予%d张补签卡", num)), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -245,7 +282,7 @@ public class SignInCommand {
                                                             ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                             signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                            player.sendMessage(new StringTextComponent(String.format("已增加%d张补签卡", num)), player.getUUID());
+                                                            player.sendMessage(new StringTextComponent(String.format("获得%d张补签卡", num)), player.getUUID());
                                                             PlayerSignInDataCapability.syncPlayerData(player);
                                                             return 1;
                                                         })

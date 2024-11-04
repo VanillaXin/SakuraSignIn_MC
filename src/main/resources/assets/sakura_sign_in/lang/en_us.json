@@ -1,8 +1,19 @@
 {
-  "key.categories.sakura_sign_in": "Sakura Sign-In",
+  "key.sakura_sign_in.categories": "Sakura Sign-In",
   "key.sakura_sign_in.sign_in": "Open Sign-In Screen",
   "key.sakura_sign_in.calendar": "Open Calendar Screen",
-  "calendar.title": "Calendar",
-  "test.title": "Test",
-  "screen.sakura_sign_in.theme_selector.empty": "No theme \nfiles found!\nRight-click to \nopen the \ntheme folder."
+  "screen.sakura_sign_in.calendar_title": "Calendar",
+  "screen.sakura_sign_in.test_title": "Test",
+  "screen.sakura_sign_in.theme_selector.empty": "No theme \nfiles found!\nRight-click to \nopen the \ntheme folder.",
+  "command.sakura_sign_in.va_help": "Get help information",
+  "command.sakura_sign_in.sign": "Like /va sign",
+  "command.sakura_sign_in.reward": "Like /va reward",
+  "command.sakura_sign_in.signex": "Like /va signex",
+  "command.sakura_sign_in.va_sign": "Sign-in",
+  "command.sakura_sign_in.va_reward": "Claim the reward",
+  "command.sakura_sign_in.va_signex": "Sign-in and claim the reward",
+  "command.sakura_sign_in.va_card_give": "Provide players with Sign-In Card",
+  "command.sakura_sign_in.va_card_set": "Set the number of player Sign-In Cards",
+  "command.sakura_sign_in.va_date_get": "Get the server's time",
+  "command.sakura_sign_in.va_date_set": "Set the server's time"
 }

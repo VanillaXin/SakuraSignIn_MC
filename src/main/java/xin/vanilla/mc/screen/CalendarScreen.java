@@ -179,7 +179,7 @@ public class CalendarScreen extends Screen {
     }
 
     public CalendarScreen() {
-        super(new TranslationTextComponent("calendar.title"));
+        super(new TranslationTextComponent("screen.sakura_sign_in.calendar_title"));
     }
 
     @Override

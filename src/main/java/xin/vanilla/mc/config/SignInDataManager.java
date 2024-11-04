@@ -24,6 +24,7 @@ public class SignInDataManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String FILE_NAME = "sign_in_data.json";
+
     @Getter
     @NonNull
     private static SignInData signInData = new SignInData();

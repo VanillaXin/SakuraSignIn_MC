@@ -26,7 +26,7 @@ import java.io.File;
 public class ClientEventHandler {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final String CATEGORIES = "key.categories.sakura_sign_in";
+    private static final String CATEGORIES = "key.sakura_sign_in.categories";
 
     // 定义按键绑定
     public static KeyBinding SIGN_IN_KEY = new KeyBinding("key.sakura_sign_in.sign_in",

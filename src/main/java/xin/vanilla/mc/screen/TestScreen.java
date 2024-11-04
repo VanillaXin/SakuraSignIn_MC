@@ -29,7 +29,7 @@ public class TestScreen extends Screen {
     private Button submitButton;
 
     public TestScreen() {
-        super(new TranslationTextComponent("test.title"));
+        super(new TranslationTextComponent("screen.sakura_sign_in.test_title"));
     }
 
     /**
