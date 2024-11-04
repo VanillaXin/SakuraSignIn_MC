@@ -3,6 +3,7 @@ package xin.vanilla.mc.config;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
+import lombok.NonNull;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +25,8 @@ public class SignInDataManager {
 
     private static final String FILE_NAME = "sign_in_data.json";
     @Getter
-    private static SignInData signInData;
+    @NonNull
+    private static SignInData signInData = new SignInData();
 
     /**
      * 获取配置文件路径
