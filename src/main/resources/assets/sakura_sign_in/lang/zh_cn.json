@@ -3,5 +3,6 @@
   "key.sakura_sign_in.sign_in": "打开签到页面",
   "key.sakura_sign_in.calendar": "打开日历页面",
   "calendar.title": "日历",
-  "test.title": "测试"
+  "test.title": "测试",
+  "screen.sakura_sign_in.theme_selector.empty": "未找到主题文件！\n鼠标右键点击\n以打开文件夹"
 }

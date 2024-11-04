@@ -12,9 +12,11 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
+import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.config.ClientConfig;
@@ -117,7 +119,10 @@ public class CalendarScreen extends Screen {
      */
     private int themeSelectorScrollOffset = 0;
     /**
-     * 当前鼠标悬停的文件索引，用于绘制高亮效果，初始为-1表示没有文件被悬停
+     * 当前鼠标悬停的文件索引，用于绘制高亮效果
+     * -1表示没有文件被悬停
+     * -2表示首次显示
+     * -3表示主题文件列表为空并且鼠标位于主题选择器内部
      */
     private int themeSelectorHoveredIndex = -1;
     /**
@@ -559,10 +564,15 @@ public class CalendarScreen extends Screen {
                     // 绘制文件名
                     String name = themeFileList.get(index).getName();
                     name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
-                    AbstractGuiUtils.drawLimitedString(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 }
             }
-            // TODO 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
+            // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
+            if (themeFileList.isEmpty()) {
+                TranslationTextComponent textComponent = new TranslationTextComponent("screen.sakura_sign_in.theme_selector.empty");
+                int textHeight = AbstractGuiUtils.multilineTextHeight(font, textComponent);
+                AbstractGuiUtils.drawMultilineText(matrixStack, font, textComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
+            }
         }
     }
 
@@ -628,21 +638,33 @@ public class CalendarScreen extends Screen {
                 // 主题选择器
                 if (!flag.get()) {
                     if (themeSelectorVisible && themeSelectorHoveredIndex >= 0) {
-                        String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
-                        if (player != null) {
-                            player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
-                            ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
-                            if (TextureUtils.isTextureAvailable(resourceLocation)) {
-                                ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
-                                updateTextureAndCoordinate.set(true);
-                                updateLayout.set(true);
+                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                            String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
+                            if (player != null) {
+                                player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
+                                ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
+                                if (TextureUtils.isTextureAvailable(resourceLocation)) {
+                                    ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
+                                    updateTextureAndCoordinate.set(true);
+                                    updateLayout.set(true);
+                                    themeSelectorVisible = false;
+                                }
                             }
+                        } else {
+                            SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
+                            themeSelectorVisible = false;
                         }
                         flag.set(true);
                     }
                     // 若为首次显示
                     else if (themeSelectorHoveredIndex == -2) {
                         themeSelectorHoveredIndex = -1;
+                    }
+                    // 若为主题文件为空
+                    else if (themeSelectorHoveredIndex == -3 && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
+                        themeSelectorVisible = false;
+                        flag.set(true);
                     } else {
                         themeSelectorVisible = false;
                     }
@@ -816,6 +838,8 @@ public class CalendarScreen extends Screen {
                     int index = themeSelectorScrollOffset + relativeY / (font.lineHeight + 2);
                     if (index < themeFileList.size()) {
                         themeSelectorHoveredIndex = index;
+                    } else if (themeFileList.isEmpty()) {
+                        themeSelectorHoveredIndex = -3;
                     }
                 }
             }

@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponent;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
@@ -61,6 +62,59 @@ public class AbstractGuiUtils {
     }
 
     /**
+     * 获取多行文本的高度，以\n为换行符
+     *
+     * @param fontRenderer  字体渲染器
+     * @param textComponent 要绘制的文本
+     */
+    public static int multilineTextHeight(FontRenderer fontRenderer, TextComponent textComponent) {
+        return textComponent.getString().replaceAll("\r\n", "\n").split("\n").length * fontRenderer.lineHeight;
+    }
+
+    /**
+     * 获取多行文本的宽度，以\n为换行符
+     *
+     * @param fontRenderer  字体渲染器
+     * @param textComponent 要绘制的文本
+     */
+    public static int multilineTextWidth(FontRenderer fontRenderer, TextComponent textComponent) {
+        int width = 0;
+        if (!StringUtils.isNotNullOrEmpty(textComponent.getString())) {
+            for (String s : textComponent.getString().replaceAll("\r\n", "\n").split("\n")) {
+                width = Math.max(width, fontRenderer.width(s));
+            }
+        }
+        return width;
+    }
+
+    /**
+     * 绘制多行文本，以\n为换行符
+     *
+     * @param matrixStack   渲染矩阵
+     * @param fontRenderer  字体渲染器
+     * @param textComponent 要绘制的文本
+     * @param x             绘制的X坐标
+     * @param y             绘制的Y坐标
+     * @param colors        文本颜色
+     */
+    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer fontRenderer, TextComponent textComponent, int x, int y, int... colors) {
+        if (StringUtils.isNotNullOrEmpty(textComponent.getString())) {
+            String[] lines = textComponent.getString().replaceAll("\r\n", "\n").split("\n");
+            for (int i = 0; i < lines.length; i++) {
+                int color;
+                if (colors.length == lines.length) {
+                    color = colors[i];
+                } else if (colors.length > 0) {
+                    color = colors[i % colors.length];
+                } else {
+                    color = 0xFFFFFF;
+                }
+                fontRenderer.draw(matrixStack, lines[i], x, y + i * fontRenderer.lineHeight, color);
+            }
+        }
+    }
+
+    /**
      * 绘制限制长度的文本，超出部分末尾以省略号表示
      *
      * @param matrixStack  渲染矩阵
@@ -71,8 +125,8 @@ public class AbstractGuiUtils {
      * @param maxWidth     文本显示的最大宽度
      * @param color        文本颜色
      */
-    public static void drawLimitedString(MatrixStack matrixStack, FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth) {
-        drawLimitedString(matrixStack, fontRenderer, text, x, y, color, maxWidth, EllipsisPosition.END);
+    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth) {
+        drawLimitedText(matrixStack, fontRenderer, text, x, y, color, maxWidth, EllipsisPosition.END);
     }
 
     /**
@@ -87,7 +141,7 @@ public class AbstractGuiUtils {
      * @param color        文本颜色
      * @param position     省略号位置（开头、中间、结尾）
      */
-    public static void drawLimitedString(MatrixStack matrixStack, FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth, EllipsisPosition position) {
+    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth, EllipsisPosition position) {
         String ellipsis = "...";
         int ellipsisWidth = fontRenderer.width(ellipsis);
 

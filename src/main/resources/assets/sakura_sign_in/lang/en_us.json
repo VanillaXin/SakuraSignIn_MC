@@ -3,5 +3,6 @@
   "key.sakura_sign_in.sign_in": "Open Sign-In Screen",
   "key.sakura_sign_in.calendar": "Open Calendar Screen",
   "calendar.title": "Calendar",
-  "test.title": "Test"
+  "test.title": "Test",
+  "screen.sakura_sign_in.theme_selector.empty": "No theme \nfiles found!\nRight-click to \nopen the \ntheme folder."
 }

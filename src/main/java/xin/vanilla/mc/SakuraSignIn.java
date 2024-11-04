@@ -1,5 +1,7 @@
 package xin.vanilla.mc;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,6 +20,8 @@ import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.SignInDataManager;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.ModNetworkHandler;
+
+import java.nio.file.Path;
 
 @Mod(SakuraSignIn.MODID)
 public class SakuraSignIn {
@@ -85,5 +89,28 @@ public class SakuraSignIn {
         // 注册签到命令到事件调度器
         LOGGER.debug("Registering commands");
         SignInCommand.register(event.getDispatcher());
+    }
+
+    /**
+     * 打开指定路径的文件夹
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static void openFolder(Path path) {
+        try {
+            // Windows
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                new ProcessBuilder("explorer.exe", path.toString()).start();
+            }
+            // macOS
+            else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+                new ProcessBuilder("open", path.toString()).start();
+            }
+            // Linux
+            else {
+                new ProcessBuilder("xdg-open", path.toString()).start();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to open folder: {}", e.getMessage());
+        }
     }
 }

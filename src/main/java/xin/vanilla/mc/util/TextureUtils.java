@@ -1,5 +1,6 @@
 package xin.vanilla.mc.util;
 
+import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
@@ -89,6 +90,7 @@ public class TextureUtils {
         return texture.getId() != -1;
     }
 
+    @NonNull
     public static List<File> getPngFilesInDirectory(String directoryPath) {
         List<File> pngFiles = new ArrayList<>();
         // 获取 .minecraft 文件夹的根目录

@@ -91,9 +91,6 @@ public class CalendarCell {
                 } else {
                     rewardUV = textureCoordinate.getNotSignedInUV();
                 }
-                // x 与 y 为内置主题特殊图标UV的偏移量
-                float u0 = (float) (rewardUV.getU0() + rewardUV.getX());
-                float v0 = (float) (rewardUV.getV0() + rewardUV.getY());
                 if (DateUtils.getHourOfDay(new Date()) < 12 && DateUtils.getDayOfMonth(new Date()) == 1 && DateUtils.getMonthOfDate(new Date()) == 4) {
                     // 逃离的距离
                     double escapeDistance = width + height;
@@ -111,6 +108,9 @@ public class CalendarCell {
                         y1 += escapeY;
                     }
                 }
+                // x 与 y 为内置主题特殊图标UV的偏移量
+                float u0 = (float) (rewardUV.getU0() + rewardUV.getX());
+                float v0 = (float) (rewardUV.getV0() + rewardUV.getY());
                 if (isHovered) {
                     AbstractGuiUtils.blit(matrixStack, (int) x1 - 2, (int) y1 - 2, (int) width + 4, (int) height + 4, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
                 } else {
