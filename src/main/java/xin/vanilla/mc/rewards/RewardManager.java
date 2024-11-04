@@ -252,15 +252,14 @@ public class RewardManager {
             // 周度签到奖励(每周固定7天, 没有倒数的说法)
             result.addAll(serverData.getWeekRewards().getOrDefault(String.valueOf(curDayOfWeek), new RewardList()));
             // 自定义日期奖励
-            result.addAll(
-                    serverData.getDateTimeRewardsRelation().keySet().stream()
-                            .filter(getDateStringList(currentDay)::contains)
-                            .map(serverData.getDateTimeRewardsRelation()::get)
-                            .distinct()
-                            .map(serverData.getDateTimeRewards()::get)
-                            .flatMap(Collection::stream)
-                            .collect(Collectors.toList())
-            );
+            List<Reward> dateTimeRewards = serverData.getDateTimeRewardsRelation().keySet().stream()
+                    .filter(getDateStringList(currentDay)::contains)
+                    .map(serverData.getDateTimeRewardsRelation()::get)
+                    .distinct()
+                    .map(serverData.getDateTimeRewards()::get)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isNullOrEmpty(dateTimeRewards)) result.addAll(dateTimeRewards);
 
             //  若日历日期>=当前日期，则添加连续签到奖励(不同玩家不一样)
             if (key >= nowCompensate8) {
@@ -272,22 +271,20 @@ public class RewardManager {
                 continuousSignInDays += key - nowCompensate8;
                 // 连续签到奖励
                 int continuousMax = serverData.getContinuousRewardsRelation().keySet().stream().map(Integer::parseInt).max(Comparator.naturalOrder()).orElse(0);
-                result.addAll(
-                        serverData.getContinuousRewards().get(
-                                serverData.getContinuousRewardsRelation().get(
-                                        String.valueOf(Math.min(continuousMax, continuousSignInDays))
-                                )
+                RewardList continuousRewards = serverData.getContinuousRewards().get(
+                        serverData.getContinuousRewardsRelation().get(
+                                String.valueOf(Math.min(continuousMax, continuousSignInDays))
                         )
                 );
+                if (!CollectionUtils.isNullOrEmpty(continuousRewards)) result.addAll(continuousRewards);
                 // 连续签到周期奖励
                 int cycleMax = serverData.getCycleRewardsRelation().keySet().stream().map(Integer::parseInt).max(Comparator.naturalOrder()).orElse(0);
-                result.addAll(
-                        serverData.getCycleRewards().get(
-                                serverData.getCycleRewardsRelation().get(
-                                        String.valueOf(continuousSignInDays % cycleMax == 0 ? cycleMax : continuousSignInDays % cycleMax)
-                                )
+                RewardList cycleRewards = serverData.getCycleRewards().get(
+                        serverData.getCycleRewardsRelation().get(
+                                String.valueOf(continuousSignInDays % cycleMax == 0 ? cycleMax : continuousSignInDays % cycleMax)
                         )
                 );
+                if (!CollectionUtils.isNullOrEmpty(cycleRewards)) result.addAll(cycleRewards);
             }
         }
         return RewardManager.mergeRewards(result);

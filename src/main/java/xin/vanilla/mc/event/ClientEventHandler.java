@@ -1,7 +1,9 @@
 package xin.vanilla.mc.event;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -63,7 +65,14 @@ public class ClientEventHandler {
             Minecraft.getInstance().setScreen(new TestScreen());
         } else if (CALENDAR_KEY.consumeClick()) {
             // 打开日历界面
-            Minecraft.getInstance().setScreen(new CalendarScreen());
+            if (SakuraSignIn.isEnabled()) {
+                Minecraft.getInstance().setScreen(new CalendarScreen());
+            } else {
+                ClientPlayerEntity player = Minecraft.getInstance().player;
+                if (player != null) {
+                    player.sendMessage(new StringTextComponent("SakuraSignIn server is offline!"), player.getUUID());
+                }
+            }
         }
     }
 }

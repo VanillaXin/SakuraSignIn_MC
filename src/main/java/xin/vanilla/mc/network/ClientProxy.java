@@ -2,6 +2,7 @@ package xin.vanilla.mc.network;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 
@@ -11,6 +12,7 @@ public class ClientProxy {
         if (player != null) {
             IPlayerSignInData clientData = PlayerSignInDataCapability.getData(player);
             PlayerSignInDataCapability.PLAYER_DATA.readNBT(clientData, null, packet.getData().serializeNBT());
+            SakuraSignIn.setEnabled(true);
         }
     }
 }

@@ -1,9 +1,13 @@
 package xin.vanilla.mc;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -30,6 +34,13 @@ public class SakuraSignIn {
     public static final String PNG_CHUNK_NAME = "vacb";
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    /**
+     * 是否有对应的服务端
+     */
+    @Getter
+    @Setter
+    private static boolean enabled;
 
     public SakuraSignIn() {
 
@@ -86,9 +97,34 @@ public class SakuraSignIn {
      */
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        // 注册签到命令到事件调度器
         LOGGER.debug("Registering commands");
+        // 注册签到命令到事件调度器
         SignInCommand.register(event.getDispatcher());
+    }
+
+    /**
+     * 玩家注销事件
+     *
+     * @param event 玩家注销事件对象，通过该对象可以获取到注销的玩家对象
+     */
+    @SubscribeEvent
+    public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        LOGGER.debug("Player has logged out.");
+        // 当玩家退出时
+        enabled = false;
+    }
+
+    /**
+     * 世界卸载事件
+     *
+     * @param event 世界卸载事件对象，通过该对象可以获取到卸载的世界对象
+     */
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onWorldUnload(WorldEvent.Unload event) {
+        LOGGER.debug("World has unloaded.");
+        // 当玩家离开世界时
+        enabled = false;
     }
 
     /**
