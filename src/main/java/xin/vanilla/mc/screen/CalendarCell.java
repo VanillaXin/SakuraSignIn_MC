@@ -37,7 +37,7 @@ public class CalendarCell {
 
     // 物品图标的大小
     private final int itemIconSize = 16;
-    public double x, y, width, height, scale;
+    public double x, y, x1, y1, width, height, scale;
     public RewardList rewardList;
     public int year, month, day;
     /**
@@ -48,11 +48,17 @@ public class CalendarCell {
     private boolean showText;
     private boolean showHover;
 
+    // 鼠标之前的位置坐标
+    private int previousMouseX;
+    private int previousMouseY;
+
     public CalendarCell(ResourceLocation resourceLocation, CalendarTextureCoordinate textureCoordinate, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
         BACKGROUND_TEXTURE = resourceLocation;
         this.textureCoordinate = textureCoordinate;
         this.x = x;
         this.y = y;
+        this.x1 = x;
+        this.y1 = y;
         this.width = width;
         this.height = height;
         this.rewardList = rewardList;
@@ -70,7 +76,7 @@ public class CalendarCell {
 
     // 渲染格子
     public void render(MatrixStack matrixStack, FontRenderer font, ItemRenderer itemRenderer, int mouseX, int mouseY) {
-        boolean isHovered = isMouseOver(mouseX, mouseY);
+        boolean isHovered = this.isMouseOver(mouseX, mouseY);
         if (showIcon) {
             Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
             if (status == ESignInStatus.REWARDED.getCode()) {
@@ -88,11 +94,30 @@ public class CalendarCell {
                 // x 与 y 为内置主题特殊图标UV的偏移量
                 float u0 = (float) (rewardUV.getU0() + rewardUV.getX());
                 float v0 = (float) (rewardUV.getV0() + rewardUV.getY());
-                if (isHovered) {
-                    AbstractGuiUtils.blit(matrixStack, (int) x - 2, (int) y - 2, (int) width + 4, (int) height + 4, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
-                } else {
-                    AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+                if (DateUtils.getHourOfDay(new Date()) < 12 && DateUtils.getDayOfMonth(new Date()) == 1 && DateUtils.getMonthOfDate(new Date()) == 4) {
+                    // 逃离的距离
+                    double escapeDistance = width + height;
+                    // 计算当前鼠标位置与图标之间的距离
+                    double dx = x1 + width / 2 - mouseX;
+                    double dy = y1 + height / 2 - mouseY;
+                    double distance = Math.sqrt(dx * dx + dy * dy);
+                    // 如果图标与鼠标距离小于指定的逃离距离
+                    if (distance < escapeDistance) {
+                        // 计算逃离方向的单位向量
+                        double escapeX = dx / distance;
+                        double escapeY = dy / distance;
+                        // 更新图标位置，向逃离方向移动
+                        x1 += escapeX;
+                        y1 += escapeY;
+                    }
                 }
+                if (isHovered) {
+                    AbstractGuiUtils.blit(matrixStack, (int) x1 - 2, (int) y1 - 2, (int) width + 4, (int) height + 4, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+                } else {
+                    AbstractGuiUtils.blit(matrixStack, (int) x1, (int) y1, (int) width, (int) height, u0, v0, (int) rewardUV.getUWidth(), (int) rewardUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+                }
+                previousMouseX = mouseX;
+                previousMouseY = mouseY;
             }
         }
 
@@ -139,8 +164,8 @@ public class CalendarCell {
         RenderSystem.defaultBlendFunc();
         // 在鼠标位置左上角绘制弹出层背景
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        double tooltipX0 = mouseX - tooltipWidth / 2;
-        double tooltipY0 = mouseY - tooltipHeight - 1;
+        double tooltipX0 = (x == x1 ? (mouseX) : x1 + width / 2) - tooltipWidth / 2;
+        double tooltipY0 = (y == y1 ? mouseY : y1 - 2) - tooltipHeight - 1;
         AbstractGuiUtils.blit(matrixStack, (int) tooltipX0, (int) tooltipY0, (int) tooltipWidth, (int) tooltipHeight, (float) tooltipUV.getU0(), (float) tooltipUV.getV0(), (int) tooltipUV.getUWidth(), (int) tooltipUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();

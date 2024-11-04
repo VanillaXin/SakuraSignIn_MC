@@ -562,6 +562,7 @@ public class CalendarScreen extends Screen {
                     AbstractGuiUtils.drawLimitedString(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 }
             }
+            // TODO 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
         }
     }
 
