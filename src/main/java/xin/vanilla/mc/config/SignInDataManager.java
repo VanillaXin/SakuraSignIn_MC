@@ -69,7 +69,7 @@ public class SignInDataManager {
         try (FileWriter writer = new FileWriter(file)) {
             // 格式化输出
             Gson gson = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
-            writer.write(gson.toJson(signInData));
+            writer.write(gson.toJson(signInData.toJsonObject()));
         } catch (IOException e) {
             LOGGER.error("Error saving sign-in data: ", e);
         }
