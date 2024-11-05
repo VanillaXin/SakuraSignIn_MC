@@ -283,10 +283,11 @@ public class SignInCommand {
                                 .requires(source -> source.hasPermission(2))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(context -> {
-                                            ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
-                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
-                                            player.sendMessage(new StringTextComponent(String.format("玩家[%s]拥有%d张补签卡", player.getDisplayName(), signInData.getSignInCard())), player.getUUID());
-                                            PlayerSignInDataCapability.syncPlayerData(player);
+                                            ServerPlayerEntity target = EntityArgument.getPlayer(context, "player");
+                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(target);
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new StringTextComponent(String.format("玩家[%s]拥有%d张补签卡", target.getDisplayName().getString(), signInData.getSignInCard())), player.getUUID());
+                                            PlayerSignInDataCapability.syncPlayerData(target);
                                             return 1;
                                         })
                                 )
