@@ -41,7 +41,8 @@ public class SignInCommand {
         add(new KeyValue<>("/va signex[ <year> <month> <day>]", "va_signex"));                               // 签到/补签并领取指定日期奖励
         add(new KeyValue<>("/va card give <num>[ <player>]", "va_card_give"));                               // 给予玩家补签卡
         add(new KeyValue<>("/va card set <num>[ <player>]", "va_card_set"));                                 // 设置玩家补签卡
-        add(new KeyValue<>("/va config get date", "va_config_get_date"));                                                  // 获取服务器时间
+        add(new KeyValue<>("/va card get <player>", "va_card_get"));                                         // 获取玩家补签卡
+        add(new KeyValue<>("/va config get", "va_config_get"));                                              // 获取服务器配置项信息
         add(new KeyValue<>("/va config set date <year> <month> <day> <hour> <minute> <second>", "va_config_set_date"));    // 设置服务器时间
     }};
 
@@ -277,8 +278,22 @@ public class SignInCommand {
                                 )
 
                         )
+                        // 获取补签卡数量 /va card get [<player>]
+                        .then(Commands.literal("get")
+                                .requires(source -> source.hasPermission(2))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
+                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
+                                            player.sendMessage(new StringTextComponent(String.format("玩家[%s]拥有%d张补签卡", player.getDisplayName(), signInData.getSignInCard())), player.getUUID());
+                                            PlayerSignInDataCapability.syncPlayerData(player);
+                                            return 1;
+                                        })
+                                )
+
+                        )
                 )
-                // 获取服务器时间 /va config get date
+                // 获取服务器配置 /va config get
                 .then(Commands.literal("config")
                         .then(Commands.literal("get")
                                 .then(Commands.literal("autoSignIn")

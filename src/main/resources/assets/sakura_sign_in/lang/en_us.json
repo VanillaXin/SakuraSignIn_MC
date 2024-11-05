@@ -13,7 +13,8 @@
   "command.sakura_sign_in.va_reward": "Claim the reward",
   "command.sakura_sign_in.va_signex": "Sign-in and claim the reward",
   "command.sakura_sign_in.va_card_give": "Provide players with Sign-In Card",
-  "command.sakura_sign_in.va_card_set": "Set the number of player Sign-In Cards",
-  "command.sakura_sign_in.va_config_get_date": "Get the server's time",
+  "command.sakura_sign_in.va_card_set": "Set the number of Sign-In Card for player",
+  "command.sakura_sign_in.va_card_get": "Get the number of Sign-In Card for player",
+  "command.sakura_sign_in.va_config_get": "Get the config info of the server",
   "command.sakura_sign_in.va_config_set_date": "Set the server's time"
 }
