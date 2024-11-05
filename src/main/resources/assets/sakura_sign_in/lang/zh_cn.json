@@ -14,6 +14,6 @@
   "command.sakura_sign_in.va_signex": "签到或补签指定日期并领取奖励",
   "command.sakura_sign_in.va_card_give": "给予玩家指定数量的补签卡",
   "command.sakura_sign_in.va_card_set": "设置玩家的补签卡数量",
-  "command.sakura_sign_in.va_date_get": "获取服务器的时间",
-  "command.sakura_sign_in.va_date_set": "设置服务器的时间"
+  "command.sakura_sign_in.va_config_get_date": "获取服务器的时间",
+  "command.sakura_sign_in.va_config_set_date": "设置服务器的时间"
 }

@@ -18,6 +18,7 @@ import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.config.KeyValue;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.enums.ESignInType;
+import xin.vanilla.mc.enums.ETimeCoolingMethod;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.DateUtils;
@@ -40,8 +41,8 @@ public class SignInCommand {
         add(new KeyValue<>("/va signex[ <year> <month> <day>]", "va_signex"));                               // 签到/补签并领取指定日期奖励
         add(new KeyValue<>("/va card give <num>[ <player>]", "va_card_give"));                               // 给予玩家补签卡
         add(new KeyValue<>("/va card set <num>[ <player>]", "va_card_set"));                                 // 设置玩家补签卡
-        add(new KeyValue<>("/va date get", "va_date_get"));                                                  // 获取服务器时间
-        add(new KeyValue<>("/va date set <year> <month> <day> <hour> <minute> <second>", "va_date_set"));    // 设置服务器时间
+        add(new KeyValue<>("/va config get date", "va_config_get_date"));                                                  // 获取服务器时间
+        add(new KeyValue<>("/va config set date <year> <month> <day> <hour> <minute> <second>", "va_config_set_date"));    // 设置服务器时间
     }};
 
     /**
@@ -171,154 +172,210 @@ public class SignInCommand {
 
         // 注册有前缀的指令
         dispatcher.register(Commands.literal("va")
+                .executes(helpCommand)
+                .then(Commands.literal("help")
                         .executes(helpCommand)
-                        .then(Commands.literal("help")
+                        .then(Commands.argument("page", IntegerArgumentType.integer(1, 4))
                                 .executes(helpCommand)
-                                .then(Commands.argument("page", IntegerArgumentType.integer(1, 4))
-                                        .executes(helpCommand)
-                                )
                         )
-                        // 签到 /va sign
-                        .then(Commands.literal("sign").executes(signInCommand)
-                                // 补签 /va sign <year> <month> <day>
-                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                        .executes(signInCommand)
-                                                )
+                )
+                // 签到 /va sign
+                .then(Commands.literal("sign").executes(signInCommand)
+                        // 补签 /va sign <year> <month> <day>
+                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
+                                                .executes(signInCommand)
                                         )
                                 )
                         )
-                        // 奖励 /va reward
-                        .then(Commands.literal("reward").executes(rewardCommand)
-                                // 补签 /va sign <year> <month> <day>
-                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                        .executes(rewardCommand)
-                                                )
+                )
+                // 奖励 /va reward
+                .then(Commands.literal("reward").executes(rewardCommand)
+                        // 补签 /va sign <year> <month> <day>
+                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
+                                                .executes(rewardCommand)
                                         )
                                 )
                         )
-                        // 签到并领取奖励 /signex
-                        .then(Commands.literal("signex").executes(signAndRewardCommand)
-                                // 补签 /va signex <year> <month> <day>
-                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                        .executes(signAndRewardCommand)
-                                                )
+                )
+                // 签到并领取奖励 /va signex
+                .then(Commands.literal("signex").executes(signAndRewardCommand)
+                        // 补签 /va signex <year> <month> <day>
+                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
+                                                .executes(signAndRewardCommand)
                                         )
                                 )
                         )
-                        // 获取服务器时间 /va date get
-                        .then(Commands.literal("date")
-                                .then(Commands.literal("get")
+                )
+                // 获取补签卡数量 /va card
+                .then(Commands.literal("card")
+                        .executes(context -> {
+                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                            if (!ServerConfig.SIGN_IN_CARD.get()) {
+                                player.sendMessage(new StringTextComponent("服务器未开启补签功能"), player.getUUID());
+                            } else {
+                                player.sendMessage(new StringTextComponent(String.format("当前拥有%d张补签卡", PlayerSignInDataCapability.getData(player).getSignInCard())), player.getUUID());
+                            }
+                            return 1;
+                        })
+                        // 增加/减少补签卡 /va card give <num> [<player>]
+                        .then(Commands.literal("give")
+                                .requires(source -> source.hasPermission(2))
+                                .then(Commands.argument("num", IntegerArgumentType.integer())
                                         .executes(context -> {
+                                            int num = IntegerArgumentType.getInteger(context, "num");
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器当前时间: %s", DateUtils.toDateTimeString(DateUtils.getServerDate()))), player.getUUID());
+                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
+                                            signInData.setSignInCard(signInData.getSignInCard() + num);
+                                            player.sendMessage(new StringTextComponent(String.format("给予%d张补签卡", num)), player.getUUID());
+                                            PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
-                                )
-                                // ↓ 不好评价的代码
-                                // 设置服务器时间 /va date set <year> <month> <day> <hour> <minute> <second>
-                                .then(Commands.literal("set")
-                                        .requires(source -> source.hasPermission(3))
-                                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                                .then(Commands.argument("hour", RelativeDateArgument.hour(-23, 23))
-                                                                        .then(Commands.argument("minute", RelativeDateArgument.minute(-59, 59))
-                                                                                .then(Commands.argument("second", RelativeDateArgument.second(-59, 59))
-                                                                                        .executes(context -> {
-                                                                                            int year = RelativeDateArgument.getInteger(context, "year");
-                                                                                            int month = RelativeDateArgument.getInteger(context, "month");
-                                                                                            int day = RelativeDateArgument.getInteger(context, "day");
-                                                                                            int hour = RelativeDateArgument.getInteger(context, "hour");
-                                                                                            int minute = RelativeDateArgument.getInteger(context, "minute");
-                                                                                            int second = RelativeDateArgument.getInteger(context, "second");
-                                                                                            Date date = DateUtils.getDate(year, month, day, hour, minute, second);
-                                                                                            ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
-                                                                                            ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
-                                                                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                                                                            player.sendMessage(new StringTextComponent(String.format("服务器时间已设置为: %s", DateUtils.toDateTimeString(date))), player.getUUID());
-                                                                                            return 1;
-                                                                                        })
-                                                                                )
-                                                                        )
-                                                                )
-                                                        )
-                                                )
-                                        )
-                                )
-                        )
-                        // 获取补签卡数量 /va card
-                        .then(Commands.literal("card")
-                                .executes(context -> {
-                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                    if (!ServerConfig.SIGN_IN_CARD.get()) {
-                                        player.sendMessage(new StringTextComponent("服务器未开启补签功能"), player.getUUID());
-                                    } else {
-                                        player.sendMessage(new StringTextComponent(String.format("当前拥有%d张补签卡", PlayerSignInDataCapability.getData(player).getSignInCard())), player.getUUID());
-                                    }
-                                    return 1;
-                                })
-                                // 增加/减少补签卡 /va card give <num> [<player>]
-                                .then(Commands.literal("give")
-                                        .requires(source -> source.hasPermission(2))
-                                        .then(Commands.argument("num", IntegerArgumentType.integer())
+                                        .then(Commands.argument("player", EntityArgument.player())
                                                 .executes(context -> {
                                                     int num = IntegerArgumentType.getInteger(context, "num");
-                                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                                    ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                    player.sendMessage(new StringTextComponent(String.format("给予%d张补签卡", num)), player.getUUID());
+                                                    player.sendMessage(new StringTextComponent(String.format("获得%d张补签卡", num)), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
-                                                .then(Commands.argument("player", EntityArgument.player())
-                                                        .executes(context -> {
-                                                            int num = IntegerArgumentType.getInteger(context, "num");
-                                                            ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
-                                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
-                                                            signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                            player.sendMessage(new StringTextComponent(String.format("获得%d张补签卡", num)), player.getUUID());
-                                                            PlayerSignInDataCapability.syncPlayerData(player);
-                                                            return 1;
-                                                        })
-                                                )
-
                                         )
+
                                 )
-                                // 设置补签卡数量 /va card set <num> [<player>]
-                                .then(Commands.literal("set")
-                                        .requires(source -> source.hasPermission(2))
-                                        .then(Commands.argument("num", IntegerArgumentType.integer())
+                        )
+                        // 设置补签卡数量 /va card set <num> [<player>]
+                        .then(Commands.literal("set")
+                                .requires(source -> source.hasPermission(2))
+                                .then(Commands.argument("num", IntegerArgumentType.integer())
+                                        .executes(context -> {
+                                            int num = IntegerArgumentType.getInteger(context, "num");
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
+                                            signInData.setSignInCard(num);
+                                            player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                            PlayerSignInDataCapability.syncPlayerData(player);
+                                            return 1;
+                                        })
+                                        .then(Commands.argument("player", EntityArgument.player())
                                                 .executes(context -> {
                                                     int num = IntegerArgumentType.getInteger(context, "num");
-                                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                                    ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(num);
                                                     player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
-                                                .then(Commands.argument("player", EntityArgument.player())
-                                                        .executes(context -> {
-                                                            int num = IntegerArgumentType.getInteger(context, "num");
-                                                            ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
-                                                            IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
-                                                            signInData.setSignInCard(num);
-                                                            player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
-                                                            PlayerSignInDataCapability.syncPlayerData(player);
-                                                            return 1;
-                                                        })
-                                                )
                                         )
+                                )
 
+                        )
+                )
+                // 获取服务器时间 /va config get date
+                .then(Commands.literal("config")
+                        .then(Commands.literal("get")
+                                .then(Commands.literal("autoSignIn")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用")), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("timeCoolingMethod")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器签到时间冷却方式为: %s", coolingMethod.getName())), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("timeCoolingTime")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            Double time = ServerConfig.TIME_COOLING_TIME.get();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器签到冷却刷新时间为: %05.2f", time)), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("timeCoolingInterval")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            Double time = ServerConfig.TIME_COOLING_INTERVAL.get();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器签到冷却刷新间隔为: %05.2f", time)), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("signInCard")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用")), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("reSignInDays")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            int time = ServerConfig.RE_SIGN_IN_DAYS.get();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器最大补签天数为: %d", time)), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("signInCardOnlyBaseReward")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用")), player.getUUID());
+                                            return 1;
+                                        })
+                                )
+                                .then(Commands.literal("date")
+                                        .executes(context -> {
+                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new StringTextComponent(String.format("服务器当前时间: %s", DateUtils.toDateTimeString(DateUtils.getServerDate()))), player.getUUID());
+                                            return 1;
+                                        })
                                 )
                         )
-                // TODO @macro 继续注册管理员指令实现能查询与修改所有服务器配置
+                        // 设置服务器时间 /va config set date <year> <month> <day> <hour> <minute> <second>
+                        .then(Commands.literal("set")
+                                        .requires(source -> source.hasPermission(3))
+                                        .then(Commands.literal("date")
+                                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
+                                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
+                                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
+                                                                        .then(Commands.argument("hour", RelativeDateArgument.hour(-23, 23))
+                                                                                .then(Commands.argument("minute", RelativeDateArgument.minute(-59, 59))
+                                                                                        .then(Commands.argument("second", RelativeDateArgument.second(-59, 59))
+                                                                                                .executes(context -> {
+                                                                                                    int year = RelativeDateArgument.getInteger(context, "year");
+                                                                                                    int month = RelativeDateArgument.getInteger(context, "month");
+                                                                                                    int day = RelativeDateArgument.getInteger(context, "day");
+                                                                                                    int hour = RelativeDateArgument.getInteger(context, "hour");
+                                                                                                    int minute = RelativeDateArgument.getInteger(context, "minute");
+                                                                                                    int second = RelativeDateArgument.getInteger(context, "second");
+                                                                                                    Date date = DateUtils.getDate(year, month, day, hour, minute, second);
+                                                                                                    ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
+                                                                                                    ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
+                                                                                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                                                                                    player.sendMessage(new StringTextComponent(String.format("服务器时间已设置为: %s", DateUtils.toDateTimeString(date))), player.getUUID());
+                                                                                                    return 1;
+                                                                                                })
+                                                                                        )
+                                                                                )
+                                                                        )
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                // TODO 继续注册管理员指令实现修改所有服务器配置
+                        )
+                )
         );
     }
 }
