@@ -178,7 +178,7 @@ public class RewardManager {
                 day = i - daysOfCurrentMonth - nextOffset;
             }
             int key = year * 10000 + month * 100 + day;
-            RewardList rewardList = getRewardListByDate(DateUtils.getDate(year, month, day, DateUtils.getHourOfDay(currentMonth), DateUtils.getMinuteOfHour(currentMonth), DateUtils.getSecondOfMinute(currentMonth)), playerData, false);
+            RewardList rewardList = RewardManager.getRewardListByDate(DateUtils.getDate(year, month, day, DateUtils.getHourOfDay(currentMonth), DateUtils.getMinuteOfHour(currentMonth), DateUtils.getSecondOfMinute(currentMonth)), playerData, false);
             result.put(key, rewardList);
         }
         return result;
@@ -195,7 +195,7 @@ public class RewardManager {
     public static RewardList getRewardListByDate(Date currentDay, IPlayerSignInData playerData, boolean onlyHistory) {
         RewardList result = new RewardList();
         SignInData serverData = SignInDataManager.getSignInData();
-        int nowCompensate8 = getCompensateDateInt();
+        int nowCompensate8 = RewardManager.getCompensateDateInt();
         // long nowCompensate14 = DateUtils.toDateTimeInt(nowCompensate);
         // 本月总天数
         int daysOfCurrentMonth = DateUtils.getDaysOfMonth(currentDay);
@@ -279,11 +279,14 @@ public class RewardManager {
                 if (!CollectionUtils.isNullOrEmpty(continuousRewards)) result.addAll(continuousRewards);
                 // 连续签到周期奖励
                 int cycleMax = serverData.getCycleRewardsRelation().keySet().stream().map(Integer::parseInt).max(Comparator.naturalOrder()).orElse(0);
-                RewardList cycleRewards = serverData.getCycleRewards().get(
-                        serverData.getCycleRewardsRelation().get(
-                                String.valueOf(continuousSignInDays % cycleMax == 0 ? cycleMax : continuousSignInDays % cycleMax)
-                        )
-                );
+                RewardList cycleRewards = new RewardList();
+                if (cycleMax > 0) {
+                    cycleRewards = serverData.getCycleRewards().get(
+                            serverData.getCycleRewardsRelation().get(
+                                    String.valueOf(continuousSignInDays % cycleMax == 0 ? cycleMax : continuousSignInDays % cycleMax)
+                            )
+                    );
+                }
                 if (!CollectionUtils.isNullOrEmpty(cycleRewards)) result.addAll(cycleRewards);
             }
         }

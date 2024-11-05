@@ -434,9 +434,9 @@ public class CalendarScreen extends Screen {
     @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        renderBackground(matrixStack);
+        this.renderBackground(matrixStack);
         // 绘制缩放背景纹理
-        renderBackgroundTexture(matrixStack);
+        this.renderBackgroundTexture(matrixStack);
 
         // 渲染年份
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;

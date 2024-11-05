@@ -23,6 +23,7 @@ public class ModNetworkHandler {
         INSTANCE.registerMessage(nextID(), PlayerDataSyncPacket.class, PlayerDataSyncPacket::toBytes, PlayerDataSyncPacket::new, PlayerDataSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ServerConfigSyncPacket.class, ServerConfigSyncPacket::toBytes, ServerConfigSyncPacket::new, ServerConfigSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ClientConfigSyncPacket.class, ClientConfigSyncPacket::toBytes, ClientConfigSyncPacket::new, ClientConfigSyncPacket::handle);
+        INSTANCE.registerMessage(nextID(), SignInDataSyncPacket.class, SignInDataSyncPacket::toBytes, SignInDataSyncPacket::new, SignInDataSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ItemStackPacket.class, ItemStackPacket::toBytes, ItemStackPacket::new, ItemStackPacket::handle);
         INSTANCE.registerMessage(nextID(), SignInPacket.class, SignInPacket::toBytes, SignInPacket::new, SignInPacket::handle);
     }
