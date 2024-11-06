@@ -1,6 +1,7 @@
 package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
+import lombok.NonNull;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.StringTextComponent;
@@ -10,19 +11,25 @@ import xin.vanilla.mc.rewards.RewardParser;
 public class MessageRewardParser implements RewardParser<StringTextComponent> {
 
     @Override
-    public StringTextComponent deserialize(JsonObject json) {
-        StringTextComponent message = new StringTextComponent(json.get("contents").getAsString());
-        JsonObject styleJson = json.getAsJsonObject("style");
-        Style style = Style.EMPTY;
-        if (styleJson.has("color"))
-            style.withColor(Color.parseColor(styleJson.get("color").getAsString()));
-        style.withBold(styleJson.get("bold").getAsBoolean());
-        style.withItalic(styleJson.get("italic").getAsBoolean());
-        style.withUnderlined(styleJson.get("underlined").getAsBoolean());
-        style.setStrikethrough(styleJson.get("strikethrough").getAsBoolean());
-        style.setObfuscated(styleJson.get("obfuscated").getAsBoolean());
-        style.withFont(new ResourceLocation(styleJson.get("font").getAsString()));
-        message.setStyle(style);
+    public @NonNull StringTextComponent deserialize(JsonObject json) {
+        StringTextComponent message;
+        try {
+            message = new StringTextComponent(json.get("contents").getAsString());
+            JsonObject styleJson = json.getAsJsonObject("style");
+            Style style = Style.EMPTY;
+            if (styleJson.has("color"))
+                style.withColor(Color.parseColor(styleJson.get("color").getAsString()));
+            style.withBold(styleJson.get("bold").getAsBoolean());
+            style.withItalic(styleJson.get("italic").getAsBoolean());
+            style.withUnderlined(styleJson.get("underlined").getAsBoolean());
+            style.setStrikethrough(styleJson.get("strikethrough").getAsBoolean());
+            style.setObfuscated(styleJson.get("obfuscated").getAsBoolean());
+            style.withFont(new ResourceLocation(styleJson.get("font").getAsString()));
+            message.setStyle(style);
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse message reward", e);
+            message = new StringTextComponent("Failed to parse message reward");
+        }
         return message;
     }
 

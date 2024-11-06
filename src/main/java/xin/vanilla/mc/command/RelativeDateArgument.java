@@ -30,36 +30,36 @@ public class RelativeDateArgument implements ArgumentType<Integer> {
     /**
      * 基准时间单位
      */
-    private final ChronoField base;
+    private final String base;
 
-    public RelativeDateArgument(int minimum, int maximum, ChronoField base) {
+    public RelativeDateArgument(int minimum, int maximum, String base) {
         this.minimum = minimum;
         this.maximum = maximum;
         this.base = base;
     }
 
     public static RelativeDateArgument year(final int min, final int max) {
-        return new RelativeDateArgument(min, max, ChronoField.YEAR);
+        return new RelativeDateArgument(min, max, ChronoField.YEAR.toString());
     }
 
     public static RelativeDateArgument month(final int min, final int max) {
-        return new RelativeDateArgument(min, max, ChronoField.MONTH_OF_YEAR);
+        return new RelativeDateArgument(min, max, ChronoField.MONTH_OF_YEAR.toString());
     }
 
     public static RelativeDateArgument date(final int min, final int max) {
-        return new RelativeDateArgument(min, max, ChronoField.DAY_OF_MONTH);
+        return new RelativeDateArgument(min, max, ChronoField.DAY_OF_MONTH.toString());
     }
 
     public static RelativeDateArgument hour(final int min, final int max) {
-        return new RelativeDateArgument(min, max, ChronoField.HOUR_OF_DAY);
+        return new RelativeDateArgument(min, max, ChronoField.HOUR_OF_DAY.toString());
     }
 
     public static RelativeDateArgument minute(final int min, final int max) {
-        return new RelativeDateArgument(min, max, ChronoField.MINUTE_OF_HOUR);
+        return new RelativeDateArgument(min, max, ChronoField.MINUTE_OF_HOUR.toString());
     }
 
     public static RelativeDateArgument second(final int min, final int max) {
-        return new RelativeDateArgument(min, max, ChronoField.SECOND_OF_MINUTE);
+        return new RelativeDateArgument(min, max, ChronoField.SECOND_OF_MINUTE.toString());
     }
 
     /**
@@ -135,6 +135,6 @@ public class RelativeDateArgument implements ArgumentType<Integer> {
      * 获取当前基准值
      */
     private int getBase() {
-        return DateUtils.getLocalDateTime(DateUtils.getServerDate()).get(base);
+        return DateUtils.getLocalDateTime(DateUtils.getServerDate()).get(ChronoField.valueOf(base));
     }
 }

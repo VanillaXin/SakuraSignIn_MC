@@ -1,14 +1,22 @@
 package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
+import lombok.NonNull;
 import net.minecraft.util.ResourceLocation;
+import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.rewards.RewardParser;
 
 public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
 
     @Override
-    public ResourceLocation deserialize(JsonObject json) {
-        String advancementId = json.get("advancement").getAsString();
+    public @NonNull ResourceLocation deserialize(JsonObject json) {
+        String advancementId;
+        try {
+            advancementId = json.get("advancement").getAsString();
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse advancement reward", e);
+            advancementId = SakuraSignIn.MODID + ":unknownAdvancement";
+        }
         return new ResourceLocation(advancementId);
     }
 
