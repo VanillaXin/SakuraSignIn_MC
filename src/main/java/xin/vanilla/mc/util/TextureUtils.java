@@ -3,7 +3,6 @@ package xin.vanilla.mc.util;
 import com.mojang.blaze3d.platform.NativeImage;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -45,31 +44,29 @@ public class TextureUtils {
         textureName = textureName.replaceAll("\\\\", "/");
         textureName = textureName.startsWith("./") ? textureName.substring(2) : textureName;
         ResourceLocation customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, TextureUtils.getSafeThemePath(textureName));
-        if (!TextureUtils.isTextureAvailable(customTextureLocation)) {
-            if (!textureName.startsWith(INTERNAL_THEME_DIR)) {
-                File textureFile;
-                // 指定外部路径的纹理文件
-                if (textureName.startsWith(CUSTOM_THEME_DIR)) {
-                    textureFile = new File(Minecraft.getInstance().gameDirectory, textureName);
-                } else {
-                    textureFile = new File(textureName);
-                }
-                // 检查文件是否存在
-                if (!textureFile.exists()) {
-                    LOGGER.warn("Texture file not found: {}", textureFile.getAbsolutePath());
+        if (!textureName.startsWith(INTERNAL_THEME_DIR)) {
+            File textureFile;
+            // 指定外部路径的纹理文件
+            if (textureName.startsWith(CUSTOM_THEME_DIR)) {
+                textureFile = new File(Minecraft.getInstance().gameDirectory, textureName);
+            } else {
+                textureFile = new File(textureName);
+            }
+            // 检查文件是否存在
+            if (!textureFile.exists()) {
+                LOGGER.warn("Texture file not found: {}", textureFile.getAbsolutePath());
+                customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
+            } else {
+                try (InputStream inputStream = Files.newInputStream(textureFile.toPath())) {
+                    // 直接从InputStream创建NativeImage
+                    NativeImage nativeImage = NativeImage.read(inputStream);
+                    // 创建DynamicTexture并注册到TextureManager
+                    DynamicTexture dynamicTexture = new DynamicTexture(nativeImage);
+                    textureManager.register(customTextureLocation, dynamicTexture);
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to load texture: {}", textureFile.getAbsolutePath());
+                    LOGGER.error(e);
                     customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
-                } else {
-                    try (InputStream inputStream = Files.newInputStream(textureFile.toPath())) {
-                        // 直接从InputStream创建NativeImage
-                        NativeImage nativeImage = NativeImage.read(inputStream);
-                        // 创建DynamicTexture并注册到TextureManager
-                        DynamicTexture dynamicTexture = new DynamicTexture(nativeImage);
-                        textureManager.register(customTextureLocation, dynamicTexture);
-                    } catch (IOException e) {
-                        LOGGER.warn("Failed to load texture: {}", textureFile.getAbsolutePath());
-                        LOGGER.error(e);
-                        customTextureLocation = new ResourceLocation(SakuraSignIn.MODID, INTERNAL_THEME_DIR + DEFAULT_THEME);
-                    }
                 }
             }
         }
@@ -80,12 +77,13 @@ public class TextureUtils {
         return path.toLowerCase().replaceAll("[^a-z0-9/._-]", "_");
     }
 
-    public static boolean isTextureAvailable(ResourceLocation resourceLocation) {
-        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-        AbstractTexture texture = textureManager.getTexture(resourceLocation);
-        // 确保纹理已经加载
-        return texture.getId() != -1;
-    }
+    // 判断不了了捏
+    // public static boolean isTextureAvailable(ResourceLocation resourceLocation) {
+    //     TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+    //     AbstractTexture texture = textureManager.getTexture(resourceLocation);
+    //     // 确保纹理已经加载
+    //     return texture.getId() != -1;
+    // }
 
     @NonNull
     public static List<File> getPngFilesInDirectory(String directoryPath) {

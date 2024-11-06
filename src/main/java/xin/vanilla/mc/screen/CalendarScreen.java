@@ -642,13 +642,10 @@ public class CalendarScreen extends Screen {
                             String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
                             if (player != null) {
                                 player.sendMessage(new TextComponent("已选择主题文件: " + selectedFile), player.getUUID());
-                                ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
-                                if (TextureUtils.isTextureAvailable(resourceLocation)) {
-                                    ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
-                                    updateTextureAndCoordinate.set(true);
-                                    updateLayout.set(true);
-                                    themeSelectorVisible = false;
-                                }
+                                ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
+                                updateTextureAndCoordinate.set(true);
+                                updateLayout.set(true);
+                                themeSelectorVisible = false;
                             }
                         } else {
                             SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
