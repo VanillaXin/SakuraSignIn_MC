@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.screen.CalendarScreen;
-import xin.vanilla.mc.screen.TestScreen;
 
 import java.io.File;
 
@@ -29,8 +28,6 @@ public class ClientEventHandler {
     private static final String CATEGORIES = "key.sakura_sign_in.categories";
 
     // 定义按键绑定
-    public static KeyBinding SIGN_IN_KEY = new KeyBinding("key.sakura_sign_in.sign_in",
-            GLFW.GLFW_KEY_G, CATEGORIES);
     public static KeyBinding CALENDAR_KEY = new KeyBinding("key.sakura_sign_in.calendar",
             GLFW.GLFW_KEY_H, CATEGORIES);
 
@@ -38,7 +35,6 @@ public class ClientEventHandler {
      * 注册键绑定
      */
     public static void registerKeyBindings() {
-        ClientRegistry.registerKeyBinding(SIGN_IN_KEY);
         ClientRegistry.registerKeyBinding(CALENDAR_KEY);
     }
 
@@ -60,10 +56,7 @@ public class ClientEventHandler {
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         // 检测并消费点击事件
-        if (SIGN_IN_KEY.consumeClick()) {
-            // 打开测试界面
-            Minecraft.getInstance().setScreen(new TestScreen());
-        } else if (CALENDAR_KEY.consumeClick()) {
+        if (CALENDAR_KEY.consumeClick()) {
             // 打开日历界面
             if (SakuraSignIn.isEnabled()) {
                 Minecraft.getInstance().setScreen(new CalendarScreen());
