@@ -45,7 +45,7 @@ public class PlayerSignInDataCapability {
      * @param data   玩家签到数据
      */
     public static void setData(PlayerEntity player, IPlayerSignInData data) {
-        player.getCapability(PLAYER_DATA).ifPresent(data::copyFrom);
+        player.getCapability(PLAYER_DATA).ifPresent(capability -> capability.copyFrom(data));
     }
 
     /**
