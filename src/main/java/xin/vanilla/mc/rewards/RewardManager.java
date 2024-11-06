@@ -4,12 +4,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.NonNull;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
@@ -312,8 +312,8 @@ public class RewardManager {
                                     }
                                     break;
                                 case EFFECT:
-                                    EffectInstance effectInstance = RewardManager.deserializeReward(reward);
-                                    key = effectInstance.getEffect().getRegistryName().toString() + " " + effectInstance.getAmplifier();
+                                    MobEffectInstance mobEffectInstance = RewardManager.deserializeReward(reward);
+                                    key = mobEffectInstance.getEffect().getRegistryName().toString() + " " + mobEffectInstance.getAmplifier();
                                     break;
                                 case EXP_POINT:
                                     break;
@@ -342,7 +342,7 @@ public class RewardManager {
                                     ((ItemStack) content1).setTag(((ItemStack) content2).getTag());
                                     break;
                                 case EFFECT:
-                                    content1 = new EffectInstance(((EffectInstance) content1).getEffect(), ((EffectInstance) content1).getDuration() + ((EffectInstance) content2).getDuration(), ((EffectInstance) content1).getAmplifier());
+                                    content1 = new MobEffectInstance(((MobEffectInstance) content1).getEffect(), ((MobEffectInstance) content1).getDuration() + ((MobEffectInstance) content2).getDuration(), ((MobEffectInstance) content1).getAmplifier());
                                     break;
                                 case EXP_POINT:
                                 case SIGN_IN_CARD:
@@ -384,51 +384,51 @@ public class RewardManager {
     /**
      * 签到or补签
      */
-    public static void signIn(ServerPlayerEntity player, SignInPacket packet) {
+    public static void signIn(ServerPlayer player, SignInPacket packet) {
         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
         ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
         int serverDateInt = getCompensateDateInt();
         int signInDateInt = DateUtils.toDateInt(packet.getSignInTime());
         // 判断签到/补签时间合法性
         if (serverDateInt < signInDateInt) {
-            player.sendMessage(new StringTextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
+            player.sendMessage(new TextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverDateInt > signInDateInt) {
-            player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
+            player.sendMessage(new TextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverDateInt <= signInDateInt) {
-            player.sendMessage(new StringTextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
+            player.sendMessage(new TextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
-            player.sendMessage(new StringTextComponent("今天已经签过到啦"), player.getUUID());
+            player.sendMessage(new TextComponent("今天已经签过到啦"), player.getUUID());
             return;
         }
         // 判断签到CD
         if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
             Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.TIME_COOLING_INTERVAL.get());
             if (packet.getSignInTime().before(lastSignInTime)) {
-                player.sendMessage(new StringTextComponent("签到冷却中，签到失败，请稍后再试"), player.getUUID());
+                player.sendMessage(new TextComponent("签到冷却中，签到失败，请稍后再试"), player.getUUID());
                 return;
             }
         }
         // 判断补签
         if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.SIGN_IN_CARD.get()) {
-            player.sendMessage(new StringTextComponent("服务器未开启补签功能，补签失败"), player.getUUID());
+            player.sendMessage(new TextComponent("服务器未开启补签功能，补签失败"), player.getUUID());
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
-            player.sendMessage(new StringTextComponent("补签卡不足，补签失败"), player.getUUID());
+            player.sendMessage(new TextComponent("补签卡不足，补签失败"), player.getUUID());
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && isSignedIn(signInData, packet.getSignInTime(), false)) {
-            player.sendMessage(new StringTextComponent("已经签过到了哦"), player.getUUID());
+            player.sendMessage(new TextComponent("已经签过到了哦"), player.getUUID());
             return;
         }
         // 判断领取奖励
         if (ESignInType.REWARD.equals(packet.getSignInType())) {
             if (isRewarded(signInData, packet.getSignInTime(), false)) {
-                player.sendMessage(new StringTextComponent(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"), player.getUUID());
+                player.sendMessage(new TextComponent(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"), player.getUUID());
                 return;
             } else if (!isSignedIn(signInData, packet.getSignInTime(), false)) {
-                player.sendMessage(new StringTextComponent(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))), player.getUUID());
+                player.sendMessage(new TextComponent(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))), player.getUUID());
                 return;
             } else {
                 signInData.getSignInRecords().stream()
@@ -448,7 +448,7 @@ public class RewardManager {
                                         giveRewardToPlayer(player, signInData, reward);
                                     });
                         });
-                player.sendMessage(new StringTextComponent("奖励领取成功"), player.getUUID());
+                player.sendMessage(new TextComponent("奖励领取成功"), player.getUUID());
             }
         }
         // 签到/补签
@@ -491,7 +491,7 @@ public class RewardManager {
             else if (packet.getSignInType().equals(ESignInType.RE_SIGN_IN)) {
                 signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), getCompensateDate(null)));
             }
-            player.sendMessage(new StringTextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
+            player.sendMessage(new TextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
         }
         // PlayerSignInDataCapability.setData(player, signInData);
         signInData.save(player);
@@ -499,7 +499,7 @@ public class RewardManager {
         PlayerSignInDataCapability.syncPlayerData(player);
     }
 
-    private static void giveRewardToPlayer(ServerPlayerEntity player, IPlayerSignInData signInData, Reward reward) {
+    private static void giveRewardToPlayer(ServerPlayer player, IPlayerSignInData signInData, Reward reward) {
         reward.setRewarded(true);
         Object object = RewardManager.deserializeReward(reward);
         switch (reward.getType()) {
@@ -510,7 +510,7 @@ public class RewardManager {
                 signInData.plusSignInCard((Integer) object);
                 break;
             case EFFECT:
-                player.addEffect((EffectInstance) object);
+                player.addEffect((MobEffectInstance) object);
                 break;
             case EXP_LEVEL:
                 player.giveExperienceLevels((Integer) object);
@@ -526,7 +526,7 @@ public class RewardManager {
                 }
                 break;
             case MESSAGE:
-                player.sendMessage((StringTextComponent) object, player.getUUID());
+                player.sendMessage((TextComponent) object, player.getUUID());
                 break;
             default:
         }
@@ -540,9 +540,9 @@ public class RewardManager {
      * @param drop      若玩家背包空间不足, 是否以物品实体的形式生成在世界上
      * @return 是否添加成功
      */
-    public static boolean giveItemStack(ServerPlayerEntity player, ItemStack itemStack, boolean drop) {
+    public static boolean giveItemStack(ServerPlayer player, ItemStack itemStack, boolean drop) {
         // 尝试将物品堆添加到玩家的库存中
-        boolean added = player.inventory.add(itemStack);
+        boolean added = player.getInventory().add(itemStack);
         // 如果物品堆无法添加到库存，则以物品实体的形式生成在世界上
         if (!added && drop) {
             ItemEntity itemEntity = new ItemEntity(player.level, player.getX(), player.getY(), player.getZ(), itemStack);

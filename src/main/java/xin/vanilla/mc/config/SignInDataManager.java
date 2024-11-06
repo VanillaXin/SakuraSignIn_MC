@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 
-import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
+import static net.minecraft.util.datafix.fixes.BlockEntitySignTextStrictJsonFix.GSON;
 
 public class SignInDataManager {
     private static final Logger LOGGER = LogManager.getLogger();

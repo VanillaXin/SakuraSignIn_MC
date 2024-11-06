@@ -1,10 +1,10 @@
 package xin.vanilla.mc.capability;
 
 import lombok.NonNull;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.DateUtils;
 
@@ -105,7 +105,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         this.signInRecords = records;
     }
 
-    public void writeToBuffer(PacketBuffer buffer) {
+    public void writeToBuffer(FriendlyByteBuf buffer) {
         buffer.writeInt(this.getContinuousSignInDays());
         buffer.writeDate(this.getLastSignInTime());
         buffer.writeInt(this.getSignInCard());
@@ -116,7 +116,7 @@ public class PlayerSignInData implements IPlayerSignInData {
         }
     }
 
-    public void readFromBuffer(PacketBuffer buffer) {
+    public void readFromBuffer(FriendlyByteBuf buffer) {
         this.continuousSignInDays.set(buffer.readInt());
         this.lastSignInTime = buffer.readDate();
         this.signInCard.set(buffer.readInt());
@@ -137,15 +137,15 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     @Override
-    public CompoundNBT serializeNBT() {
-        // 创建一个CompoundNBT对象，并将玩家的分数和活跃状态写入其中
-        CompoundNBT tag = new CompoundNBT();
+    public CompoundTag serializeNBT() {
+        // 创建一个CompoundTag对象，并将玩家的分数和活跃状态写入其中
+        CompoundTag tag = new CompoundTag();
         tag.putInt("continuousSignInDays", this.getContinuousSignInDays());
         tag.putString("lastSignInTime", DateUtils.toDateTimeString(this.getLastSignInTime()));
         tag.putInt("signInCard", this.getSignInCard());
         tag.putBoolean("autoRewarded", this.isAutoRewarded());
         // 序列化签到记录
-        ListNBT recordsNBT = new ListNBT();
+        ListTag recordsNBT = new ListTag();
         for (SignInRecord record : this.getSignInRecords()) {
             recordsNBT.add(record.writeToNBT());
         }
@@ -154,14 +154,14 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     @Override
-    public void deserializeNBT(CompoundNBT nbt) {
+    public void deserializeNBT(CompoundTag nbt) {
         // 从NBT标签中读取玩家的分数和活跃状态，并更新到实例中
         this.setContinuousSignInDays(nbt.getInt("continuousSignInDays"));
         this.setLastSignInTime(DateUtils.format(nbt.getString("lastSignInTime")));
         this.setSignInCard(nbt.getInt("signInCard"));
         this.setAutoRewarded(nbt.getBoolean("autoRewarded"));
         // 反序列化签到记录
-        ListNBT recordsNBT = nbt.getList("signInRecords", 10); // 10 是 CompoundNBT 的类型ID
+        ListTag recordsNBT = nbt.getList("signInRecords", 10); // 10 是 CompoundTag 的类型ID
         List<SignInRecord> records = new ArrayList<>();
         for (int i = 0; i < recordsNBT.size(); i++) {
             records.add(SignInRecord.readFromNBT(recordsNBT.getCompound(i)));
@@ -170,7 +170,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     @Override
-    public void save(ServerPlayerEntity player) {
+    public void save(ServerPlayer player) {
         player.getCapability(PlayerSignInDataCapability.PLAYER_DATA).ifPresent(this::copyFrom);
     }
 }

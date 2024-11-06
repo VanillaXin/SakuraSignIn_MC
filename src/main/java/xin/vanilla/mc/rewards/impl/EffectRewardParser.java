@@ -3,37 +3,37 @@ package xin.vanilla.mc.rewards.impl;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.NonNull;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraftforge.registries.ForgeRegistries;
 import xin.vanilla.mc.rewards.RewardParser;
 
-public class EffectRewardParser implements RewardParser<EffectInstance> {
+public class EffectRewardParser implements RewardParser<MobEffectInstance> {
 
     @Override
-    public @NonNull EffectInstance deserialize(JsonObject json) {
-        EffectInstance effectInstance;
+    public @NonNull MobEffectInstance deserialize(JsonObject json) {
+        MobEffectInstance mobEffectInstance;
         try {
             String effectId = json.get("effect").getAsString();
             int duration = json.get("duration").getAsInt();
             int amplifier = json.get("amplifier").getAsInt();
 
-            Effect effect = ForgeRegistries.POTIONS.getValue(new ResourceLocation(effectId));
+            MobEffect effect = ForgeRegistries.MOB_EFFECTS.getValue(new ResourceLocation(effectId));
             if (effect == null) {
                 throw new JsonParseException("Unknown potion effect ID: " + effectId);
             }
-            effectInstance = new EffectInstance(effect, duration, amplifier);
+            mobEffectInstance = new MobEffectInstance(effect, duration, amplifier);
         } catch (Exception e) {
             LOGGER.error("Failed to parse effect reward", e);
-            effectInstance = new EffectInstance(Effects.LUCK, 0, 0);
+            mobEffectInstance = new MobEffectInstance(MobEffects.LUCK, 0, 0);
         }
-        return effectInstance;
+        return mobEffectInstance;
     }
 
     @Override
-    public JsonObject serialize(EffectInstance reward) {
+    public JsonObject serialize(MobEffectInstance reward) {
         JsonObject json = new JsonObject();
         json.addProperty("effect", reward.getEffect().getRegistryName().toString());
         json.addProperty("duration", reward.getDuration());

@@ -1,13 +1,13 @@
 package xin.vanilla.mc.util;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.SakuraSignIn;
@@ -82,10 +82,7 @@ public class TextureUtils {
 
     public static boolean isTextureAvailable(ResourceLocation resourceLocation) {
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-        Texture texture = textureManager.getTexture(resourceLocation);
-        if (texture == null) {
-            return false;
-        }
+        AbstractTexture texture = textureManager.getTexture(resourceLocation);
         // 确保纹理已经加载
         return texture.getId() != -1;
     }
@@ -111,9 +108,9 @@ public class TextureUtils {
     /**
      * 获取药水效果图标
      */
-    public static ResourceLocation getEffectTexture(EffectInstance effectInstance) {
+    public static ResourceLocation getEffectTexture(MobEffectInstance mobEffectInstance) {
         ResourceLocation effectIcon;
-        ResourceLocation registryName = effectInstance.getEffect().getRegistryName();
+        ResourceLocation registryName = mobEffectInstance.getEffect().getRegistryName();
         if (registryName != null) {
             effectIcon = new ResourceLocation(registryName.getNamespace(), DEFAULT_EFFECT_DIR + registryName.getPath() + ".png");
         } else {

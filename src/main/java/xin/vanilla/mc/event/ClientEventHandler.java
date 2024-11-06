@@ -1,15 +1,15 @@
 package xin.vanilla.mc.event;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -28,7 +28,7 @@ public class ClientEventHandler {
     private static final String CATEGORIES = "key.sakura_sign_in.categories";
 
     // 定义按键绑定
-    public static KeyBinding CALENDAR_KEY = new KeyBinding("key.sakura_sign_in.calendar",
+    public static KeyMapping CALENDAR_KEY = new KeyMapping("key.sakura_sign_in.calendar",
             GLFW.GLFW_KEY_H, CATEGORIES);
 
     /**
@@ -61,9 +61,9 @@ public class ClientEventHandler {
             if (SakuraSignIn.isEnabled()) {
                 Minecraft.getInstance().setScreen(new CalendarScreen());
             } else {
-                ClientPlayerEntity player = Minecraft.getInstance().player;
+                LocalPlayer player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.sendMessage(new StringTextComponent("SakuraSignIn server is offline!"), player.getUUID());
+                    player.sendMessage(new TextComponent("SakuraSignIn server is offline!"), player.getUUID());
                 }
             }
         }

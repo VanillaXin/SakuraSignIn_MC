@@ -2,7 +2,7 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.rewards.RewardParser;
 

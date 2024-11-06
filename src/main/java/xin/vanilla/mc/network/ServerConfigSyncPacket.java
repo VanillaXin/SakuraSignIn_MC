@@ -1,8 +1,8 @@
 package xin.vanilla.mc.network;
 
 import lombok.Getter;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.enums.ETimeCoolingMethod;
 import xin.vanilla.mc.util.DateUtils;
@@ -58,7 +58,7 @@ public class ServerConfigSyncPacket {
         this.actualTime = DateUtils.format(ServerConfig.ACTUAL_TIME.get());
     }
 
-    public ServerConfigSyncPacket(PacketBuffer buf) {
+    public ServerConfigSyncPacket(FriendlyByteBuf buf) {
         this.autoSignIn = buf.readBoolean();
         this.timeCoolingMethod = ETimeCoolingMethod.valueOf(buf.readInt());
         this.timeCoolingTime = buf.readDouble();
@@ -69,7 +69,7 @@ public class ServerConfigSyncPacket {
         this.actualTime = buf.readDate();
     }
 
-    public void toBytes(PacketBuffer buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         buf.writeBoolean(this.autoSignIn);
         buf.writeInt(this.timeCoolingMethod.getCode());
         buf.writeDouble(this.timeCoolingTime);

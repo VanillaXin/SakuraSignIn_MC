@@ -1,7 +1,7 @@
 package xin.vanilla.mc.capability;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * 玩家签到数据提供者类，实现了ICapabilityProvider和INBTSerializable接口，
  * 用于管理和序列化玩家的签到数据
  */
-public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerializable<CompoundNBT> {
+public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
 
     // 玩家签到数据实例，使用PlayerSignInData类进行管理
     private IPlayerSignInData playerData;
@@ -48,25 +48,25 @@ public class PlayerSignInDataProvider implements ICapabilityProvider, INBTSerial
     /**
      * 序列化玩家签到数据为NBT格式
      *
-     * @return 返回包含玩家签到数据的CompoundNBT对象
+     * @return 返回包含玩家签到数据的CompoundTag对象
      * <p>
      * 该方法实现了玩家签到数据的序列化，返回的数据可以用于存储或传输
      */
     @Override
-    public CompoundNBT serializeNBT() {
+    public CompoundTag serializeNBT() {
         return this.getOrCreateCapability().serializeNBT();
-        // return (CompoundNBT) PlayerSignInDataCapability.PLAYER_DATA.getStorage().writeNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null);
+        // return (CompoundTag) PlayerSignInDataCapability.PLAYER_DATA.getStorage().writeNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null);
     }
 
     /**
      * 从NBT格式的数据中反序列化玩家签到数据
      *
-     * @param nbt 包含玩家签到数据的CompoundNBT对象
+     * @param nbt 包含玩家签到数据的CompoundTag对象
      *            <p>
      *            该方法实现了玩家签到数据的反序列化，从提供的NBT数据中恢复玩家签到信息
      */
     @Override
-    public void deserializeNBT(CompoundNBT nbt) {
+    public void deserializeNBT(CompoundTag nbt) {
         this.getOrCreateCapability().deserializeNBT(nbt);
         // PlayerSignInDataCapability.PLAYER_DATA.getStorage().readNBT(PlayerSignInDataCapability.PLAYER_DATA, this.getOrCreateCapability(), null, nbt);
     }

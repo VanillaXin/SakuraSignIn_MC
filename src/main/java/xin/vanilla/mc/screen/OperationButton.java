@@ -2,7 +2,7 @@ package xin.vanilla.mc.screen;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 页面操作按钮

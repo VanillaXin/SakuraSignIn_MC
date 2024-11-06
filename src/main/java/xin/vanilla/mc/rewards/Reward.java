@@ -3,13 +3,14 @@ package xin.vanilla.mc.rewards;
 import com.google.gson.JsonObject;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import xin.vanilla.mc.enums.ERewardType;
 
 import java.io.Serializable;
 
-import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
+import static net.minecraft.util.datafix.fixes.BlockEntitySignTextStrictJsonFix.GSON;
+
 
 /**
  * 奖励实体

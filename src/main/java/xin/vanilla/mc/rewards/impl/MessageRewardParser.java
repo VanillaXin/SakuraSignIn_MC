@@ -2,23 +2,23 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import xin.vanilla.mc.rewards.RewardParser;
 
-public class MessageRewardParser implements RewardParser<StringTextComponent> {
+public class MessageRewardParser implements RewardParser<TextComponent> {
 
     @Override
-    public @NonNull StringTextComponent deserialize(JsonObject json) {
-        StringTextComponent message;
+    public @NonNull TextComponent deserialize(JsonObject json) {
+        TextComponent message;
         try {
-            message = new StringTextComponent(json.get("contents").getAsString());
+            message = new TextComponent(json.get("contents").getAsString());
             JsonObject styleJson = json.getAsJsonObject("style");
             Style style = Style.EMPTY;
             if (styleJson.has("color"))
-                style.withColor(Color.parseColor(styleJson.get("color").getAsString()));
+                style.withColor(TextColor.parseColor(styleJson.get("color").getAsString()));
             style.withBold(styleJson.get("bold").getAsBoolean());
             style.withItalic(styleJson.get("italic").getAsBoolean());
             style.withUnderlined(styleJson.get("underlined").getAsBoolean());
@@ -28,13 +28,13 @@ public class MessageRewardParser implements RewardParser<StringTextComponent> {
             message.setStyle(style);
         } catch (Exception e) {
             LOGGER.error("Failed to parse message reward", e);
-            message = new StringTextComponent("Failed to parse message reward");
+            message = new TextComponent("Failed to parse message reward");
         }
         return message;
     }
 
     @Override
-    public JsonObject serialize(StringTextComponent reward) {
+    public JsonObject serialize(TextComponent reward) {
         JsonObject result = new JsonObject();
         JsonObject styleJson = new JsonObject();
         Style style = reward.getStyle();
