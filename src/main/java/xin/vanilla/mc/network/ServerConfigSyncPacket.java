@@ -2,7 +2,7 @@ package xin.vanilla.mc.network;
 
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.enums.ETimeCoolingMethod;
 import xin.vanilla.mc.util.DateUtils;
