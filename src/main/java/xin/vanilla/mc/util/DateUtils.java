@@ -666,12 +666,8 @@ public class DateUtils {
                 // 当到达最大单位后，将整数与小数部分填充为指定数量的9
                 StringBuilder ninePart = new StringBuilder();
                 StringBuilder decimal = new StringBuilder();
-                for (int i = 0; i < maxNineCount; i++) {
-                    ninePart.append("9");
-                }
-                for (int i = 0; i < decimalPlaces; i++) {
-                    decimal.append("9");
-                }
+                ninePart.append("9".repeat(maxNineCount));
+                decimal.append("9".repeat(decimalPlaces));
                 if (decimalPlaces > 0) {
                     result = ninePart + "." + decimal + "+" + curUnit.getUnit();
                 } else {

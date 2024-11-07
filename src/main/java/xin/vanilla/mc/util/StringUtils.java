@@ -203,23 +203,10 @@ public class StringUtils {
      */
     public static boolean stringToBoolean(String s) {
         if (null == s) return false;
-        switch (s.toLowerCase().trim()) {
-            case "1":
-            case "真":
-            case "是":
-            case "true":
-            case "y":
-            case "t":
-                return true;
-            case "0":
-            case "假":
-            case "否":
-            case "false":
-            case "n":
-            case "f":
-            default:
-                return false;
-        }
+        return switch (s.toLowerCase().trim()) {
+            case "1", "真", "是", "true", "y", "t" -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -350,7 +337,7 @@ public class StringUtils {
                 int unitIndex = integerLen - i - 1;
                 int unit = unitIndex % 4;
                 if (digit == 0) {
-                    if (unit != 0 && sb.length() > 0 && sb.charAt(sb.length() - 1) != '零') {
+                    if (unit != 0 && !sb.isEmpty() && sb.charAt(sb.length() - 1) != '零') {
                         sb.append(NUM[0]);
                     }
                 } else {
