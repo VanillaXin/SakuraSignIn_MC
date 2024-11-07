@@ -683,6 +683,12 @@ public class DateUtils {
         return result;
     }
 
+    /**
+     * 计算连续签到天数
+     *
+     * @param dateList 日期列表
+     * @param current  当前日期
+     */
     public static int calculateContinuousDays(List<Date> dateList, Date current) {
         if (dateList == null || dateList.isEmpty()) {
             return 0;
@@ -698,7 +704,7 @@ public class DateUtils {
         int continuousDays = 0;
         for (int i = 0; i < dateList.size(); i++) {
             Date date = dateList.get(i);
-            if (i == 0 && DateUtils.toDateInt(current) == DateUtils.toDateInt(date))
+            if (i == 0 && DateUtils.toDateInt(current) <= DateUtils.toDateInt(date))
                 continuousDays++;
             else if (i - 1 >= 0 && DateUtils.toDateInt(DateUtils.addDay(dateList.get(i - 1), -1)) == DateUtils.toDateInt(date))
                 continuousDays++;
