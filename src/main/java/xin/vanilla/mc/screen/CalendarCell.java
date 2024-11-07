@@ -128,7 +128,7 @@ public class CalendarCell {
             if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
                 if (day == DateUtils.getDayOfMonth(date)) {
                     color = textureCoordinate.getTextColorToday();
-                    dayStr.setStyle(dayStr.getStyle().setUnderlined(true));
+                    dayStr.setStyle(dayStr.getStyle().withUnderlined(true));
                 } else {
                     color = textureCoordinate.getTextColorCurrent();
                 }
