@@ -1,6 +1,7 @@
 package xin.vanilla.mc.util;
 
 import lombok.Getter;
+import lombok.NonNull;
 import xin.vanilla.mc.config.ServerConfig;
 
 import java.text.ParseException;
@@ -568,6 +569,13 @@ public class DateUtils {
     }
 
     /**
+     * 计算两个时间之间的毫秒数间隔
+     */
+    public static long millisOfTwo(Date startDateTime, Date endDateTime) {
+        return ChronoUnit.MILLIS.between(getLocalDateTime(startDateTime), getLocalDateTime(endDateTime));
+    }
+
+    /**
      * 计算两个时间之间的详细间隔日期
      * 返回一个包含年月日时分秒毫秒的Date对象
      */
@@ -598,6 +606,29 @@ public class DateUtils {
             serverTime = DateUtils.addDate(serverTime, DateUtils.dateOfTwo(originalTime, actualTime));
         }
         return serverTime;
+    }
+
+    /**
+     * 比较两个日期是否相等
+     *
+     * @param date1     日期1
+     * @param date2     日期2
+     * @param precision 精度
+     */
+    public static boolean equals(Date date1, Date date2, @NonNull DateUnit precision) {
+        if (date1 == date2) return true;
+        else if (date1 == null) {
+            return false;
+        } else if (date2 == null) {
+            return false;
+        } else {
+            long l = DateUtils.millisOfTwo(date1, date2);
+            long l2 = 1;
+            for (int i = 1; i < precision.getCode(); i++) {
+                l2 *= DateUnit.valueOf(i).getBase();
+            }
+            return Math.abs(l) < l2;
+        }
     }
 
     /**
