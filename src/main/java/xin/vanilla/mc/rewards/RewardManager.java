@@ -140,6 +140,32 @@ public class RewardManager {
     }
 
     /**
+     * 获取签到时间的反向校准时间
+     * <p>
+     * 当前时间加上 签到冷却刷新时间
+     *
+     * @param date 若date为null, 则使用服务器当前时间
+     */
+    public static Date getUnCompensateDate(Date date) {
+        if (date == null) {
+            date = DateUtils.getServerDate();
+        }
+        // 签到冷却刷新时间, 固定间隔不需要校准时间
+        double cooling;
+        switch (ServerConfig.TIME_COOLING_METHOD.get()) {
+            case MIXED:
+            case FIXED_TIME:
+                cooling = ServerConfig.TIME_COOLING_TIME.get();
+                break;
+            default:
+                cooling = 0;
+                break;
+        }
+        // 校准后当前时间
+        return DateUtils.addDate(date, -cooling);
+    }
+
+    /**
      * 获取指定月份的奖励列表
      *
      * @param currentMonth 当前月份
@@ -385,21 +411,32 @@ public class RewardManager {
      * 签到or补签
      */
     public static void signIn(ServerPlayerEntity player, SignInPacket packet) {
+        Date serverDate = DateUtils.getServerDate();
+        Date serverCompensateDate = getCompensateDate(serverDate);
         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
         ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
-        int serverDateInt = getCompensateDateInt();
+        int serverCompensateDateInt = DateUtils.toDateInt(serverCompensateDate);
         int signInDateInt = DateUtils.toDateInt(packet.getSignInTime());
         // 判断签到/补签时间合法性
-        if (serverDateInt < signInDateInt) {
-            player.sendMessage(new StringTextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
+        if (serverCompensateDateInt < signInDateInt) {
+            if (ESignInType.SIGN_IN.equals(packet.getSignInType())
+                    && (coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
+                    && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE)) {
+                player.sendMessage(new StringTextComponent(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.TIME_COOLING_TIME.get())), player.getUUID());
+            } else {
+                player.sendMessage(new StringTextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
+            }
             return;
-        } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverDateInt > signInDateInt) {
-            player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
-            return;
-        } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverDateInt <= signInDateInt) {
+        } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt > signInDateInt) {
+            if (!((coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
+                    && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE))) {
+                player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
+                return;
+            }
+        } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt <= signInDateInt) {
             player.sendMessage(new StringTextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
             return;
-        } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
+        } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
             player.sendMessage(new StringTextComponent("今天已经签过到啦"), player.getUUID());
             return;
         }
@@ -462,7 +499,7 @@ public class RewardManager {
             if (packet.getSignInType().equals(ESignInType.RE_SIGN_IN)) {
                 signInRecord.setCompensateTime(packet.getSignInTime());
             } else {
-                signInRecord.setCompensateTime(getCompensateDate(null));
+                signInRecord.setCompensateTime(serverCompensateDate);
             }
             signInRecord.setSignInUUID(player.getUUID().toString());
             // 是否自动领取
@@ -476,21 +513,7 @@ public class RewardManager {
             }
             signInData.setLastSignInTime(packet.getSignInTime());
             signInData.getSignInRecords().add(signInRecord);
-            // 若为签到
-            if (packet.getSignInType().equals(ESignInType.SIGN_IN)) {
-                // 若签到时间大于最后签到时间一天, 则连续签到天数+1
-                if (serverDateInt == DateUtils.toDateInt(DateUtils.addDay(signInData.getLastSignInTime(), 1))) {
-                    signInData.plusContinuousSignInDays();
-                }
-                // 重置连续签到天数
-                else {
-                    signInData.resetContinuousSignInDays();
-                }
-            }
-            // 若为补签, 重新计算连续签到天数
-            else if (packet.getSignInType().equals(ESignInType.RE_SIGN_IN)) {
-                signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), getCompensateDate(null)));
-            }
+            signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), getCompensateDate(null)));
             player.sendMessage(new StringTextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
         }
         // PlayerSignInDataCapability.setData(player, signInData);
