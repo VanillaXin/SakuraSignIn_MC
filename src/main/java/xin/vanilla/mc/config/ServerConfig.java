@@ -79,7 +79,7 @@ public class ServerConfig {
                         , "签到时间冷却时间，以小数表示时间，整数部分为小时，小数部分为分钟。"
                         , "若timeCoolingMethod=FIXED_TIME(默认)，则表示每天4.00(默认)刷新签到冷却；"
                         , "若timeCoolingMethod=MIXED，则表示每天4.00(默认)刷新签到冷却，并且需要距离上次签到12小时34分钟(默认)后才能再次签到。")
-                .defineInRange("timeCoolingTime", 4.00, 0.00, 23.59);
+                .defineInRange("timeCoolingTime", 4.00, -23.59, 23.59);
 
         // 签到冷却刷新间隔
         TIME_COOLING_INTERVAL = SERVER_BUILDER
