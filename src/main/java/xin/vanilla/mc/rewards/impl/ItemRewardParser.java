@@ -48,7 +48,7 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     public JsonObject serialize(ItemStack reward) {
         JsonObject json = new JsonObject();
         try {
-            json.addProperty("item", reward.getItem().getRegistryName().toString());
+            json.addProperty("item", ForgeRegistries.ITEMS.getKey(reward.getItem()).toString());
             json.addProperty("count", reward.getCount());
 
             // 如果物品有NBT数据，则序列化
@@ -59,7 +59,7 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             }
         } catch (Exception e) {
             LOGGER.error("Failed to serialize item reward", e);
-            json.addProperty("item", Items.AIR.getRegistryName().toString());
+            json.addProperty("item", ForgeRegistries.ITEMS.getKey(Items.AIR).toString());
             json.addProperty("count", 0);
         }
         return json;

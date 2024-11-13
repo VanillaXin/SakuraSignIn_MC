@@ -35,7 +35,7 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
     @Override
     public JsonObject serialize(MobEffectInstance reward) {
         JsonObject json = new JsonObject();
-        json.addProperty("effect", reward.getEffect().getRegistryName().toString());
+        json.addProperty("effect", ForgeRegistries.MOB_EFFECTS.getKey(reward.getEffect()).toString());
         json.addProperty("duration", reward.getDuration());
         json.addProperty("amplifier", reward.getAmplifier());
         return json;

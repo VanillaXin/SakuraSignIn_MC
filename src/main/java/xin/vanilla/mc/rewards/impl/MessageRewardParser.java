@@ -2,19 +2,20 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import xin.vanilla.mc.rewards.RewardParser;
 
-public class MessageRewardParser implements RewardParser<TextComponent> {
+public class MessageRewardParser implements RewardParser<MutableComponent> {
 
     @Override
-    public @NonNull TextComponent deserialize(JsonObject json) {
-        TextComponent message;
+    public @NonNull MutableComponent deserialize(JsonObject json) {
+        MutableComponent message;
         try {
-            message = new TextComponent(json.get("contents").getAsString());
+            message = Component.literal(json.get("contents").getAsString());
             JsonObject styleJson = json.getAsJsonObject("style");
             Style style = Style.EMPTY;
             if (styleJson.has("color"))
@@ -28,13 +29,13 @@ public class MessageRewardParser implements RewardParser<TextComponent> {
             message.setStyle(style);
         } catch (Exception e) {
             LOGGER.error("Failed to parse message reward", e);
-            message = new TextComponent("Failed to parse message reward");
+            message = Component.literal("Failed to parse message reward");
         }
         return message;
     }
 
     @Override
-    public JsonObject serialize(TextComponent reward) {
+    public JsonObject serialize(MutableComponent reward) {
         JsonObject result = new JsonObject();
         JsonObject styleJson = new JsonObject();
         Style style = reward.getStyle();
@@ -47,7 +48,7 @@ public class MessageRewardParser implements RewardParser<TextComponent> {
         styleJson.addProperty("strikethrough", style.isStrikethrough());
         styleJson.addProperty("obfuscated", style.isObfuscated());
         styleJson.addProperty("font", style.getFont().toString());
-        result.addProperty("contents", reward.getContents());
+        result.addProperty("contents", reward.getString());
         result.add("style", styleJson);
         return result;
     }

@@ -4,12 +4,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.NonNull;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
@@ -320,14 +322,14 @@ public class RewardManager {
                             switch (type) {
                                 case ITEM:
                                     ItemStack itemStack = RewardManager.deserializeReward(reward);
-                                    key = itemStack.getItem().getRegistryName().toString();
+                                    key = ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString();
                                     if (itemStack.hasTag()) {
                                         key += itemStack.getTag().toString();
                                     }
                                     break;
                                 case EFFECT:
                                     MobEffectInstance mobEffectInstance = RewardManager.deserializeReward(reward);
-                                    key = mobEffectInstance.getEffect().getRegistryName().toString() + " " + mobEffectInstance.getAmplifier();
+                                    key = ForgeRegistries.MOB_EFFECTS.getKey(mobEffectInstance.getEffect()).toString() + " " + mobEffectInstance.getAmplifier();
                                     break;
                                 case EXP_POINT:
                                     break;
@@ -410,50 +412,50 @@ public class RewardManager {
             if (ESignInType.SIGN_IN.equals(packet.getSignInType())
                     && (coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
                     && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE)) {
-                player.sendMessage(new TextComponent(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.TIME_COOLING_TIME.get())), player.getUUID());
+                player.sendSystemMessage(Component.literal(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.TIME_COOLING_TIME.get())));
             } else {
-                player.sendMessage(new TextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
+                player.sendSystemMessage(Component.literal("签到日期晚于服务器当前日期，签到失败"));
             }
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt > signInDateInt) {
             if (!((coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
                     && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE))) {
-                player.sendMessage(new TextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
+                player.sendSystemMessage(Component.literal("签到日期早于服务器当前日期，签到失败"));
                 return;
             }
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt <= signInDateInt) {
-            player.sendMessage(new TextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
+            player.sendSystemMessage(Component.literal("补签日期不早于服务器当前日期，补签失败"));
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
-            player.sendMessage(new TextComponent("今天已经签过到啦"), player.getUUID());
+            player.sendSystemMessage(Component.literal("今天已经签过到啦"));
             return;
         }
         // 判断签到CD
         if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
             Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.TIME_COOLING_INTERVAL.get());
             if (packet.getSignInTime().before(lastSignInTime)) {
-                player.sendMessage(new TextComponent("签到冷却中，签到失败，请稍后再试"), player.getUUID());
+                player.sendSystemMessage(Component.literal("签到冷却中，签到失败，请稍后再试"));
                 return;
             }
         }
         // 判断补签
         if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.SIGN_IN_CARD.get()) {
-            player.sendMessage(new TextComponent("服务器未开启补签功能，补签失败"), player.getUUID());
+            player.sendSystemMessage(Component.literal("服务器未开启补签功能，补签失败"));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
-            player.sendMessage(new TextComponent("补签卡不足，补签失败"), player.getUUID());
+            player.sendSystemMessage(Component.literal("补签卡不足，补签失败"));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && isSignedIn(signInData, packet.getSignInTime(), false)) {
-            player.sendMessage(new TextComponent("已经签过到了哦"), player.getUUID());
+            player.sendSystemMessage(Component.literal("已经签过到了哦"));
             return;
         }
         // 判断领取奖励
         if (ESignInType.REWARD.equals(packet.getSignInType())) {
             if (isRewarded(signInData, packet.getSignInTime(), false)) {
-                player.sendMessage(new TextComponent(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"), player.getUUID());
+                player.sendSystemMessage(Component.literal(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"));
                 return;
             } else if (!isSignedIn(signInData, packet.getSignInTime(), false)) {
-                player.sendMessage(new TextComponent(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))), player.getUUID());
+                player.sendSystemMessage(Component.literal(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))));
                 return;
             } else {
                 signInData.getSignInRecords().stream()
@@ -473,7 +475,7 @@ public class RewardManager {
                                         giveRewardToPlayer(player, signInData, reward);
                                     });
                         });
-                player.sendMessage(new TextComponent("奖励领取成功"), player.getUUID());
+                player.sendSystemMessage(Component.literal("奖励领取成功"));
             }
         }
         // 签到/补签
@@ -502,7 +504,7 @@ public class RewardManager {
             signInData.setLastSignInTime(packet.getSignInTime());
             signInData.getSignInRecords().add(signInRecord);
             signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), getCompensateDate(null)));
-            player.sendMessage(new TextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
+            player.sendSystemMessage(Component.literal(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))));
         }
         // PlayerSignInDataCapability.setData(player, signInData);
         signInData.save(player);
@@ -537,7 +539,7 @@ public class RewardManager {
                 }
                 break;
             case MESSAGE:
-                player.sendMessage((TextComponent) object, player.getUUID());
+                player.sendSystemMessage((MutableComponent) object);
                 break;
             default:
         }

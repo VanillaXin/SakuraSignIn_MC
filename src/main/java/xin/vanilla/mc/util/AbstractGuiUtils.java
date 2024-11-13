@@ -6,8 +6,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.network.chat.BaseComponent;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
@@ -64,23 +64,23 @@ public class AbstractGuiUtils {
     /**
      * 获取多行文本的高度，以\n为换行符
      *
-     * @param font          字体渲染器
-     * @param textComponent 要绘制的文本
+     * @param font             字体渲染器
+     * @param MutableComponent 要绘制的文本
      */
-    public static int multilineTextHeight(Font font, BaseComponent textComponent) {
-        return textComponent.getString().replaceAll("\r\n", "\n").split("\n").length * font.lineHeight;
+    public static int multilineTextHeight(Font font, MutableComponent MutableComponent) {
+        return MutableComponent.getString().replaceAll("\r\n", "\n").split("\n").length * font.lineHeight;
     }
 
     /**
      * 获取多行文本的宽度，以\n为换行符
      *
-     * @param font          字体渲染器
-     * @param textComponent 要绘制的文本
+     * @param font             字体渲染器
+     * @param MutableComponent 要绘制的文本
      */
-    public static int multilineTextWidth(Font font, BaseComponent textComponent) {
+    public static int multilineTextWidth(Font font, MutableComponent MutableComponent) {
         int width = 0;
-        if (!StringUtils.isNotNullOrEmpty(textComponent.getString())) {
-            for (String s : textComponent.getString().replaceAll("\r\n", "\n").split("\n")) {
+        if (!StringUtils.isNotNullOrEmpty(MutableComponent.getString())) {
+            for (String s : MutableComponent.getString().replaceAll("\r\n", "\n").split("\n")) {
                 width = Math.max(width, font.width(s));
             }
         }
@@ -90,16 +90,16 @@ public class AbstractGuiUtils {
     /**
      * 绘制多行文本，以\n为换行符
      *
-     * @param poseStack     渲染矩阵
-     * @param font          字体渲染器
-     * @param textComponent 要绘制的文本
-     * @param x             绘制的X坐标
-     * @param y             绘制的Y坐标
-     * @param colors        文本颜色
+     * @param poseStack        渲染矩阵
+     * @param font             字体渲染器
+     * @param MutableComponent 要绘制的文本
+     * @param x                绘制的X坐标
+     * @param y                绘制的Y坐标
+     * @param colors           文本颜色
      */
-    public static void drawMultilineText(PoseStack poseStack, Font font, BaseComponent textComponent, int x, int y, int... colors) {
-        if (StringUtils.isNotNullOrEmpty(textComponent.getString())) {
-            String[] lines = textComponent.getString().replaceAll("\r\n", "\n").split("\n");
+    public static void drawMultilineText(PoseStack poseStack, Font font, MutableComponent MutableComponent, int x, int y, int... colors) {
+        if (StringUtils.isNotNullOrEmpty(MutableComponent.getString())) {
+            String[] lines = MutableComponent.getString().replaceAll("\r\n", "\n").split("\n");
             for (int i = 0; i < lines.length; i++) {
                 int color;
                 if (colors.length == lines.length) {
@@ -208,7 +208,7 @@ public class AbstractGuiUtils {
         if (showText) {
             // 效果等级
             if (mobEffectInstance.getAmplifier() >= 0) {
-                TextComponent amplifierString = new TextComponent(StringUtils.intToRoman(mobEffectInstance.getAmplifier() + 1));
+                MutableComponent amplifierString = Component.literal(StringUtils.intToRoman(mobEffectInstance.getAmplifier() + 1));
                 int amplifierWidth = font.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
@@ -216,7 +216,7 @@ public class AbstractGuiUtils {
             }
             // 效果持续时间
             if (mobEffectInstance.getDuration() > 0) {
-                TextComponent durationString = new TextComponent(DateUtils.toMaxUnitString(mobEffectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
+                MutableComponent durationString = Component.literal(DateUtils.toMaxUnitString(mobEffectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
                 int durationWidth = font.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
@@ -243,7 +243,7 @@ public class AbstractGuiUtils {
         AbstractGuiUtils.bindTexture(textureLocation);
         AbstractGuiUtils.blit(poseStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
-            TextComponent num = new TextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
+            MutableComponent num = Component.literal(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
             int numWidth = font.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - font.lineHeight + 2;
