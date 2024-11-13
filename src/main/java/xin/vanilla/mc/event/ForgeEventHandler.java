@@ -25,7 +25,10 @@ import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.SignInDataManager;
 import xin.vanilla.mc.enums.ESignInType;
-import xin.vanilla.mc.network.*;
+import xin.vanilla.mc.network.ClientConfigSyncPacket;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.SignInDataSyncPacket;
+import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardManager;
 
 import java.util.Date;
@@ -104,8 +107,6 @@ public class ForgeEventHandler {
             LOGGER.debug("Server: Player logged in.");
             // 同步玩家签到数据到客户端
             PlayerSignInDataCapability.syncPlayerData((ServerPlayerEntity) event.getPlayer());
-            // 同步服务器配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new ServerConfigSyncPacket());
             // 同步签到奖励配置到客户端
             ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new SignInDataSyncPacket(SignInDataManager.getSignInData()));
         }
