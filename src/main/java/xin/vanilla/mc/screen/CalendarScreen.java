@@ -1,9 +1,9 @@
 package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -357,13 +357,13 @@ public class CalendarScreen extends Screen {
     /**
      * 绘制背景纹理
      */
-    private void renderBackgroundTexture(PoseStack poseStack) {
+    private void renderBackgroundTexture(GuiGraphics graphics) {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         // 绘制背景纹理，使用缩放后的宽度和高度
-        AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
-        AbstractGuiUtils.blit(poseStack, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        // AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
+        AbstractGuiUtils.blit(graphics, BACKGROUND_TEXTURE, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();
     }
@@ -371,13 +371,13 @@ public class CalendarScreen extends Screen {
     /**
      * 绘制旋转的纹理
      *
-     * @param poseStack      矩阵栈
+     * @param graphics       矩阵栈
      * @param coordinate     纹理坐标
      * @param angle          旋转角度
      * @param flipHorizontal 水平翻转
      * @param flipVertical   垂直翻转
      */
-    private void renderRotatedTexture(PoseStack poseStack, TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
+    private void renderRotatedTexture(GuiGraphics graphics, TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
         double x = bgX + coordinate.getX() * this.scale;
         double y = bgY + coordinate.getY() * this.scale;
         int width = (int) (coordinate.getWidth() * this.scale);
@@ -387,14 +387,14 @@ public class CalendarScreen extends Screen {
         int uWidth = (int) coordinate.getUWidth();
         int vHeight = (int) coordinate.getVHeight();
         // 绑定纹理
-        AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
+        // AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
         // 保存当前矩阵状态
-        poseStack.pushPose();
+        graphics.pose().pushPose();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
-        poseStack.translate(x + width / 2.0, y + height / 2.0, 0);
+        graphics.pose().translate(x + width / 2.0, y + height / 2.0, 0);
         // 创建一个 Quaternion 用来表示绕 Z 轴旋转
         // 将角度转换为弧度
-        poseStack.mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
+        graphics.pose().mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
 
         // 左右翻转
         if (flipHorizontal) {
@@ -407,11 +407,11 @@ public class CalendarScreen extends Screen {
             vHeight = -vHeight;
         }
         // 平移回原点
-        poseStack.translate(-width / 2.0, -height / 2.0, 0);
+        graphics.pose().translate(-width / 2.0, -height / 2.0, 0);
         // 绘制纹理
-        AbstractGuiUtils.blit(poseStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        AbstractGuiUtils.blit(graphics, BACKGROUND_TEXTURE, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 恢复矩阵状态
-        poseStack.popPose();
+        graphics.pose().popPose();
     }
 
     /**
@@ -433,23 +433,23 @@ public class CalendarScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(poseStack);
+        this.renderBackground(graphics);
         // 绘制缩放背景纹理
-        this.renderBackgroundTexture(poseStack);
+        this.renderBackgroundTexture(graphics);
 
         // 渲染年份
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(poseStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
+        graphics.drawString(this.font, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate(), false);
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(poseStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
+        graphics.drawString(this.font, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate(), false);
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -533,25 +533,25 @@ public class CalendarScreen extends Screen {
             }
             button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
             button.setX(coordinate.getX()).setY(coordinate.getY());
-            this.renderRotatedTexture(poseStack, coordinate, angle, flipHorizontal, flipVertical);
+            this.renderRotatedTexture(graphics, coordinate, angle, flipHorizontal, flipVertical);
         }
 
-        super.render(poseStack, mouseX, mouseY, partialTicks);
+        super.render(graphics, mouseX, mouseY, partialTicks);
         // 渲染所有格子
         for (CalendarCell cell : calendarCells) {
-            cell.render(poseStack, this.font, this.itemRenderer, mouseX, mouseY);
+            cell.render(graphics, this.font, mouseX, mouseY);
         }
         // 渲染格子弹出层
         for (CalendarCell cell : calendarCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
-                cell.renderTooltip(poseStack, this.font, this.itemRenderer, mouseX, mouseY);
+                cell.renderTooltip(graphics, this.font, mouseX, mouseY);
             }
         }
 
         // 渲染自定义背景文件列表，根据 scrollOffset 显示文件名
         if (themeSelectorVisible) {
             // 绘制背景
-            fill(poseStack, themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
+            graphics.fill(themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
             for (int i = 0; i < THEME_SELECTOR_MAX_VISIBLE_ITEMS; i++) {
                 int index = i + themeSelectorScrollOffset;
                 if (index >= 0 && index < themeFileList.size()) {
@@ -560,19 +560,19 @@ public class CalendarScreen extends Screen {
 
                     // 检测鼠标悬停状态，高亮显示
                     if (index == themeSelectorHoveredIndex) {
-                        fill(poseStack, x - 2, y - 2, x + themeSelectorMaxWidth + 2, y + font.lineHeight + 2, 0xAAAAAAAA);
+                        graphics.fill(x - 2, y - 2, x + themeSelectorMaxWidth + 2, y + font.lineHeight + 2, 0xAAAAAAAA);
                     }
                     // 绘制文件名
                     String name = themeFileList.get(index).getName();
                     name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
-                    AbstractGuiUtils.drawLimitedText(poseStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(graphics, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 }
             }
             // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
             if (themeFileList.isEmpty()) {
                 MutableComponent MutableComponent = Component.translatable("screen.sakura_sign_in.theme_selector.empty");
                 int textHeight = AbstractGuiUtils.multilineTextHeight(font, MutableComponent);
-                AbstractGuiUtils.drawMultilineText(poseStack, font, MutableComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
+                AbstractGuiUtils.drawMultilineText(graphics, font, MutableComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
             }
         }
     }
