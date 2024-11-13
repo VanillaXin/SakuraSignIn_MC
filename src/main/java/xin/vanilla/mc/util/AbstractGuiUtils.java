@@ -265,9 +265,9 @@ public class AbstractGuiUtils {
     public static void renderCustomReward(PoseStack poseStack, ItemRenderer itemRenderer, Font font, ResourceLocation textureLocation, CalendarTextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
-            itemRenderer.renderGuiItem(itemStack, x, y);
+            itemRenderer.renderGuiItem(poseStack, itemStack, x, y);
             if (showText) {
-                itemRenderer.renderGuiItemDecorations(font, itemStack, x, y, String.valueOf(itemStack.getCount()));
+                itemRenderer.renderGuiItemDecorations(poseStack, font, itemStack, x, y, String.valueOf(itemStack.getCount()));
             }
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
             MobEffectInstance mobEffectInstance = RewardManager.deserializeReward(reward);
