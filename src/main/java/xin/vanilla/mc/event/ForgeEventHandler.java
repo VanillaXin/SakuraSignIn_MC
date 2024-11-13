@@ -104,8 +104,6 @@ public class ForgeEventHandler {
             LOGGER.debug("Server: Player logged in.");
             // 同步玩家签到数据到客户端
             PlayerSignInDataCapability.syncPlayerData((ServerPlayerEntity) event.getPlayer());
-            // 同步服务器配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new ServerConfigSyncPacket());
             // 同步签到奖励配置到客户端
             ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new SignInDataSyncPacket(SignInDataManager.getSignInData()));
         }
