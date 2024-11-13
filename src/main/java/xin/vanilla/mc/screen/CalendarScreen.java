@@ -2,7 +2,6 @@ package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,6 +14,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joml.Quaternionf;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
@@ -35,7 +35,6 @@ import xin.vanilla.mc.util.TextureUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -393,8 +392,10 @@ public class CalendarScreen extends Screen {
         poseStack.pushPose();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
         poseStack.translate(x + width / 2.0, y + height / 2.0, 0);
-        // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
-        poseStack.mulPose(Vector3f.ZP.rotationDegrees(angle));
+        // 创建一个 Quaternion 用来表示绕 Z 轴旋转
+        // 将角度转换为弧度
+        poseStack.mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
+
         // 左右翻转
         if (flipHorizontal) {
             u0 += uWidth;
