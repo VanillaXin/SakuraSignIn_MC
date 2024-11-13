@@ -7,8 +7,8 @@ import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -179,7 +179,7 @@ public class CalendarScreen extends Screen {
     }
 
     public CalendarScreen() {
-        super(new TranslatableComponent("screen.sakura_sign_in.calendar_title"));
+        super(Component.translatable("screen.sakura_sign_in.calendar_title"));
     }
 
     @Override
@@ -214,7 +214,7 @@ public class CalendarScreen extends Screen {
         try {
             BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.THEME.get());
             specialVersion = Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get());
-            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
+            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).get().open();
             textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
         } catch (IOException | ClassNotFoundException ignored) {
         }
@@ -569,7 +569,7 @@ public class CalendarScreen extends Screen {
             }
             // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
             if (themeFileList.isEmpty()) {
-                TranslatableComponent textComponent = new TranslatableComponent("screen.sakura_sign_in.theme_selector.empty");
+                MutableComponent textComponent = Component.translatable("screen.sakura_sign_in.theme_selector.empty");
                 int textHeight = AbstractGuiUtils.multilineTextHeight(font, textComponent);
                 AbstractGuiUtils.drawMultilineText(poseStack, font, textComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
             }
@@ -641,7 +641,7 @@ public class CalendarScreen extends Screen {
                         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                             String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
                             if (player != null) {
-                                player.sendMessage(new TextComponent("已选择主题文件: " + selectedFile), player.getUUID());
+                                player.sendSystemMessage(Component.literal("已选择主题文件: " + selectedFile));
                                 ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
                                 updateTextureAndCoordinate.set(true);
                                 updateLayout.set(true);
@@ -779,7 +779,7 @@ public class CalendarScreen extends Screen {
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
-                    player.sendMessage(new TextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                    player.sendSystemMessage(Component.literal("前面的的日期以后再来探索吧。"));
                 } else {
                     cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
@@ -787,10 +787,10 @@ public class CalendarScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new TextComponent("已经签过到了哦。"), player.getUUID());
+                player.sendSystemMessage(Component.literal("已经签过到了哦。"));
             } else {
                 if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
-                    player.sendMessage(new TextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+                    player.sendSystemMessage(Component.literal("不论怎么点也不会获取俩次奖励吧。"));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
@@ -799,10 +799,10 @@ public class CalendarScreen extends Screen {
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!ServerConfig.SIGN_IN_CARD.get()) {
-                    player.sendMessage(new TextComponent("服务器未开启补签功能哦。"), player.getUUID());
+                    player.sendSystemMessage(Component.literal("服务器未开启补签功能哦。"));
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                        player.sendMessage(new TextComponent("补签卡不足了哦。"), player.getUUID());
+                        player.sendSystemMessage(Component.literal("补签卡不足了哦。"));
                     } else {
                         cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                         ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
@@ -811,15 +811,15 @@ public class CalendarScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
             if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
-                player.sendMessage(new TextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                player.sendSystemMessage(Component.literal("前面的的日期以后再来探索吧。"));
             } else {
-                player.sendMessage(new TextComponent("后面的的日期怎么想也回不去了吧。"), player.getUUID());
+                player.sendSystemMessage(Component.literal("后面的的日期怎么想也回不去了吧。"));
             }
         } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
-            player.sendMessage(new TextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+            player.sendSystemMessage(Component.literal("不论怎么点也不会获取俩次奖励吧。"));
         } else {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new TextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());
+                player.sendSystemMessage(Component.literal(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)));
             }
         }
     }

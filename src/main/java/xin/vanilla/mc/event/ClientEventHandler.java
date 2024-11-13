@@ -3,9 +3,9 @@ package xin.vanilla.mc.event;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -34,8 +34,11 @@ public class ClientEventHandler {
     /**
      * 注册键绑定
      */
-    public static void registerKeyBindings() {
-        ClientRegistry.registerKeyBinding(CALENDAR_KEY);
+    @SubscribeEvent
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        // 注册按键绑定
+        LOGGER.debug("Registering key bindings");
+        event.register(CALENDAR_KEY);
     }
 
     /**
@@ -63,7 +66,7 @@ public class ClientEventHandler {
             } else {
                 LocalPlayer player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.sendMessage(new TextComponent("SakuraSignIn server is offline!"), player.getUUID());
+                    player.sendSystemMessage(Component.literal("SakuraSignIn server is offline!"));
                 }
             }
         }

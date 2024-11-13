@@ -9,9 +9,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -82,9 +82,6 @@ public class SakuraSignIn {
      */
     @SubscribeEvent
     public void onClientSetup(final FMLClientSetupEvent event) {
-        // 注册键绑定
-        LOGGER.debug("Registering key bindings");
-        ClientEventHandler.registerKeyBindings();
         // 创建配置文件目录
         ClientEventHandler.createConfigPath();
     }
@@ -114,7 +111,7 @@ public class SakuraSignIn {
         // 判断是否在客户端并且退出的玩家是客户端的当前玩家
         if (Minecraft.getInstance().level != null && Minecraft.getInstance().player != null) {
             // 获取退出的玩家对象
-            Player player = event.getPlayer();
+            Player player = event.getEntity();
             if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
                 LOGGER.debug("Current player has logged out.");
                 // 当前客户端玩家与退出的玩家相同
@@ -130,7 +127,7 @@ public class SakuraSignIn {
      */
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onWorldUnload(WorldEvent.Unload event) {
+    public void onWorldUnload(LevelEvent.Unload event) {
         LOGGER.debug("World has unloaded.");
         // 当玩家离开世界时
         enabled = false;

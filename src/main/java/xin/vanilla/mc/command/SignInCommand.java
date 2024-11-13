@@ -4,13 +4,18 @@ package xin.vanilla.mc.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import lombok.NonNull;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
@@ -22,7 +27,9 @@ import xin.vanilla.mc.enums.ETimeCoolingMethod;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.util.DateUtils;
+import xin.vanilla.mc.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,7 +38,7 @@ public class SignInCommand {
 
     public static int HELP_INFO_NUM_PER_PAGE = 5;
 
-    public static final List<KeyValue<String, String>> HELP_MESSAGE = new ArrayList<KeyValue<String, String>>() {{
+    public static final List<KeyValue<String, String>> HELP_MESSAGE = new ArrayList<>() {{
         add(new KeyValue<>("/va help[ <page>]", "va_help"));                                                 // 获取帮助信息
         add(new KeyValue<>("/sign[ <year> <month> <day>]", "sign"));                                         // 签到简洁版本
         add(new KeyValue<>("/reward[ <year> <month> <day>]", "reward"));                                     // 领取今天的奖励简洁版本
@@ -46,27 +53,51 @@ public class SignInCommand {
         add(new KeyValue<>("/va config set date <year> <month> <day> <hour> <minute> <second>", "va_config_set_date"));    // 设置服务器时间
     }};
 
+    /*
+        0 - 所有玩家。
+        1 - 拥有操作员权限的玩家（/op 命令）。
+        2 - 能够使用 /give 和 /clear 等管理指令的操作员。
+        3 - 能够使用 /ban 和 /kick 等服务器管理指令的操作员。
+        4 - 服务器所有者或控制台。
+     */
+
     /**
      * 注册命令到命令调度器
      *
      * @param dispatcher 命令调度器，用于管理服务器中的所有命令
      */
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        /*
-            0 - 所有玩家。
-            1 - 拥有操作员权限的玩家（/op 命令）。
-            2 - 能够使用 /give 和 /clear 等管理指令的操作员。
-            3 - 能够使用 /ban 和 /kick 等服务器管理指令的操作员。
-            4 - 服务器所有者或控制台。
-         */
+
+        // 提供日期建议的 SuggestionProvider
+        SuggestionProvider<CommandSourceStack> dateSuggestions = (context, builder) -> {
+            LocalDateTime localDateTime = DateUtils.getLocalDateTime(DateUtils.getServerDate());
+            builder.suggest(localDateTime.getYear() + " " + localDateTime.getMonthValue() + " " + localDateTime.getDayOfMonth());
+            builder.suggest("~ ~ ~");
+            builder.suggest("~ ~ ~-1");
+            return builder.buildFuture();
+        };
+        SuggestionProvider<CommandSourceStack> timeSuggestions = (context, builder) -> {
+            LocalDateTime localDateTime = DateUtils.getLocalDateTime(DateUtils.getServerDate());
+            builder.suggest(localDateTime.getHour() + " " + localDateTime.getMinute() + " " + localDateTime.getSecond());
+            builder.suggest("~ ~ ~");
+            builder.suggest("~ ~ ~-1");
+            return builder.buildFuture();
+        };
+        SuggestionProvider<CommandSourceStack> datetimeSuggestions = (context, builder) -> {
+            LocalDateTime localDateTime = DateUtils.getLocalDateTime(DateUtils.getServerDate());
+            builder.suggest(localDateTime.getYear() + " " + localDateTime.getMonthValue() + " " + localDateTime.getDayOfMonth()
+                    + " " + localDateTime.getHour() + " " + localDateTime.getMinute() + " " + localDateTime.getSecond());
+            builder.suggest("~ ~ ~ ~ ~ ~");
+            builder.suggest("~ ~ ~ ~ ~ ~-1");
+            return builder.buildFuture();
+        };
+
         Command<CommandSourceStack> signInCommand = context -> {
             Date signInTime;
             ESignInType signInType;
             try {
-                int year = RelativeDateArgument.getInteger(context, "year");
-                int month = RelativeDateArgument.getInteger(context, "month");
-                int day = RelativeDateArgument.getInteger(context, "day");
-                signInTime = DateUtils.getDate(year, month, day);
+                long date = getRelativeLong(context, "date");
+                signInTime = DateUtils.getDate(date);
                 signInType = ESignInType.RE_SIGN_IN;
             } catch (IllegalArgumentException ignored) {
                 signInTime = DateUtils.getServerDate();
@@ -78,27 +109,23 @@ public class SignInCommand {
             return 1;
         };
         Command<CommandSourceStack> rewardCommand = context -> {
-            Date signInTime;
+            Date rewardTime;
             try {
-                int year = RelativeDateArgument.getInteger(context, "year");
-                int month = RelativeDateArgument.getInteger(context, "month");
-                int day = RelativeDateArgument.getInteger(context, "day");
-                signInTime = DateUtils.getDate(year, month, day);
+                long date = getRelativeLong(context, "date");
+                rewardTime = DateUtils.getDate(date);
             } catch (IllegalArgumentException ignored) {
-                signInTime = DateUtils.getServerDate();
+                rewardTime = DateUtils.getServerDate();
             }
             ServerPlayer player = context.getSource().getPlayerOrException();
-            RewardManager.signIn(player, new SignInPacket(signInTime, true, ESignInType.REWARD));
+            RewardManager.signIn(player, new SignInPacket(rewardTime, true, ESignInType.REWARD));
             return 1;
         };
         Command<CommandSourceStack> signAndRewardCommand = context -> {
             Date signInTime;
             ESignInType signInType;
             try {
-                int year = RelativeDateArgument.getInteger(context, "year");
-                int month = RelativeDateArgument.getInteger(context, "month");
-                int day = RelativeDateArgument.getInteger(context, "day");
-                signInTime = DateUtils.getDate(year, month, day);
+                long date = getRelativeLong(context, "date");
+                signInTime = DateUtils.getDate(date);
                 signInType = ESignInType.RE_SIGN_IN;
             } catch (IllegalArgumentException ignored) {
                 signInTime = DateUtils.getServerDate();
@@ -118,56 +145,47 @@ public class SignInCommand {
             if (page < 1 || page > pages) {
                 throw new IllegalArgumentException("page must be between 1 and " + (HELP_MESSAGE.size() / HELP_INFO_NUM_PER_PAGE));
             }
-            TextComponent helpInfo = new TextComponent("-----==== Sakura Sign In Help (" + page + "/" + pages + ") ====-----\n");
+            MutableComponent helpInfo = Component.literal("-----==== Sakura Sign In Help (" + page + "/" + pages + ") ====-----\n");
             for (int i = 0; (page - 1) * HELP_INFO_NUM_PER_PAGE + i < HELP_MESSAGE.size() && i < HELP_INFO_NUM_PER_PAGE; i++) {
                 KeyValue<String, String> keyValue = HELP_MESSAGE.get((page - 1) * HELP_INFO_NUM_PER_PAGE + i);
-                TranslatableComponent commandTips = new TranslatableComponent("command." + SakuraSignIn.MODID + "." + keyValue.getValue());
+                MutableComponent commandTips = Component.translatable("command." + SakuraSignIn.MODID + "." + keyValue.getValue());
                 commandTips.withStyle(Style.EMPTY.withColor(ChatFormatting.GRAY));
                 helpInfo.append(keyValue.getKey())
-                        .append(new TextComponent(" -> ").withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
+                        .append(Component.literal(" -> ").withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
                         .append(commandTips);
                 if (i != HELP_MESSAGE.size() - 1) {
                     helpInfo.append("\n");
                 }
             }
-            ServerPlayer player = ((CommandSourceStack) context.getSource()).getPlayerOrException();
-            player.sendMessage(helpInfo, player.getUUID());
+            ServerPlayer player = context.getSource().getPlayerOrException();
+            player.sendSystemMessage(helpInfo);
             return 1;
         };
 
         // 签到 /sign
         dispatcher.register(Commands.literal("sign").executes(signInCommand)
                 // 带有日期参数 -> 补签
-                .then(Commands.argument("year", RelativeDateArgument.year(1, 9999))
-                        .then(Commands.argument("month", RelativeDateArgument.month(1, 12))
-                                .then(Commands.argument("day", RelativeDateArgument.date(1, 31))
-                                        .executes(signInCommand)
-                                )
-                        )
+                .then(Commands.argument("date", StringArgumentType.greedyString())
+                        .suggests(dateSuggestions)
+                        .executes(signInCommand)
                 )
         );
 
         // 领取奖励 /reward
         dispatcher.register(Commands.literal("reward").executes(rewardCommand)
                 // 带有日期参数 -> 补签
-                .then(Commands.argument("year", RelativeDateArgument.year(1, 9999))
-                        .then(Commands.argument("month", RelativeDateArgument.month(1, 12))
-                                .then(Commands.argument("day", RelativeDateArgument.date(1, 31))
-                                        .executes(rewardCommand)
-                                )
-                        )
+                .then(Commands.argument("date", StringArgumentType.greedyString())
+                        .suggests(dateSuggestions)
+                        .executes(rewardCommand)
                 )
         );
 
         // 签到并领取奖励 /signex
         dispatcher.register(Commands.literal("signex").executes(signAndRewardCommand)
                 // 带有日期参数 -> 补签
-                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                        .executes(signAndRewardCommand)
-                                )
-                        )
+                .then(Commands.argument("date", StringArgumentType.greedyString())
+                        .suggests(dateSuggestions)
+                        .executes(signAndRewardCommand)
                 )
         );
 
@@ -183,34 +201,25 @@ public class SignInCommand {
                 // 签到 /va sign
                 .then(Commands.literal("sign").executes(signInCommand)
                         // 补签 /va sign <year> <month> <day>
-                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                .executes(signInCommand)
-                                        )
-                                )
+                        .then(Commands.argument("date", StringArgumentType.greedyString())
+                                .suggests(dateSuggestions)
+                                .executes(signInCommand)
                         )
                 )
                 // 奖励 /va reward
                 .then(Commands.literal("reward").executes(rewardCommand)
                         // 补签 /va sign <year> <month> <day>
-                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                .executes(rewardCommand)
-                                        )
-                                )
+                        .then(Commands.argument("date", StringArgumentType.greedyString())
+                                .suggests(dateSuggestions)
+                                .executes(rewardCommand)
                         )
                 )
                 // 签到并领取奖励 /va signex
                 .then(Commands.literal("signex").executes(signAndRewardCommand)
                         // 补签 /va signex <year> <month> <day>
-                        .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                        .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                .executes(signAndRewardCommand)
-                                        )
-                                )
+                        .then(Commands.argument("date", StringArgumentType.greedyString())
+                                .suggests(dateSuggestions)
+                                .executes(signAndRewardCommand)
                         )
                 )
                 // 获取补签卡数量 /va card
@@ -218,9 +227,9 @@ public class SignInCommand {
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             if (!ServerConfig.SIGN_IN_CARD.get()) {
-                                player.sendMessage(new TextComponent("服务器未开启补签功能"), player.getUUID());
+                                player.sendSystemMessage(Component.literal("服务器未开启补签功能"));
                             } else {
-                                player.sendMessage(new TextComponent(String.format("当前拥有%d张补签卡", PlayerSignInDataCapability.getData(player).getSignInCard())), player.getUUID());
+                                player.sendSystemMessage(Component.literal(String.format("当前拥有%d张补签卡", PlayerSignInDataCapability.getData(player).getSignInCard())));
                             }
                             return 1;
                         })
@@ -233,7 +242,7 @@ public class SignInCommand {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(signInData.getSignInCard() + num);
-                                            player.sendMessage(new TextComponent(String.format("给予%d张补签卡", num)), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("给予%d张补签卡", num)));
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
@@ -243,7 +252,7 @@ public class SignInCommand {
                                                     ServerPlayer player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                    player.sendMessage(new TextComponent(String.format("获得%d张补签卡", num)), player.getUUID());
+                                                    player.sendSystemMessage(Component.literal(String.format("获得%d张补签卡", num)));
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -260,7 +269,7 @@ public class SignInCommand {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(num);
-                                            player.sendMessage(new TextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("补签卡被设置为了%d张", num)));
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
@@ -270,7 +279,7 @@ public class SignInCommand {
                                                     ServerPlayer player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(num);
-                                                    player.sendMessage(new TextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                                    player.sendSystemMessage(Component.literal(String.format("补签卡被设置为了%d张", num)));
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -286,7 +295,7 @@ public class SignInCommand {
                                             ServerPlayer target = EntityArgument.getPlayer(context, "player");
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(target);
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TextComponent(String.format("玩家[%s]拥有%d张补签卡", target.getDisplayName().getString(), signInData.getSignInCard())), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("玩家[%s]拥有%d张补签卡", target.getDisplayName().getString(), signInData.getSignInCard())));
                                             PlayerSignInDataCapability.syncPlayerData(target);
                                             return 1;
                                         })
@@ -300,7 +309,7 @@ public class SignInCommand {
                                 .then(Commands.literal("autoSignIn")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TextComponent(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用")), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用")));
                                             return 1;
                                         })
                                 )
@@ -308,7 +317,7 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
-                                            player.sendMessage(new TextComponent(String.format("服务器签到时间冷却方式为: %s", coolingMethod.getName())), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器签到时间冷却方式为: %s", coolingMethod.getName())));
                                             return 1;
                                         })
                                 )
@@ -316,7 +325,7 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             Double time = ServerConfig.TIME_COOLING_TIME.get();
-                                            player.sendMessage(new TextComponent(String.format("服务器签到冷却刷新时间为: %05.2f", time)), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器签到冷却刷新时间为: %05.2f", time)));
                                             return 1;
                                         })
                                 )
@@ -324,14 +333,14 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             Double time = ServerConfig.TIME_COOLING_INTERVAL.get();
-                                            player.sendMessage(new TextComponent(String.format("服务器签到冷却刷新间隔为: %05.2f", time)), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器签到冷却刷新间隔为: %05.2f", time)));
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("signInCard")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TextComponent(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用")), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用")));
                                             return 1;
                                         })
                                 )
@@ -339,21 +348,21 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             int time = ServerConfig.RE_SIGN_IN_DAYS.get();
-                                            player.sendMessage(new TextComponent(String.format("服务器最大补签天数为: %d", time)), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器最大补签天数为: %d", time)));
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("signInCardOnlyBaseReward")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TextComponent(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用")), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用")));
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("date")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TextComponent(String.format("服务器当前时间: %s", DateUtils.toDateTimeString(DateUtils.getServerDate()))), player.getUUID());
+                                            player.sendSystemMessage(Component.literal(String.format("服务器当前时间: %s", DateUtils.toDateTimeString(DateUtils.getServerDate()))));
                                             return 1;
                                         })
                                 )
@@ -362,36 +371,75 @@ public class SignInCommand {
                         .then(Commands.literal("set")
                                         .requires(source -> source.hasPermission(3))
                                         .then(Commands.literal("date")
-                                                .then(Commands.argument("year", RelativeDateArgument.year(-9, 9999))
-                                                        .then(Commands.argument("month", RelativeDateArgument.month(-12, 12))
-                                                                .then(Commands.argument("day", RelativeDateArgument.date(-31, 31))
-                                                                        .then(Commands.argument("hour", RelativeDateArgument.hour(-23, 23))
-                                                                                .then(Commands.argument("minute", RelativeDateArgument.minute(-59, 59))
-                                                                                        .then(Commands.argument("second", RelativeDateArgument.second(-59, 59))
-                                                                                                .executes(context -> {
-                                                                                                    int year = RelativeDateArgument.getInteger(context, "year");
-                                                                                                    int month = RelativeDateArgument.getInteger(context, "month");
-                                                                                                    int day = RelativeDateArgument.getInteger(context, "day");
-                                                                                                    int hour = RelativeDateArgument.getInteger(context, "hour");
-                                                                                                    int minute = RelativeDateArgument.getInteger(context, "minute");
-                                                                                                    int second = RelativeDateArgument.getInteger(context, "second");
-                                                                                                    Date date = DateUtils.getDate(year, month, day, hour, minute, second);
-                                                                                                    ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
-                                                                                                    ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
-                                                                                                    ServerPlayer player = context.getSource().getPlayerOrException();
-                                                                                                    player.sendMessage(new TextComponent(String.format("服务器时间已设置为: %s", DateUtils.toDateTimeString(date))), player.getUUID());
-                                                                                                    return 1;
-                                                                                                })
-                                                                                        )
-                                                                                )
-                                                                        )
-                                                                )
-                                                        )
+                                                .then(Commands.argument("datetime", StringArgumentType.greedyString())
+                                                        .suggests(datetimeSuggestions)
+                                                        .executes(context -> {
+                                                            long datetime = getRelativeLong(context, "datetime");
+                                                            Date date = DateUtils.getDate(datetime);
+                                                            ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
+                                                            ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
+                                                            ServerPlayer player = context.getSource().getPlayerOrException();
+                                                            player.sendSystemMessage(Component.literal(String.format("服务器时间已设置为: %s", DateUtils.toDateTimeString(date))));
+                                                            return 1;
+                                                        })
                                                 )
                                         )
                                 // TODO 继续注册管理员指令实现修改所有服务器配置
                         )
                 )
         );
+    }
+
+    private static long getRelativeLong(CommandContext<CommandSourceStack> context, @NonNull String name) throws CommandSyntaxException {
+        String string = StringArgumentType.getString(context, name);
+        if (StringUtils.isNullOrEmptyEx(string)) {
+            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.readerInvalidInt().create(string);
+        }
+        String[] split = string.split(" ");
+        String[] units;
+        if ((name.equalsIgnoreCase("date") && split.length == 3)) {
+            units = new String[]{"year", "month", "day"};
+        } else if ((name.equalsIgnoreCase("time") && split.length == 3)) {
+            units = new String[]{"hour", "minute", "second"};
+        } else if (name.equalsIgnoreCase("datetime") && split.length == 6) {
+            units = new String[]{"year", "month", "day", "hour", "minute", "second"};
+        } else {
+            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.readerInvalidInt().create(string);
+        }
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < split.length; i++) {
+            int input;
+            int offset;
+            String inputString = split[i];
+            if (inputString.startsWith("_") || inputString.startsWith("~")) {
+                offset = switch (units[i]) {
+                    case "year" -> DateUtils.getLocalDateTime(DateUtils.getServerDate()).getYear();
+                    case "month" -> DateUtils.getLocalDateTime(DateUtils.getServerDate()).getMonthValue();
+                    case "day" -> DateUtils.getLocalDateTime(DateUtils.getServerDate()).getDayOfMonth();
+                    case "hour" -> DateUtils.getLocalDateTime(DateUtils.getServerDate()).getHour();
+                    case "minute" -> DateUtils.getLocalDateTime(DateUtils.getServerDate()).getMinute();
+                    case "second" -> DateUtils.getLocalDateTime(DateUtils.getServerDate()).getSecond();
+                    default -> 0;
+                };
+                if (inputString.equalsIgnoreCase("_") || inputString.equalsIgnoreCase("~")) {
+                    inputString = "0";
+                } else {
+                    inputString = inputString.substring(1);
+                }
+            } else {
+                offset = 0;
+            }
+            try {
+                input = Integer.parseInt(inputString);
+            } catch (NumberFormatException e) {
+                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.readerInvalidInt().create(inputString);
+            }
+            if (units[i].equalsIgnoreCase("year")) {
+                result.append(String.format("%04d", offset + input));
+            } else {
+                result.append(String.format("%02d", offset + input));
+            }
+        }
+        return Long.parseLong(result.toString());
     }
 }

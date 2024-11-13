@@ -8,7 +8,8 @@ import lombok.experimental.Accessors;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.enums.ESignInStatus;
@@ -124,7 +125,7 @@ public class CalendarCell {
             // 绘制日期
             Date date = new Date();
             int color = textureCoordinate.getTextColorDefault();
-            TextComponent dayStr = new TextComponent(String.valueOf(day));
+            MutableComponent dayStr = Component.literal(String.valueOf(day));
             if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
                 if (day == DateUtils.getDayOfMonth(date)) {
                     color = textureCoordinate.getTextColorToday();
@@ -206,7 +207,7 @@ public class CalendarCell {
             }
         }
         // 绘制文字
-        TextComponent title = new TextComponent(month + "月" + day + "日");
+        MutableComponent title = Component.literal(month + "月" + day + "日");
         double fontWidth = font.width(title);
         TextureCoordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
         double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;
