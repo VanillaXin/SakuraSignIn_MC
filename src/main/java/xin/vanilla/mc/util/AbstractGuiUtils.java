@@ -1,9 +1,11 @@
 package xin.vanilla.mc.util;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import lombok.Getter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -13,6 +15,8 @@ import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.CalendarTextureCoordinate;
 import xin.vanilla.mc.screen.TextureCoordinate;
+
+import javax.annotation.Nullable;
 
 /**
  * AbstractGui工具类
@@ -45,11 +49,49 @@ public class AbstractGuiUtils {
      * @param textureHeight 整个纹理的高度，用于计算纹理坐标。
      */
     public static void blit(GuiGraphics graphics, ResourceLocation resourceLocation, int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
+        // 设置纹理的颜色(RGBA)为白色，表示没有颜色变化，纹理将按原样显示。
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         graphics.blit(resourceLocation, x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
     }
 
     public static void blit(GuiGraphics graphics, ResourceLocation resourceLocation, int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
         graphics.blit(resourceLocation, x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, @Nullable String text, float x, float y, int color) {
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color, true);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, @Nullable String text, float x, float y, int color, EDepth depth) {
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color, true, depth);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, @Nullable String text, float x, float y, int color, boolean shadow) {
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color, shadow, EDepth.FOREGROUND);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, @Nullable String text, float x, float y, int color, boolean shadow, EDepth depth) {
+        AbstractGuiUtils.setDepth(graphics, depth);
+        graphics.drawString(font, text, x, y, color, shadow);
+        AbstractGuiUtils.resetDepth(graphics);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, Component text, float x, float y, int color) {
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color, true);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, Component text, float x, float y, int color, EDepth depth) {
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color, true, depth);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, Component text, float x, float y, int color, boolean shadow) {
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color, shadow, EDepth.FOREGROUND);
+    }
+
+    public static void drawString(GuiGraphics graphics, Font font, Component text, float x, float y, int color, boolean shadow, EDepth depth) {
+        AbstractGuiUtils.setDepth(graphics, depth);
+        graphics.drawString(font, text, (int) x, (int) y, color, shadow);
+        AbstractGuiUtils.resetDepth(graphics);
     }
 
     public enum EllipsisPosition {
@@ -106,7 +148,7 @@ public class AbstractGuiUtils {
                 } else {
                     color = 0xFFFFFF;
                 }
-                graphics.drawString(font, lines[i], x, y + i * font.lineHeight, color);
+                AbstractGuiUtils.drawString(graphics, font, lines[i], x, y + i * font.lineHeight, color);
             }
         }
     }
@@ -177,7 +219,7 @@ public class AbstractGuiUtils {
             }
         }
 
-        graphics.drawString(font, text, x, y, color);
+        AbstractGuiUtils.drawString(graphics, font, text, x, y, color);
     }
 
     /**
@@ -209,7 +251,7 @@ public class AbstractGuiUtils {
                 int amplifierWidth = font.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
-                graphics.drawString(font, amplifierString, fontX, fontY, 0xFFFFFF, true);
+                AbstractGuiUtils.drawString(graphics, font, amplifierString, fontX, fontY, 0xFFFFFF, true);
             }
             // 效果持续时间
             if (mobEffectInstance.getDuration() > 0) {
@@ -217,7 +259,7 @@ public class AbstractGuiUtils {
                 int durationWidth = font.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
-                graphics.drawString(font, durationString, fontX, fontY, 0xFFFFFF, true);
+                AbstractGuiUtils.drawString(graphics, font, durationString, fontX, fontY, 0xFFFFFF, true);
             }
         }
     }
@@ -244,7 +286,7 @@ public class AbstractGuiUtils {
             int numWidth = font.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - font.lineHeight + 2;
-            graphics.drawString(font, num, fontX, fontY, 0xFFFFFF, true);
+            AbstractGuiUtils.drawString(graphics, font, num, fontX, fontY, 0xFFFFFF, true);
         }
     }
 
@@ -284,5 +326,44 @@ public class AbstractGuiUtils {
         // 设置纹理的颜色(RGBA)为白色，表示没有颜色变化，纹理将按原样显示。
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, resourceLocation);
+    }
+
+    @Getter
+    public enum EDepth {
+        BACKGROUND(1),
+        FOREGROUND(10),
+        OVERLAY(100),
+        TOOLTIP(200);
+
+        private final int depth;
+
+        EDepth(int depth) {
+            this.depth = depth;
+        }
+    }
+
+    /**
+     * 设置深度
+     */
+    public static void setDepth(GuiGraphics graphics) {
+        AbstractGuiUtils.setDepth(graphics, EDepth.FOREGROUND);
+    }
+
+    /**
+     * 设置深度
+     *
+     * @param graphics 用于变换绘制坐标系的矩阵堆栈
+     * @param depth    深度
+     */
+    public static void setDepth(GuiGraphics graphics, EDepth depth) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, depth.getDepth());
+    }
+
+    /**
+     * 重置深度
+     */
+    public static void resetDepth(GuiGraphics graphics) {
+        graphics.pose().popPose();
     }
 }

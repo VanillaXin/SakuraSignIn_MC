@@ -3,12 +3,11 @@ package xin.vanilla.mc.network;
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.rewards.RewardManager;
 
 import java.util.Date;
-import java.util.function.Supplier;
 
 @Getter
 public class SignInPacket {
@@ -34,13 +33,13 @@ public class SignInPacket {
         buf.writeInt(signInType.getCode());
     }
 
-    public static void handle(SignInPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
+    public static void handle(SignInPacket packet, CustomPayloadEvent.Context ctx) {
+        ctx.enqueueWork(() -> {
+            ServerPlayer player = ctx.getSender();
             if (player != null) {
                 RewardManager.signIn(player, packet);
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

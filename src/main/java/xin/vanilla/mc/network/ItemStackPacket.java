@@ -6,11 +6,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import xin.vanilla.mc.SakuraSignIn;
 
 import java.io.IOException;
-import java.util.function.Supplier;
 
 /**
  * ItemStackPacket类用于在网络中传输ItemStack数据
@@ -55,11 +54,11 @@ public class ItemStackPacket {
      * @param packet 包含物品堆信息的数据包
      * @param ctx    用于访问网络事件上下文的供应商函数，包括访问玩家信息和设置数据包处理状态
      */
-    public static void handle(ItemStackPacket packet, Supplier<NetworkEvent.Context> ctx) {
+    public static void handle(ItemStackPacket packet, CustomPayloadEvent.Context ctx) {
         // 获取网络事件上下文并排队执行工作
-        ctx.get().enqueueWork(() -> {
+        ctx.enqueueWork(() -> {
             // 获取发送数据包的玩家实体
-            ServerPlayer player = ctx.get().getSender();
+            ServerPlayer player = ctx.getSender();
             if (player != null) {
                 // 尝试将物品堆添加到玩家的库存中
                 boolean added = player.getInventory().add(packet.itemStack);
@@ -75,6 +74,6 @@ public class ItemStackPacket {
             }
         });
         // 设置数据包已处理状态，防止重复处理
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

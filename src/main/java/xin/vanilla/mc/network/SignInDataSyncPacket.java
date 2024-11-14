@@ -2,11 +2,9 @@ package xin.vanilla.mc.network;
 
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import xin.vanilla.mc.config.SignInData;
 import xin.vanilla.mc.config.SignInDataManager;
-
-import java.util.function.Supplier;
 
 @Getter
 public class SignInDataSyncPacket {
@@ -27,13 +25,13 @@ public class SignInDataSyncPacket {
         buf.writeUtf(SignInDataManager.serializeSignInData(signInData));
     }
 
-    public static void handle(SignInDataSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            if (ctx.get().getDirection().getReceptionSide().isClient()) {
+    public static void handle(SignInDataSyncPacket packet, CustomPayloadEvent.Context ctx) {
+        ctx.enqueueWork(() -> {
+            if (ctx.getDirection().getReceptionSide().isClient()) {
                 // 在客户端更新 SignInData
                 SignInDataManager.setSignInData(packet.getSignInData());
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

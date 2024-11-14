@@ -3,7 +3,7 @@ package xin.vanilla.mc.rewards;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.NonNull;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -536,7 +536,7 @@ public class RewardManager {
                 break;
             case ADVANCEMENT:
                 // TODO 待研究成就解锁
-                Advancement advancement = player.server.getAdvancements().getAdvancement((ResourceLocation) object);
+                AdvancementHolder advancement = player.server.getAdvancements().get((ResourceLocation) object);
                 if (advancement != null) {
                     player.getAdvancements().award(advancement, "impossible");
                 }

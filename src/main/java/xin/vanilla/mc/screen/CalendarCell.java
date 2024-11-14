@@ -77,6 +77,8 @@ public class CalendarCell {
         boolean isHovered = this.isMouseOver(mouseX, mouseY);
         if (showIcon) {
             // AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
+            // 提升Z坐标以确保弹出层在最上层
+            AbstractGuiUtils.setDepth(graphics);
             if (status == ESignInStatus.REWARDED.getCode()) {
                 // 绘制已领取图标
                 TextureCoordinate signedInUV = textureCoordinate.getRewardedUV();
@@ -117,6 +119,7 @@ public class CalendarCell {
                 previousMouseX = mouseX;
                 previousMouseY = mouseY;
             }
+            AbstractGuiUtils.resetDepth(graphics);
         }
 
         if (showText) {
@@ -135,7 +138,7 @@ public class CalendarCell {
                 color = textureCoordinate.getTextColorCanRepair();
             }
             float dayWidth = font.width(dayStr);
-            graphics.drawString(font, dayStr.getString(), (float) (x + (width - dayWidth) / 2), (float) (y + height + 0.1f), color, false);
+            AbstractGuiUtils.drawString(graphics, font, dayStr.getString(), (float) (x + (width - dayWidth) / 2), (float) (y + height + 0.1f), color, false);
         }
     }
 
@@ -143,9 +146,8 @@ public class CalendarCell {
     public void renderTooltip(GuiGraphics graphics, Font font, int mouseX, int mouseY) {
         // 禁用深度测试
         RenderSystem.disableDepthTest();
-        graphics.pose().pushPose();
         // 提升Z坐标以确保弹出层在最上层
-        graphics.pose().translate(0, 0, 200.0F);
+        AbstractGuiUtils.setDepth(graphics, AbstractGuiUtils.EDepth.TOOLTIP);
 
         TextureCoordinate tooltipUV = textureCoordinate.getTooltipUV();
         TextureCoordinate cellCoordinate = textureCoordinate.getTooltipCellCoordinate();
@@ -210,10 +212,10 @@ public class CalendarCell {
         TextureCoordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
         double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;
         double tooltipDateY = tooltipY0 + (dateCoordinate.getY() * tooltipScale);
-        graphics.drawString(font, title, (int) tooltipDateX, (int) tooltipDateY, 0xFFFFFF, false);
+        AbstractGuiUtils.drawString(graphics, font, title, (int) tooltipDateX, (int) tooltipDateY, 0xFFFFFF, false, AbstractGuiUtils.EDepth.TOOLTIP);
 
         // 恢复原来的矩阵状态
-        graphics.pose().popPose();
+        AbstractGuiUtils.resetDepth(graphics);
         // 恢复深度测试
         RenderSystem.enableDepthTest();
     }

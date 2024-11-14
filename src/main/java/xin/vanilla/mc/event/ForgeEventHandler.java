@@ -25,7 +25,10 @@ import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.SignInDataManager;
 import xin.vanilla.mc.enums.ESignInType;
-import xin.vanilla.mc.network.*;
+import xin.vanilla.mc.network.ClientConfigSyncPacket;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.SignInDataSyncPacket;
+import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardManager;
 
 import java.util.Date;
@@ -45,7 +48,7 @@ public class ForgeEventHandler {
         LOGGER.debug("Client: Player logged in.");
         isPlayerLoggedIn = true;
         // 同步客户端配置到服务器
-        ModNetworkHandler.INSTANCE.sendToServer(new ClientConfigSyncPacket());
+        ModNetworkHandler.INSTANCE.send(new ClientConfigSyncPacket(), PacketDistributor.SERVER.noArg());
     }
 
     @SubscribeEvent
@@ -60,7 +63,7 @@ public class ForgeEventHandler {
                 IPlayerSignInData data = PlayerSignInDataCapability.getData(mc.player);
                 // 服务器是否启用自动签到, 且玩家未签到
                 if (ServerConfig.autoSignIn && !RewardManager.isSignedIn(data, new Date(), true)) {
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN));
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
                 }
             }
         }
@@ -105,7 +108,7 @@ public class ForgeEventHandler {
             // 同步玩家签到数据到客户端
             PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getEntity());
             // 同步签到奖励配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new SignInDataSyncPacket(SignInDataManager.getSignInData()));
+            ModNetworkHandler.INSTANCE.send(new SignInDataSyncPacket(SignInDataManager.getSignInData()), PacketDistributor.PLAYER.with((ServerPlayer) event.getEntity()));
         }
     }
 }

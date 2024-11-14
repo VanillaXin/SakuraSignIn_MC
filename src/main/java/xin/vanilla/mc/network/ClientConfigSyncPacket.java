@@ -3,12 +3,10 @@ package xin.vanilla.mc.network;
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.config.ClientConfig;
-
-import java.util.function.Supplier;
 
 @Getter
 public class ClientConfigSyncPacket {
@@ -29,15 +27,15 @@ public class ClientConfigSyncPacket {
         buf.writeBoolean(this.autoRewarded);
     }
 
-    public static void handle(ClientConfigSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
+    public static void handle(ClientConfigSyncPacket packet, CustomPayloadEvent.Context ctx) {
+        ctx.enqueueWork(() -> {
+            ServerPlayer player = ctx.getSender();
             if (player != null) {
                 IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                 signInData.setAutoRewarded(packet.autoRewarded);
                 signInData.save(player);
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.Quaternionf;
@@ -361,9 +362,11 @@ public class CalendarScreen extends Screen {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        AbstractGuiUtils.setDepth(graphics, AbstractGuiUtils.EDepth.BACKGROUND);
         // 绘制背景纹理，使用缩放后的宽度和高度
         // AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
         AbstractGuiUtils.blit(graphics, BACKGROUND_TEXTURE, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        AbstractGuiUtils.resetDepth(graphics);
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();
     }
@@ -391,7 +394,7 @@ public class CalendarScreen extends Screen {
         // 保存当前矩阵状态
         graphics.pose().pushPose();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
-        graphics.pose().translate(x + width / 2.0, y + height / 2.0, 0);
+        graphics.pose().translate(x + width / 2.0, y + height / 2.0, 10);
         // 创建一个 Quaternion 用来表示绕 Z 轴旋转
         // 将角度转换为弧度
         graphics.pose().mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
@@ -407,7 +410,7 @@ public class CalendarScreen extends Screen {
             vHeight = -vHeight;
         }
         // 平移回原点
-        graphics.pose().translate(-width / 2.0, -height / 2.0, 0);
+        graphics.pose().translate(-width / 2.0, -height / 2.0, 10);
         // 绘制纹理
         AbstractGuiUtils.blit(graphics, BACKGROUND_TEXTURE, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 恢复矩阵状态
@@ -435,7 +438,7 @@ public class CalendarScreen extends Screen {
     @ParametersAreNonnullByDefault
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         // 绘制缩放背景纹理
         this.renderBackgroundTexture(graphics);
 
@@ -443,13 +446,13 @@ public class CalendarScreen extends Screen {
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
-        graphics.drawString(this.font, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate(), false);
+        AbstractGuiUtils.drawString(graphics, this.font, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate(), false);
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
-        graphics.drawString(this.font, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate(), false);
+        AbstractGuiUtils.drawString(graphics, this.font, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate(), false);
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -550,6 +553,7 @@ public class CalendarScreen extends Screen {
 
         // 渲染自定义背景文件列表，根据 scrollOffset 显示文件名
         if (themeSelectorVisible) {
+            AbstractGuiUtils.setDepth(graphics, AbstractGuiUtils.EDepth.OVERLAY);
             // 绘制背景
             graphics.fill(themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
             for (int i = 0; i < THEME_SELECTOR_MAX_VISIBLE_ITEMS; i++) {
@@ -574,6 +578,7 @@ public class CalendarScreen extends Screen {
                 int textHeight = AbstractGuiUtils.multilineTextHeight(font, MutableComponent);
                 AbstractGuiUtils.drawMultilineText(graphics, font, MutableComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
             }
+            AbstractGuiUtils.resetDepth(graphics);
         }
     }
 
@@ -783,7 +788,7 @@ public class CalendarScreen extends Screen {
                     player.sendSystemMessage(Component.literal("前面的的日期以后再来探索吧。"));
                 } else {
                     cell.status = ClientConfig.autoRewarded ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN));
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
                 }
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
@@ -794,7 +799,7 @@ public class CalendarScreen extends Screen {
                     player.sendSystemMessage(Component.literal("不论怎么点也不会获取俩次奖励吧。"));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.REWARD));
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.REWARD), PacketDistributor.SERVER.noArg());
                 }
             }
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
@@ -806,7 +811,7 @@ public class CalendarScreen extends Screen {
                         player.sendSystemMessage(Component.literal("补签卡不足了哦。"));
                     } else {
                         cell.status = ClientConfig.autoRewarded ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                        ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.RE_SIGN_IN));
+                        ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.RE_SIGN_IN), PacketDistributor.SERVER.noArg());
                     }
                 }
             }
@@ -846,12 +851,12 @@ public class CalendarScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollH, double scrollV) {
         // 主题选择器
         if (themeSelectorVisible) {
-            if (delta > 0) {
+            if (scrollV > 0) {
                 themeSelectorScrollOffset = Math.max(themeSelectorScrollOffset - 1, 0);
-            } else if (delta < 0) {
+            } else if (scrollV < 0) {
                 themeSelectorScrollOffset = Math.min(themeSelectorScrollOffset + 1, themeFileList.size() - THEME_SELECTOR_MAX_VISIBLE_ITEMS);
             }
         }
@@ -859,9 +864,9 @@ public class CalendarScreen extends Screen {
         // 奖励悬浮层
         for (CalendarCell cell : calendarCells) {
             if (cell.isShowIcon() && cell.isShowHover() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
-                if (delta > 0) {
+                if (scrollV > 0) {
                     cell.setTooltipScrollOffset(Math.max(cell.getTooltipScrollOffset() - 1, 0));
-                } else if (delta < 0) {
+                } else if (scrollV < 0) {
                     cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - CalendarCell.TOOLTIP_MAX_VISIBLE_ITEMS));
                 }
             }
