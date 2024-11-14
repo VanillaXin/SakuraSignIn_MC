@@ -112,10 +112,10 @@ public class SakuraSignIn {
     @SubscribeEvent
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LOGGER.debug("Player has logged out.");
+        // 获取退出的玩家对象
+        Player player = event.getPlayer();
         // 判断是否在客户端并且退出的玩家是客户端的当前玩家
-        if (Minecraft.getInstance().level != null && Minecraft.getInstance().player != null) {
-            // 获取退出的玩家对象
-            PlayerEntity player = event.getPlayer();
+        if (player.getCommandSenderWorld().isClientSide) {
             if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
                 LOGGER.debug("Current player has logged out.");
                 // 当前客户端玩家与退出的玩家相同
