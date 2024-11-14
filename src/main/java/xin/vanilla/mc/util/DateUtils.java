@@ -600,8 +600,8 @@ public class DateUtils {
         // 服务器当前时间
         Date serverTime = new Date();
         // 校准服务器时间
-        Date originalTime = DateUtils.format(ServerConfig.SERVER_TIME.get());
-        Date actualTime = DateUtils.format(ServerConfig.ACTUAL_TIME.get());
+        Date originalTime = ServerConfig.serverTime;
+        Date actualTime = ServerConfig.actualTime;
         if (originalTime.compareTo(actualTime) != 0) {
             serverTime = DateUtils.addDate(serverTime, DateUtils.dateOfTwo(originalTime, actualTime));
         }

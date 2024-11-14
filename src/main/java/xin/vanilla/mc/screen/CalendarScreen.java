@@ -211,8 +211,8 @@ public class CalendarScreen extends Screen {
      */
     private void updateTextureAndCoordinate() {
         try {
-            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.THEME.get());
-            specialVersion = Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get());
+            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.theme);
+            specialVersion = Boolean.TRUE.equals(ClientConfig.specialTheme);
             InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).get().open();
             textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
         } catch (Exception ignored) {
@@ -271,8 +271,8 @@ public class CalendarScreen extends Screen {
             Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, signInData, lastOffset, nextOffset);
 
             boolean allCurrentDaysDisplayed = false;
-            boolean showLastReward = ClientConfig.SHOW_LAST_REWARD.get();
-            boolean showNextReward = ClientConfig.SHOW_NEXT_REWARD.get();
+            boolean showLastReward = ClientConfig.showLastReward;
+            boolean showNextReward = ClientConfig.showNextReward;
             for (int row = 0; row < rows; row++) {
                 if (allCurrentDaysDisplayed && !showNextReward) break;
                 for (int col = 0; col < columns; col++) {
@@ -328,9 +328,9 @@ public class CalendarScreen extends Screen {
                     // if (CollectionUtils.isNullOrEmpty(rewards)) continue;
 
                     // 是否能补签
-                    if (ServerConfig.SIGN_IN_CARD.get()) {
+                    if (ServerConfig.signInCard) {
                         // 最早能补签的日期
-                        Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.RE_SIGN_IN_DAYS.get());
+                        Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.reSignInDays);
                         if (DateUtils.toDateInt(minDate) <= key && key <= DateUtils.toDateInt(compensateDate) && status != ESignInStatus.NOT_SIGNED_IN.getCode()) {
                             status = ESignInStatus.CAN_REPAIR.getCode();
                         }
@@ -782,8 +782,8 @@ public class CalendarScreen extends Screen {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
                     player.sendSystemMessage(Component.literal("前面的的日期以后再来探索吧。"));
                 } else {
-                    cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
+                    cell.status = ClientConfig.autoRewarded ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN));
                 }
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
@@ -794,19 +794,19 @@ public class CalendarScreen extends Screen {
                     player.sendSystemMessage(Component.literal("不论怎么点也不会获取俩次奖励吧。"));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
+                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.REWARD));
                 }
             }
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                if (!ServerConfig.SIGN_IN_CARD.get()) {
+                if (!ServerConfig.signInCard) {
                     player.sendSystemMessage(Component.literal("服务器未开启补签功能哦。"));
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
                         player.sendSystemMessage(Component.literal("补签卡不足了哦。"));
                     } else {
-                        cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                        ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
+                        cell.status = ClientConfig.autoRewarded ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                        ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.RE_SIGN_IN));
                     }
                 }
             }

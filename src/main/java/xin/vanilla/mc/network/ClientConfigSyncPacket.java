@@ -18,7 +18,7 @@ public class ClientConfigSyncPacket {
     private final boolean autoRewarded;
 
     public ClientConfigSyncPacket() {
-        this.autoRewarded = ClientConfig.AUTO_REWARDED.get();
+        this.autoRewarded = ClientConfig.autoRewarded;
     }
 
     public ClientConfigSyncPacket(FriendlyByteBuf buf) {
