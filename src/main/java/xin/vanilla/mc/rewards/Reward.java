@@ -9,7 +9,7 @@ import xin.vanilla.mc.enums.ERewardType;
 
 import java.io.Serializable;
 
-import static net.minecraft.util.datafix.fixes.BlockEntitySignTextStrictJsonFix.GSON;
+import static xin.vanilla.mc.config.SignInDataManager.GSON;
 
 
 /**
