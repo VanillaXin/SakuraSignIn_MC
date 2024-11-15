@@ -6,7 +6,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -36,14 +35,13 @@ import java.util.Date;
 /**
  * Forge 事件处理
  */
-@Mod.EventBusSubscriber(modid = SakuraSignIn.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class ForgeEventHandler {
+@Mod.EventBusSubscriber(modid = SakuraSignIn.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+public class ClientForgeEventHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static boolean isPlayerLoggedIn = false;
     private static boolean hasTriggeredLoadComplete = false;
 
     @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
         LOGGER.debug("Client: Player logged in.");
         isPlayerLoggedIn = true;
@@ -52,7 +50,6 @@ public class ForgeEventHandler {
     }
 
     @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END && isPlayerLoggedIn) {
             Minecraft mc = Minecraft.getInstance();

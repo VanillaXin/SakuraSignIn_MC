@@ -391,7 +391,7 @@ public class CalendarScreen extends Screen {
     @ParametersAreNonnullByDefault
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
+        this.renderTransparentBackground(graphics);
         // 绘制缩放背景纹理
         this.renderBackgroundTexture(graphics);
 
@@ -494,7 +494,6 @@ public class CalendarScreen extends Screen {
             AbstractGuiUtils.renderRotatedTexture(graphics, BACKGROUND_TEXTURE, coordinate, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), angle, flipHorizontal, flipVertical);
         }
 
-        super.render(graphics, mouseX, mouseY, partialTicks);
         // 渲染所有格子
         for (CalendarCell cell : calendarCells) {
             cell.render(graphics, this.font, mouseX, mouseY);

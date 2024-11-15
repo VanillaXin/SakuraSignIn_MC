@@ -2,10 +2,7 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import lombok.NonNull;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -28,15 +25,17 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             }
             itemStack = new ItemStack(item, count);
 
-            // 如果存在NBT数据，则解析
-            if (json.has("nbt")) {
-                try {
-                    CompoundTag nbt = TagParser.parseTag(json.get("nbt").getAsString());
-                    itemStack.setTag(nbt);
-                } catch (CommandSyntaxException e) {
-                    throw new JsonParseException("Failed to parse NBT data", e);
-                }
-            }
+            // TODO 如果存在NBT数据，则解析
+            // if (json.has("nbt")) {
+            //     try {
+            //         for (String s : json.get("nbt").getAsJsonObject().keySet()) {
+            //             String asString = json.get(s).getAsString();
+            //             itemStack.set(GSON.fromJson(s, DataComponentType.class), GSON.fromJson(asString, Object.class));
+            //         }
+            //     } catch (Exception e) {
+            //         throw new JsonParseException("Failed to parse NBT data", e);
+            //     }
+            // }
         } catch (Exception e) {
             LOGGER.error("Failed to deserialize item reward", e);
             itemStack = new ItemStack(Items.AIR);
@@ -51,12 +50,15 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             json.addProperty("item", ForgeRegistries.ITEMS.getKey(reward.getItem()).toString());
             json.addProperty("count", reward.getCount());
 
-            // 如果物品有NBT数据，则序列化
-            if (reward.hasTag()) {
-                if (reward.getTag() != null) {
-                    json.addProperty("nbt", reward.getTag().toString());
-                }
-            }
+            // TODO 如果物品有NBT数据，则序列化
+            // if (!reward.getComponents().isEmpty()) {
+            //     JsonObject nbt = new JsonObject();
+            //     DataComponentMap components = reward.getComponents();
+            //     for (DataComponentType<?> dataComponentType : components.keySet()) {
+            //         nbt.addProperty(GSON.toJson(dataComponentType), GSON.toJson(components.get(dataComponentType)));
+            //     }
+            //     json.add("nbt", nbt);
+            // }
         } catch (Exception e) {
             LOGGER.error("Failed to serialize item reward", e);
             json.addProperty("item", ForgeRegistries.ITEMS.getKey(Items.AIR).toString());

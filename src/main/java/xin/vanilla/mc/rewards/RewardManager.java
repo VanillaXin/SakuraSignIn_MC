@@ -326,13 +326,13 @@ public class RewardManager {
                                 case ITEM:
                                     ItemStack itemStack = RewardManager.deserializeReward(reward);
                                     key = ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString();
-                                    if (itemStack.hasTag()) {
-                                        key += itemStack.getTag().toString();
+                                    if (!itemStack.getComponents().isEmpty()) {
+                                        key += itemStack.getComponents().toString();
                                     }
                                     break;
                                 case EFFECT:
                                     MobEffectInstance mobEffectInstance = RewardManager.deserializeReward(reward);
-                                    key = ForgeRegistries.MOB_EFFECTS.getKey(mobEffectInstance.getEffect()).toString() + " " + mobEffectInstance.getAmplifier();
+                                    key = ForgeRegistries.MOB_EFFECTS.getKey(mobEffectInstance.getEffect().value()).toString() + " " + mobEffectInstance.getAmplifier();
                                     break;
                                 case EXP_POINT:
                                     break;
@@ -358,7 +358,7 @@ public class RewardManager {
                             switch (type) {
                                 case ITEM:
                                     content1 = new ItemStack(((ItemStack) content1).getItem(), ((ItemStack) content1).getCount() + ((ItemStack) content2).getCount());
-                                    ((ItemStack) content1).setTag(((ItemStack) content2).getTag());
+                                    ((ItemStack) content1).applyComponents(((ItemStack) content2).getComponents());
                                     break;
                                 case EFFECT:
                                     content1 = new MobEffectInstance(((MobEffectInstance) content1).getEffect(), ((MobEffectInstance) content1).getDuration() + ((MobEffectInstance) content2).getDuration(), ((MobEffectInstance) content1).getAmplifier());

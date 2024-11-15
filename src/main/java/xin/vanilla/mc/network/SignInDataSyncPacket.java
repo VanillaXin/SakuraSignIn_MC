@@ -27,7 +27,7 @@ public class SignInDataSyncPacket {
 
     public static void handle(SignInDataSyncPacket packet, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            if (ctx.getDirection().getReceptionSide().isClient()) {
+            if (ctx.isClientSide()) {
                 // 在客户端更新 SignInData
                 SignInDataManager.setSignInData(packet.getSignInData());
             }
