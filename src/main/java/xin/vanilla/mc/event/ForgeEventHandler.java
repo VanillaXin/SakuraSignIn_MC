@@ -59,8 +59,8 @@ public class ForgeEventHandler {
                 // 获取玩家的自定义数据
                 IPlayerSignInData data = PlayerSignInDataCapability.getData(mc.player);
                 // 服务器是否启用自动签到, 且玩家未签到
-                if (ServerConfig.autoSignIn && !RewardManager.isSignedIn(data, new Date(), true)) {
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN));
+                if (ServerConfig.isAutoSignIn() && !RewardManager.isSignedIn(data, new Date(), true)) {
+                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.isAutoRewarded(), ESignInType.SIGN_IN));
                 }
             }
         }

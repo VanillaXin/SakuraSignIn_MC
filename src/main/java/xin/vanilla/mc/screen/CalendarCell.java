@@ -84,7 +84,7 @@ public class CalendarCell {
             } else {
                 TextureCoordinate rewardUV;
                 // 绘制奖励图标
-                if (status == ESignInStatus.SIGNED_IN.getCode() || ClientConfig.autoRewarded) {
+                if (status == ESignInStatus.SIGNED_IN.getCode() || ClientConfig.isAutoRewarded()) {
                     rewardUV = textureCoordinate.getSignedInUV();
                 } else {
                     rewardUV = textureCoordinate.getNotSignedInUV();
