@@ -10,6 +10,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Quaternionf;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
@@ -320,6 +321,72 @@ public class AbstractGuiUtils {
             // 这玩意不是Integer类型也没有数量, 不能showText
             AbstractGuiUtils.drawCustomIcon(graphics, font, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
         }
+    }
+
+    /**
+     * 绘制旋转的纹理
+     *
+     * @param graphics       矩阵栈
+     * @param texture        纹理
+     * @param coordinate     纹理坐标
+     * @param totalWidth     纹理总宽度
+     * @param totalHeight    纹理总高度
+     * @param angle          旋转角度
+     * @param flipHorizontal 水平翻转
+     * @param flipVertical   垂直翻转
+     */
+    public static void renderRotatedTexture(GuiGraphics graphics, ResourceLocation texture, TextureCoordinate coordinate, int totalWidth, int totalHeight, float angle, boolean flipHorizontal, boolean flipVertical) {
+        AbstractGuiUtils.renderRotatedTexture(graphics, texture, coordinate, totalWidth, totalHeight, angle, flipHorizontal, flipVertical, EDepth.FOREGROUND);
+    }
+
+    /**
+     * 绘制旋转的纹理
+     *
+     * @param graphics       矩阵栈
+     * @param texture        纹理
+     * @param coordinate     纹理坐标
+     * @param totalWidth     纹理总宽度
+     * @param totalHeight    纹理总高度
+     * @param angle          旋转角度
+     * @param flipHorizontal 水平翻转
+     * @param flipVertical   垂直翻转
+     * @param depth          深度
+     */
+    public static void renderRotatedTexture(GuiGraphics graphics, ResourceLocation texture, TextureCoordinate coordinate, int totalWidth, int totalHeight, float angle, boolean flipHorizontal, boolean flipVertical, EDepth depth) {
+        double x = coordinate.getX();
+        double y = coordinate.getY();
+        int width = (int) coordinate.getWidth();
+        int height = (int) coordinate.getHeight();
+        float u0 = (float) coordinate.getU0();
+        float v0 = (float) coordinate.getV0();
+        int uWidth = (int) coordinate.getUWidth();
+        int vHeight = (int) coordinate.getVHeight();
+        // 绑定纹理
+        // AbstractGuiUtils.bindTexture(texture);
+        // 保存当前矩阵状态
+        graphics.pose().pushPose();
+        // 平移到旋转中心 (x + width / 2, y + height / 2)
+        graphics.pose().translate(x + width / 2.0, y + height / 2.0, depth.getDepth());
+        // 创建一个 Quaternion 用来表示绕 Z 轴旋转
+        // 将角度转换为弧度
+        graphics.pose().mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
+
+        // 左右翻转
+        if (flipHorizontal) {
+            u0 += uWidth;
+            uWidth = -uWidth;
+        }
+        // 上下翻转
+        if (flipVertical) {
+            v0 += vHeight;
+            vHeight = -vHeight;
+        }
+        // 平移回原点
+        graphics.pose().translate(-width / 2.0, -height / 2.0, depth.getDepth());
+        // 绘制纹理
+        AbstractGuiUtils.blit(graphics, texture, 0, 0, width, height, u0, v0, uWidth, vHeight, totalWidth, totalHeight);
+        // 恢复矩阵状态
+        graphics.pose().popPose();
     }
 
     public static void bindTexture(ResourceLocation resourceLocation) {

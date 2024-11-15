@@ -15,7 +15,6 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joml.Quaternionf;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
@@ -372,52 +371,6 @@ public class CalendarScreen extends Screen {
     }
 
     /**
-     * 绘制旋转的纹理
-     *
-     * @param graphics       矩阵栈
-     * @param coordinate     纹理坐标
-     * @param angle          旋转角度
-     * @param flipHorizontal 水平翻转
-     * @param flipVertical   垂直翻转
-     */
-    private void renderRotatedTexture(GuiGraphics graphics, TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
-        double x = bgX + coordinate.getX() * this.scale;
-        double y = bgY + coordinate.getY() * this.scale;
-        int width = (int) (coordinate.getWidth() * this.scale);
-        int height = (int) (coordinate.getHeight() * this.scale);
-        float u0 = (float) coordinate.getU0();
-        float v0 = (float) coordinate.getV0();
-        int uWidth = (int) coordinate.getUWidth();
-        int vHeight = (int) coordinate.getVHeight();
-        // 绑定纹理
-        // AbstractGuiUtils.bindTexture(BACKGROUND_TEXTURE);
-        // 保存当前矩阵状态
-        graphics.pose().pushPose();
-        // 平移到旋转中心 (x + width / 2, y + height / 2)
-        graphics.pose().translate(x + width / 2.0, y + height / 2.0, 10);
-        // 创建一个 Quaternion 用来表示绕 Z 轴旋转
-        // 将角度转换为弧度
-        graphics.pose().mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
-
-        // 左右翻转
-        if (flipHorizontal) {
-            u0 += uWidth;
-            uWidth = -uWidth;
-        }
-        // 上下翻转
-        if (flipVertical) {
-            v0 += vHeight;
-            vHeight = -vHeight;
-        }
-        // 平移回原点
-        graphics.pose().translate(-width / 2.0, -height / 2.0, 10);
-        // 绘制纹理
-        AbstractGuiUtils.blit(graphics, BACKGROUND_TEXTURE, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
-        // 恢复矩阵状态
-        graphics.pose().popPose();
-    }
-
-    /**
      * 获取操作按钮的纹理坐标
      */
     private TextureCoordinate getCoordinate(OperationButton button, int mouseX, int mouseY) {
@@ -536,7 +489,9 @@ public class CalendarScreen extends Screen {
             }
             button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
             button.setX(coordinate.getX()).setY(coordinate.getY());
-            this.renderRotatedTexture(graphics, coordinate, angle, flipHorizontal, flipVertical);
+            // 设置绝对坐标与绝对大小
+            coordinate.setX(coordinate.getX() * this.scale + bgX).setY(coordinate.getY() * this.scale + bgY).setWidth(coordinate.getWidth() * this.scale).setHeight(coordinate.getHeight() * this.scale);
+            AbstractGuiUtils.renderRotatedTexture(graphics, BACKGROUND_TEXTURE, coordinate, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight(), angle, flipHorizontal, flipVertical);
         }
 
         super.render(graphics, mouseX, mouseY, partialTicks);
