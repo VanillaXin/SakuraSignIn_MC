@@ -18,7 +18,7 @@ public class MessageRewardParser implements RewardParser<TextComponent> {
             JsonObject styleJson = json.getAsJsonObject("style");
             Style style = Style.EMPTY;
             if (styleJson.has("color"))
-                style.withColor(TextColor.parseColor(styleJson.get("color").getAsString()));
+                style.withColor(TextColor.fromRgb(styleJson.get("color").getAsInt()));
             style.withBold(styleJson.get("bold").getAsBoolean());
             style.withItalic(styleJson.get("italic").getAsBoolean());
             style.withUnderlined(styleJson.get("underlined").getAsBoolean());
@@ -39,7 +39,7 @@ public class MessageRewardParser implements RewardParser<TextComponent> {
         JsonObject styleJson = new JsonObject();
         Style style = reward.getStyle();
         if (style.getColor() != null) {
-            styleJson.addProperty("color", style.getColor().serialize());
+            styleJson.addProperty("color", style.getColor().getValue());
         }
         styleJson.addProperty("bold", style.isBold());
         styleJson.addProperty("italic", style.isItalic());
