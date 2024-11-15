@@ -8,7 +8,7 @@ import xin.vanilla.mc.rewards.RewardList;
 import java.io.Serializable;
 import java.util.Date;
 
-import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
+import static xin.vanilla.mc.config.SignInDataManager.GSON;
 
 /**
  * 签到记录
