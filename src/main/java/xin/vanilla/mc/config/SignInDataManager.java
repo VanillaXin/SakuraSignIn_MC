@@ -20,9 +20,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 
-import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
-
 public class SignInDataManager {
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String FILE_NAME = "sign_in_data.json";
