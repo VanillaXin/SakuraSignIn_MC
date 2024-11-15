@@ -219,7 +219,7 @@ public class SignInCommand {
                 .then(Commands.literal("card")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
-                            if (!ServerConfig.signInCard) {
+                            if (!ServerConfig.isSignInCard()) {
                                 player.sendSystemMessage(Component.literal("服务器未开启补签功能"));
                             } else {
                                 player.sendSystemMessage(Component.literal(String.format("当前拥有%d张补签卡", PlayerSignInDataCapability.getData(player).getSignInCard())));
@@ -302,14 +302,14 @@ public class SignInCommand {
                                 .then(Commands.literal("autoSignIn")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendSystemMessage(Component.literal(String.format("服务器%s自动签到", ServerConfig.autoSignIn ? "已启用" : "未启用")));
+                                            player.sendSystemMessage(Component.literal(String.format("服务器%s自动签到", ServerConfig.isAutoSignIn() ? "已启用" : "未启用")));
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("timeCoolingMethod")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            ETimeCoolingMethod coolingMethod = ServerConfig.timeCoolingMethod;
+                                            ETimeCoolingMethod coolingMethod = ServerConfig.getTimeCoolingMethod();
                                             player.sendSystemMessage(Component.literal(String.format("服务器签到时间冷却方式为: %s", coolingMethod.getName())));
                                             return 1;
                                         })
@@ -317,7 +317,7 @@ public class SignInCommand {
                                 .then(Commands.literal("timeCoolingTime")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            Double time = ServerConfig.timeCoolingTime;
+                                            Double time = ServerConfig.getTimeCoolingTime();
                                             player.sendSystemMessage(Component.literal(String.format("服务器签到冷却刷新时间为: %05.2f", time)));
                                             return 1;
                                         })
@@ -325,7 +325,7 @@ public class SignInCommand {
                                 .then(Commands.literal("timeCoolingInterval")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            Double time = ServerConfig.timeCoolingInterval;
+                                            Double time = ServerConfig.getTimeCoolingInterval();
                                             player.sendSystemMessage(Component.literal(String.format("服务器签到冷却刷新间隔为: %05.2f", time)));
                                             return 1;
                                         })
@@ -333,14 +333,14 @@ public class SignInCommand {
                                 .then(Commands.literal("signInCard")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendSystemMessage(Component.literal(String.format("服务器%s补签卡", ServerConfig.signInCard ? "已启用" : "未启用")));
+                                            player.sendSystemMessage(Component.literal(String.format("服务器%s补签卡", ServerConfig.isSignInCard() ? "已启用" : "未启用")));
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("reSignInDays")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            int time = ServerConfig.reSignInDays;
+                                            int time = ServerConfig.getReSignInDays();
                                             player.sendSystemMessage(Component.literal(String.format("服务器最大补签天数为: %d", time)));
                                             return 1;
                                         })
@@ -348,7 +348,7 @@ public class SignInCommand {
                                 .then(Commands.literal("signInCardOnlyBaseReward")
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
-                                            player.sendSystemMessage(Component.literal(String.format("服务器%s补签仅获得基础奖励", ServerConfig.signInCardOnlyBaseReward ? "已启用" : "未启用")));
+                                            player.sendSystemMessage(Component.literal(String.format("服务器%s补签仅获得基础奖励", ServerConfig.isBaseReward() ? "已启用" : "未启用")));
                                             return 1;
                                         })
                                 )
@@ -369,8 +369,8 @@ public class SignInCommand {
                                                         .executes(context -> {
                                                             long datetime = getRelativeLong(context, "datetime");
                                                             Date date = DateUtils.getDate(datetime);
-                                                            ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
-                                                            ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
+                                                            ServerConfig.setServerTime(new Date());
+                                                            ServerConfig.setActualTime(date);
                                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                                             player.sendSystemMessage(Component.literal(String.format("服务器时间已设置为: %s", DateUtils.toDateTimeString(date))));
                                                             return 1;

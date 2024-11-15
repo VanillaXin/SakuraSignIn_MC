@@ -212,8 +212,8 @@ public class CalendarScreen extends Screen {
      */
     private void updateTextureAndCoordinate() {
         try {
-            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.theme);
-            specialVersion = Boolean.TRUE.equals(ClientConfig.specialTheme);
+            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.getTheme());
+            specialVersion = Boolean.TRUE.equals(ClientConfig.isSpecialTheme());
             InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).get().open();
             textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
         } catch (Exception ignored) {
@@ -272,8 +272,8 @@ public class CalendarScreen extends Screen {
             Map<Integer, RewardList> monthRewardList = RewardManager.getMonthRewardList(current, signInData, lastOffset, nextOffset);
 
             boolean allCurrentDaysDisplayed = false;
-            boolean showLastReward = ClientConfig.showLastReward;
-            boolean showNextReward = ClientConfig.showNextReward;
+            boolean showLastReward = ClientConfig.isShowLastReward();
+            boolean showNextReward = ClientConfig.isShowNextReward();
             for (int row = 0; row < rows; row++) {
                 if (allCurrentDaysDisplayed && !showNextReward) break;
                 for (int col = 0; col < columns; col++) {
@@ -329,9 +329,9 @@ public class CalendarScreen extends Screen {
                     // if (CollectionUtils.isNullOrEmpty(rewards)) continue;
 
                     // 是否能补签
-                    if (ServerConfig.signInCard) {
+                    if (ServerConfig.isSignInCard()) {
                         // 最早能补签的日期
-                        Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.reSignInDays);
+                        Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.getReSignInDays());
                         if (DateUtils.toDateInt(minDate) <= key && key <= DateUtils.toDateInt(compensateDate) && status != ESignInStatus.NOT_SIGNED_IN.getCode()) {
                             status = ESignInStatus.CAN_REPAIR.getCode();
                         }
@@ -648,7 +648,7 @@ public class CalendarScreen extends Screen {
                             String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
                             if (player != null) {
                                 player.sendSystemMessage(Component.literal("已选择主题文件: " + selectedFile));
-                                ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
+                                ClientConfig.setTheme(themeFileList.get(themeSelectorHoveredIndex).getPath());
                                 updateTextureAndCoordinate.set(true);
                                 updateLayout.set(true);
                                 themeSelectorVisible = false;
@@ -730,8 +730,8 @@ public class CalendarScreen extends Screen {
         // 类原版主题
         else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
             specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-            ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.setTheme(THEME_ORIGINAL_BUTTON.getPath());
+            ClientConfig.setSpecialTheme(specialVersion);
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -739,8 +739,8 @@ public class CalendarScreen extends Screen {
         // 樱花粉主题
         else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
             specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-            ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.setTheme(THEME_SAKURA_BUTTON.getPath());
+            ClientConfig.setSpecialTheme(specialVersion);
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -748,8 +748,8 @@ public class CalendarScreen extends Screen {
         // 四叶草主题
         else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
             specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-            ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.setTheme(THEME_CLOVER_BUTTON.getPath());
+            ClientConfig.setSpecialTheme(specialVersion);
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -757,8 +757,8 @@ public class CalendarScreen extends Screen {
         // 枫叶主题
         else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
             specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-            ClientConfig.THEME.set(THEME_MAPLE_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.setTheme(THEME_MAPLE_BUTTON.getPath());
+            ClientConfig.setSpecialTheme(specialVersion);
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -766,7 +766,7 @@ public class CalendarScreen extends Screen {
         // 混沌主题
         else if (value.getOperation() == THEME_CHAOS_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                ClientConfig.THEME.set(THEME_CHAOS_BUTTON.getPath());
+                ClientConfig.setTheme(THEME_CHAOS_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
                 flag.set(true);
@@ -787,8 +787,8 @@ public class CalendarScreen extends Screen {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
                     player.sendSystemMessage(Component.literal("前面的的日期以后再来探索吧。"));
                 } else {
-                    cell.status = ClientConfig.autoRewarded ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.autoRewarded, ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
+                    cell.status = ClientConfig.isAutoRewarded() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.isAutoRewarded(), ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
                 }
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
@@ -799,19 +799,19 @@ public class CalendarScreen extends Screen {
                     player.sendSystemMessage(Component.literal("不论怎么点也不会获取俩次奖励吧。"));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
-                    ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.REWARD), PacketDistributor.SERVER.noArg());
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.isAutoRewarded(), ESignInType.REWARD), PacketDistributor.SERVER.noArg());
                 }
             }
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                if (!ServerConfig.signInCard) {
+                if (!ServerConfig.isSignInCard()) {
                     player.sendSystemMessage(Component.literal("服务器未开启补签功能哦。"));
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
                         player.sendSystemMessage(Component.literal("补签卡不足了哦。"));
                     } else {
-                        cell.status = ClientConfig.autoRewarded ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                        ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.autoRewarded, ESignInType.RE_SIGN_IN), PacketDistributor.SERVER.noArg());
+                        cell.status = ClientConfig.isAutoRewarded() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                        ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.isAutoRewarded(), ESignInType.RE_SIGN_IN), PacketDistributor.SERVER.noArg());
                     }
                 }
             }

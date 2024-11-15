@@ -130,8 +130,8 @@ public class RewardManager {
             date = DateUtils.getServerDate();
         }
         // 签到冷却刷新时间, 固定间隔不需要校准时间
-        double cooling = switch (ServerConfig.timeCoolingMethod) {
-            case MIXED, FIXED_TIME -> ServerConfig.timeCoolingTime;
+        double cooling = switch (ServerConfig.getTimeCoolingMethod()) {
+            case MIXED, FIXED_TIME -> ServerConfig.getTimeCoolingTime();
             default -> 0;
         };
         // 校准后当前时间
@@ -150,8 +150,8 @@ public class RewardManager {
             date = DateUtils.getServerDate();
         }
         // 签到冷却刷新时间, 固定间隔不需要校准时间
-        double cooling = switch (ServerConfig.timeCoolingMethod) {
-            case MIXED, FIXED_TIME -> ServerConfig.timeCoolingTime;
+        double cooling = switch (ServerConfig.getTimeCoolingMethod()) {
+            case MIXED, FIXED_TIME -> ServerConfig.getTimeCoolingTime();
             default -> 0;
         };
         // 校准后当前时间
@@ -254,7 +254,7 @@ public class RewardManager {
             result.addAll(rewardRecords);
         }
         // 若日期小于当前日期 且 补签仅计算基础奖励
-        else if (!onlyHistory && key < nowCompensate8 && ServerConfig.signInCardOnlyBaseReward) {
+        else if (!onlyHistory && key < nowCompensate8 && ServerConfig.isBaseReward()) {
             // 基础奖励
             result.addAll(serverData.getBaseRewards());
         } else if (!onlyHistory) {
@@ -407,7 +407,7 @@ public class RewardManager {
         Date serverDate = DateUtils.getServerDate();
         Date serverCompensateDate = getCompensateDate(serverDate);
         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
-        ETimeCoolingMethod coolingMethod = ServerConfig.timeCoolingMethod;
+        ETimeCoolingMethod coolingMethod = ServerConfig.getTimeCoolingMethod();
         int serverCompensateDateInt = DateUtils.toDateInt(serverCompensateDate);
         int signInDateInt = DateUtils.toDateInt(packet.getSignInTime());
         // 判断签到/补签时间合法性
@@ -415,7 +415,7 @@ public class RewardManager {
             if (ESignInType.SIGN_IN.equals(packet.getSignInType())
                     && (coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
                     && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE)) {
-                player.sendSystemMessage(Component.literal(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.timeCoolingTime)));
+                player.sendSystemMessage(Component.literal(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.getTimeCoolingTime())));
             } else {
                 player.sendSystemMessage(Component.literal("签到日期晚于服务器当前日期，签到失败"));
             }
@@ -435,14 +435,14 @@ public class RewardManager {
         }
         // 判断签到CD
         if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
-            Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.timeCoolingInterval);
+            Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.getTimeCoolingInterval());
             if (packet.getSignInTime().before(lastSignInTime)) {
                 player.sendSystemMessage(Component.literal("签到冷却中，签到失败，请稍后再试"));
                 return;
             }
         }
         // 判断补签
-        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.signInCard) {
+        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.isSignInCard()) {
             player.sendSystemMessage(Component.literal("服务器未开启补签功能，补签失败"));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
