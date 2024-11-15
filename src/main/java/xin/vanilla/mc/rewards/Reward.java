@@ -9,7 +9,8 @@ import xin.vanilla.mc.enums.ERewardType;
 
 import java.io.Serializable;
 
-import static net.minecraft.util.datafix.fixes.SignStrictJSON.GSON;
+import static xin.vanilla.mc.config.SignInDataManager.GSON;
+
 
 /**
  * 奖励实体
