@@ -1,13 +1,11 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -16,6 +14,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
@@ -358,13 +357,13 @@ public class CalendarScreen extends Screen {
     /**
      * 绘制背景纹理
      */
-    private void renderBackgroundTexture(MatrixStack matrixStack) {
+    private void renderBackgroundTexture() {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         // 绘制背景纹理，使用缩放后的宽度和高度
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        AbstractGuiUtils.blit(matrixStack, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        AbstractGuiUtils.blit(bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();
     }
@@ -372,13 +371,12 @@ public class CalendarScreen extends Screen {
     /**
      * 绘制旋转的纹理
      *
-     * @param matrixStack    矩阵栈
      * @param coordinate     纹理坐标
      * @param angle          旋转角度
      * @param flipHorizontal 水平翻转
      * @param flipVertical   垂直翻转
      */
-    private void renderRotatedTexture(MatrixStack matrixStack, TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
+    private void renderRotatedTexture(TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
         double x = bgX + coordinate.getX() * this.scale;
         double y = bgY + coordinate.getY() * this.scale;
         int width = (int) (coordinate.getWidth() * this.scale);
@@ -390,11 +388,11 @@ public class CalendarScreen extends Screen {
         // 绑定纹理
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         // 保存当前矩阵状态
-        matrixStack.pushPose();
+        GL11.glPushMatrix();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
-        matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
+        GL11.glTranslatef((float) (x + width / 2.0), (float) (y + height / 2.0), 0);
         // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
-        matrixStack.mulPose(Vector3f.ZP.rotationDegrees(angle));
+        GL11.glRotatef(angle, 0, 0, 0);
         // 左右翻转
         if (flipHorizontal) {
             u0 += uWidth;
@@ -406,11 +404,11 @@ public class CalendarScreen extends Screen {
             vHeight = -vHeight;
         }
         // 平移回原点
-        matrixStack.translate(-width / 2.0, -height / 2.0, 0);
+        GL11.glTranslatef((float) (-width / 2.0), (float) (-height / 2.0), 0);
         // 绘制纹理
-        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        AbstractGuiUtils.blit(0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 恢复矩阵状态
-        matrixStack.popPose();
+        GL11.glPopMatrix();
     }
 
     /**
@@ -432,23 +430,23 @@ public class CalendarScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(matrixStack);
+        this.renderBackground(0);
         // 绘制缩放背景纹理
-        this.renderBackgroundTexture(matrixStack);
+        this.renderBackgroundTexture();
 
         // 渲染年份
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
+        this.font.draw(yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
+        this.font.draw(monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -532,25 +530,25 @@ public class CalendarScreen extends Screen {
             }
             button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
             button.setX(coordinate.getX()).setY(coordinate.getY());
-            this.renderRotatedTexture(matrixStack, coordinate, angle, flipHorizontal, flipVertical);
+            this.renderRotatedTexture(coordinate, angle, flipHorizontal, flipVertical);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
         // 渲染所有格子
         for (CalendarCell cell : calendarCells) {
-            cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
+            cell.render(this.font, this.itemRenderer, mouseX, mouseY);
         }
         // 渲染格子弹出层
         for (CalendarCell cell : calendarCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
-                cell.renderTooltip(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
+                cell.renderTooltip(this.font, this.itemRenderer, mouseX, mouseY);
             }
         }
 
         // 渲染自定义背景文件列表，根据 scrollOffset 显示文件名
         if (themeSelectorVisible) {
             // 绘制背景
-            fill(matrixStack, themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
+            fill(themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
             for (int i = 0; i < THEME_SELECTOR_MAX_VISIBLE_ITEMS; i++) {
                 int index = i + themeSelectorScrollOffset;
                 if (index >= 0 && index < themeFileList.size()) {
@@ -559,19 +557,19 @@ public class CalendarScreen extends Screen {
 
                     // 检测鼠标悬停状态，高亮显示
                     if (index == themeSelectorHoveredIndex) {
-                        fill(matrixStack, x - 2, y - 2, x + themeSelectorMaxWidth + 2, y + font.lineHeight + 2, 0xAAAAAAAA);
+                        fill(x - 2, y - 2, x + themeSelectorMaxWidth + 2, y + font.lineHeight + 2, 0xAAAAAAAA);
                     }
                     // 绘制文件名
                     String name = themeFileList.get(index).getName();
                     name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
-                    AbstractGuiUtils.drawLimitedText(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 }
             }
             // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
             if (themeFileList.isEmpty()) {
                 TranslationTextComponent textComponent = new TranslationTextComponent("screen.sakura_sign_in.theme_selector.empty");
                 int textHeight = AbstractGuiUtils.multilineTextHeight(font, textComponent);
-                AbstractGuiUtils.drawMultilineText(matrixStack, font, textComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
+                AbstractGuiUtils.drawMultilineText(font, textComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
             }
         }
     }
@@ -641,7 +639,7 @@ public class CalendarScreen extends Screen {
                         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                             String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
                             if (player != null) {
-                                player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
+                                player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile));
                                 ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
                                 if (TextureUtils.isTextureAvailable(resourceLocation)) {
                                     ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
@@ -782,7 +780,7 @@ public class CalendarScreen extends Screen {
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
-                    player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                    player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"));
                 } else {
                     cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
@@ -790,10 +788,10 @@ public class CalendarScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new StringTextComponent("已经签过到了哦。"), player.getUUID());
+                player.sendMessage(new StringTextComponent("已经签过到了哦。"));
             } else {
                 if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
-                    player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+                    player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
@@ -802,10 +800,10 @@ public class CalendarScreen extends Screen {
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!ServerConfig.SIGN_IN_CARD.get()) {
-                    player.sendMessage(new StringTextComponent("服务器未开启补签功能哦。"), player.getUUID());
+                    player.sendMessage(new StringTextComponent("服务器未开启补签功能哦。"));
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                        player.sendMessage(new StringTextComponent("补签卡不足了哦。"), player.getUUID());
+                        player.sendMessage(new StringTextComponent("补签卡不足了哦。"));
                     } else {
                         cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                         ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
@@ -814,15 +812,15 @@ public class CalendarScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
             if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
-                player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"));
             } else {
-                player.sendMessage(new StringTextComponent("后面的的日期怎么想也回不去了吧。"), player.getUUID());
+                player.sendMessage(new StringTextComponent("后面的的日期怎么想也回不去了吧。"));
             }
         } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
-            player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+            player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"));
         } else {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());
+                player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)));
             }
         }
     }

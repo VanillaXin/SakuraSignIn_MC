@@ -63,7 +63,7 @@ public class ClientEventHandler {
             } else {
                 ClientPlayerEntity player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.sendMessage(new StringTextComponent("SakuraSignIn server is offline!"), player.getUUID());
+                    player.sendMessage(new StringTextComponent("SakuraSignIn server is offline!"));
                 }
             }
         }

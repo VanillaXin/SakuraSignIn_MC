@@ -422,50 +422,50 @@ public class RewardManager {
             if (ESignInType.SIGN_IN.equals(packet.getSignInType())
                     && (coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
                     && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE)) {
-                player.sendMessage(new StringTextComponent(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.TIME_COOLING_TIME.get())), player.getUUID());
+                player.sendMessage(new StringTextComponent(String.format("要到今天的%05.2f后才能签到哦", ServerConfig.TIME_COOLING_TIME.get())));
             } else {
-                player.sendMessage(new StringTextComponent("签到日期晚于服务器当前日期，签到失败"), player.getUUID());
+                player.sendMessage(new StringTextComponent("签到日期晚于服务器当前日期，签到失败"));
             }
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt > signInDateInt) {
             if (!((coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
                     && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE))) {
-                player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"), player.getUUID());
+                player.sendMessage(new StringTextComponent("签到日期早于服务器当前日期，签到失败"));
                 return;
             }
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt <= signInDateInt) {
-            player.sendMessage(new StringTextComponent("补签日期不早于服务器当前日期，补签失败"), player.getUUID());
+            player.sendMessage(new StringTextComponent("补签日期不早于服务器当前日期，补签失败"));
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt == DateUtils.toDateInt(signInData.getLastSignInTime())) {
-            player.sendMessage(new StringTextComponent("今天已经签过到啦"), player.getUUID());
+            player.sendMessage(new StringTextComponent("今天已经签过到啦"));
             return;
         }
         // 判断签到CD
         if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
             Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.TIME_COOLING_INTERVAL.get());
             if (packet.getSignInTime().before(lastSignInTime)) {
-                player.sendMessage(new StringTextComponent("签到冷却中，签到失败，请稍后再试"), player.getUUID());
+                player.sendMessage(new StringTextComponent("签到冷却中，签到失败，请稍后再试"));
                 return;
             }
         }
         // 判断补签
         if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.SIGN_IN_CARD.get()) {
-            player.sendMessage(new StringTextComponent("服务器未开启补签功能，补签失败"), player.getUUID());
+            player.sendMessage(new StringTextComponent("服务器未开启补签功能，补签失败"));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
-            player.sendMessage(new StringTextComponent("补签卡不足，补签失败"), player.getUUID());
+            player.sendMessage(new StringTextComponent("补签卡不足，补签失败"));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && isSignedIn(signInData, packet.getSignInTime(), false)) {
-            player.sendMessage(new StringTextComponent("已经签过到了哦"), player.getUUID());
+            player.sendMessage(new StringTextComponent("已经签过到了哦"));
             return;
         }
         // 判断领取奖励
         if (ESignInType.REWARD.equals(packet.getSignInType())) {
             if (isRewarded(signInData, packet.getSignInTime(), false)) {
-                player.sendMessage(new StringTextComponent(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"), player.getUUID());
+                player.sendMessage(new StringTextComponent(DateUtils.toString(packet.getSignInTime()) + "的奖励已经领取过啦"));
                 return;
             } else if (!isSignedIn(signInData, packet.getSignInTime(), false)) {
-                player.sendMessage(new StringTextComponent(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))), player.getUUID());
+                player.sendMessage(new StringTextComponent(String.format("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", DateUtils.toString(packet.getSignInTime()))));
                 return;
             } else {
                 signInData.getSignInRecords().stream()
@@ -485,7 +485,7 @@ public class RewardManager {
                                         giveRewardToPlayer(player, signInData, reward);
                                     });
                         });
-                player.sendMessage(new StringTextComponent("奖励领取成功"), player.getUUID());
+                player.sendMessage(new StringTextComponent("奖励领取成功"));
             }
         }
         // 签到/补签
@@ -514,7 +514,7 @@ public class RewardManager {
             signInData.setLastSignInTime(packet.getSignInTime());
             signInData.getSignInRecords().add(signInRecord);
             signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), getCompensateDate(null)));
-            player.sendMessage(new StringTextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
+            player.sendMessage(new StringTextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))));
         }
         // PlayerSignInDataCapability.setData(player, signInData);
         signInData.save(player);
@@ -549,7 +549,7 @@ public class RewardManager {
                 }
                 break;
             case MESSAGE:
-                player.sendMessage((StringTextComponent) object, player.getUUID());
+                player.sendMessage((StringTextComponent) object);
                 break;
             default:
         }

@@ -1,6 +1,5 @@
 package xin.vanilla.mc.util;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -9,7 +8,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponent;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
@@ -24,18 +22,17 @@ public class AbstractGuiUtils {
 
     public final static int ITEM_ICON_SIZE = 16;
 
-    public static void blit(MatrixStack matrixStack, int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
-        AbstractGui.blit(matrixStack, x0, y0, z, destWidth, destHeight, sprite);
+    public static void blit(int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
+        AbstractGui.blit(x0, y0, z, destWidth, destHeight, sprite);
     }
 
-    public static void blit(MatrixStack matrixStack, int x0, int y0, int z, float u0, float v0, int width, int height, int textureHeight, int textureWidth) {
-        AbstractGui.blit(matrixStack, x0, y0, z, u0, v0, width, height, textureHeight, textureWidth);
+    public static void blit(int x0, int y0, int z, float u0, float v0, int width, int height, int textureHeight, int textureWidth) {
+        AbstractGui.blit(x0, y0, z, u0, v0, width, height, textureHeight, textureWidth);
     }
 
     /**
      * 使用指定的纹理坐标和尺寸信息绘制一个矩形区域。
      *
-     * @param matrixStack   用于变换绘制坐标系的矩阵堆栈。
      * @param x0            矩形的左上角x坐标。
      * @param y0            矩形的左上角y坐标。
      * @param destWidth     目标矩形的宽度，决定了图像在屏幕上的宽度。
@@ -47,12 +44,12 @@ public class AbstractGuiUtils {
      * @param textureWidth  整个纹理的宽度，用于计算纹理坐标。
      * @param textureHeight 整个纹理的高度，用于计算纹理坐标。
      */
-    public static void blit(MatrixStack matrixStack, int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
-        AbstractGui.blit(matrixStack, x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
+    public static void blit(int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
+        AbstractGui.blit(x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
     }
 
-    public static void blit(MatrixStack matrixStack, int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
-        AbstractGui.blit(matrixStack, x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
+    public static void blit(int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
+        AbstractGui.blit(x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
     }
 
     public enum EllipsisPosition {
@@ -90,14 +87,13 @@ public class AbstractGuiUtils {
     /**
      * 绘制多行文本，以\n为换行符
      *
-     * @param matrixStack   渲染矩阵
      * @param fontRenderer  字体渲染器
      * @param textComponent 要绘制的文本
      * @param x             绘制的X坐标
      * @param y             绘制的Y坐标
      * @param colors        文本颜色
      */
-    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer fontRenderer, TextComponent textComponent, int x, int y, int... colors) {
+    public static void drawMultilineText(FontRenderer fontRenderer, TextComponent textComponent, int x, int y, int... colors) {
         if (StringUtils.isNotNullOrEmpty(textComponent.getString())) {
             String[] lines = textComponent.getString().replaceAll("\r\n", "\n").split("\n");
             for (int i = 0; i < lines.length; i++) {
@@ -109,7 +105,7 @@ public class AbstractGuiUtils {
                 } else {
                     color = 0xFFFFFF;
                 }
-                fontRenderer.draw(matrixStack, lines[i], x, y + i * fontRenderer.lineHeight, color);
+                fontRenderer.draw(lines[i], x, y + i * fontRenderer.lineHeight, color);
             }
         }
     }
@@ -117,7 +113,6 @@ public class AbstractGuiUtils {
     /**
      * 绘制限制长度的文本，超出部分末尾以省略号表示
      *
-     * @param matrixStack  渲染矩阵
      * @param fontRenderer 字体渲染器
      * @param text         要绘制的文本
      * @param x            绘制的X坐标
@@ -125,14 +120,13 @@ public class AbstractGuiUtils {
      * @param maxWidth     文本显示的最大宽度
      * @param color        文本颜色
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth) {
-        drawLimitedText(matrixStack, fontRenderer, text, x, y, color, maxWidth, EllipsisPosition.END);
+    public static void drawLimitedText(FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth) {
+        drawLimitedText(fontRenderer, text, x, y, color, maxWidth, EllipsisPosition.END);
     }
 
     /**
      * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
      *
-     * @param matrixStack  渲染矩阵
      * @param fontRenderer 字体渲染器
      * @param text         要绘制的文本
      * @param x            绘制的X坐标
@@ -141,7 +135,7 @@ public class AbstractGuiUtils {
      * @param color        文本颜色
      * @param position     省略号位置（开头、中间、结尾）
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth, EllipsisPosition position) {
+    public static void drawLimitedText(FontRenderer fontRenderer, String text, int x, int y, int color, int maxWidth, EllipsisPosition position) {
         String ellipsis = "...";
         int ellipsisWidth = fontRenderer.width(ellipsis);
 
@@ -180,13 +174,12 @@ public class AbstractGuiUtils {
             }
         }
 
-        fontRenderer.draw(matrixStack, text, x, y, color);
+        fontRenderer.draw(text, x, y, color);
     }
 
     /**
      * 绘制效果图标
      *
-     * @param matrixStack    用于变换绘制坐标系的矩阵堆栈
      * @param fontRenderer   字体渲染器
      * @param effectInstance 待绘制的效果实例
      * @param x              矩形的左上角x坐标
@@ -195,32 +188,32 @@ public class AbstractGuiUtils {
      * @param height         目标矩形的高度，决定了图像在屏幕上的高度
      * @param showText       是否显示效果等级和持续时间
      */
-    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
+    public static void drawEffectIcon(FontRenderer fontRenderer, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
         ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
         if (effectIcon == null) {
             Minecraft.getInstance().getTextureManager().bind(textureLocation);
             TextureCoordinate buffUV = textureCoordinate.getBuffUV();
-            AbstractGuiUtils.blit(matrixStack, x, y, width, height, (float) buffUV.getU0(), (float) buffUV.getV0(), (int) buffUV.getUWidth(), (int) buffUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+            AbstractGuiUtils.blit(x, y, width, height, (float) buffUV.getU0(), (float) buffUV.getV0(), (int) buffUV.getUWidth(), (int) buffUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         } else {
             Minecraft.getInstance().getTextureManager().bind(effectIcon);
-            AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
+            AbstractGuiUtils.blit(x, y, 0, 0, width, height, width, height);
         }
         if (showText) {
             // 效果等级
             if (effectInstance.getAmplifier() >= 0) {
-                StringTextComponent amplifierString = new StringTextComponent(StringUtils.intToRoman(effectInstance.getAmplifier() + 1));
+                String amplifierString = StringUtils.intToRoman(effectInstance.getAmplifier() + 1);
                 int amplifierWidth = fontRenderer.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
-                fontRenderer.drawShadow(matrixStack, amplifierString, fontX, fontY, 0xFFFFFF);
+                fontRenderer.drawShadow(amplifierString, fontX, fontY, 0xFFFFFF);
             }
             // 效果持续时间
             if (effectInstance.getDuration() > 0) {
-                StringTextComponent durationString = new StringTextComponent(DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
+                String durationString = DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1);
                 int durationWidth = fontRenderer.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
-                fontRenderer.drawShadow(matrixStack, durationString, fontX, fontY, 0xFFFFFF);
+                fontRenderer.drawShadow(durationString, fontX, fontY, 0xFFFFFF);
             }
         }
     }
@@ -228,7 +221,6 @@ public class AbstractGuiUtils {
     /**
      * 绘制自定义图标
      *
-     * @param matrixStack     用于变换绘制坐标系的矩阵堆栈
      * @param fontRenderer    字体渲染器
      * @param reward          待绘制的奖励
      * @param textureLocation 纹理位置
@@ -239,22 +231,21 @@ public class AbstractGuiUtils {
      * @param totalHeight     纹理总高度
      * @param showText        是否显示物品数量等信息
      */
-    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer fontRenderer, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
+    public static void drawCustomIcon(FontRenderer fontRenderer, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
         Minecraft.getInstance().getTextureManager().bind(textureLocation);
-        AbstractGuiUtils.blit(matrixStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
+        AbstractGuiUtils.blit(x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
-            StringTextComponent num = new StringTextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
+            String num = String.valueOf((Integer) RewardManager.deserializeReward(reward));
             int numWidth = fontRenderer.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - fontRenderer.lineHeight + 2;
-            fontRenderer.drawShadow(matrixStack, num, fontX, fontY, 0xFFFFFF);
+            fontRenderer.drawShadow(num, fontX, fontY, 0xFFFFFF);
         }
     }
 
     /**
      * 渲染奖励图标
      *
-     * @param matrixStack  用于变换绘制坐标系的矩阵堆栈
      * @param itemRenderer 物品渲染器
      * @param fontRenderer 字体渲染器
      * @param reward       待绘制的奖励
@@ -262,7 +253,7 @@ public class AbstractGuiUtils {
      * @param y            图标的y坐标
      * @param showText     是否显示物品数量等信息
      */
-    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
+    public static void renderCustomReward(ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             itemRenderer.renderGuiItem(itemStack, x, y);
@@ -271,16 +262,16 @@ public class AbstractGuiUtils {
             }
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
             EffectInstance effectInstance = RewardManager.deserializeReward(reward);
-            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
+            AbstractGuiUtils.drawEffectIcon(fontRenderer, effectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
         } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getPointUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(fontRenderer, reward, textureLocation, textureUV.getPointUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getLevelUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(fontRenderer, reward, textureLocation, textureUV.getLevelUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getCardUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(fontRenderer, reward, textureLocation, textureUV.getCardUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         } else if (reward.getType().equals(ERewardType.MESSAGE)) {
             // 这玩意不是Integer类型也没有数量, 不能showText
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
+            AbstractGuiUtils.drawCustomIcon(fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
         }
     }
 }

@@ -7,7 +7,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -69,6 +68,9 @@ public class SakuraSignIn {
     private void onServerStarting(FMLServerStartingEvent event) {
         SignInDataManager.loadSignInData();
         LOGGER.debug("SignIn data loaded.");
+        LOGGER.debug("Registering commands");
+        // 注册签到命令到事件调度器
+        SignInCommand.register(event.getServer().getCommands().getDispatcher());
     }
 
     // 服务器关闭时保存数据
@@ -91,20 +93,6 @@ public class SakuraSignIn {
     }
 
     /**
-     * 注册命令事件的处理方法
-     * 当注册命令事件被触发时，此方法将被调用
-     * 该方法主要用于注册签到命令到事件调度器
-     *
-     * @param event 注册命令事件对象，通过该对象可以获取到事件调度器
-     */
-    @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        LOGGER.debug("Registering commands");
-        // 注册签到命令到事件调度器
-        SignInCommand.register(event.getDispatcher());
-    }
-
-    /**
      * 玩家注销事件
      *
      * @param event 玩家注销事件对象，通过该对象可以获取到注销的玩家对象
@@ -113,7 +101,7 @@ public class SakuraSignIn {
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LOGGER.debug("Player has logged out.");
         // 获取退出的玩家对象
-        Player player = event.getPlayer();
+        PlayerEntity player = event.getPlayer();
         // 判断是否在客户端并且退出的玩家是客户端的当前玩家
         if (player.getCommandSenderWorld().isClientSide) {
             if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
