@@ -3,8 +3,8 @@ package xin.vanilla.mc.util;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
@@ -82,12 +82,18 @@ public class TextureUtils {
 
     public static boolean isTextureAvailable(ResourceLocation resourceLocation) {
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-        Texture texture = textureManager.getTexture(resourceLocation);
-        if (texture == null) {
+        ITextureObject texture;
+        try {
+            texture = textureManager.getTexture(resourceLocation);
+        } catch (Exception e) {
             return false;
         }
-        // 确保纹理已经加载
-        return texture.getId() != -1;
+        // 确保纹理已经加载, 抽象Idea说texture==null始终为false
+        try {
+            return texture.getId() != -1;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @NonNull

@@ -568,7 +568,7 @@ public class RewardManager {
         boolean added = player.inventory.add(itemStack);
         // 如果物品堆无法添加到库存，则以物品实体的形式生成在世界上
         if (!added && drop) {
-            ItemEntity itemEntity = new ItemEntity(player.level, player.getX(), player.getY(), player.getZ(), itemStack);
+            ItemEntity itemEntity = new ItemEntity(player.level, player.x, player.y, player.z, itemStack);
             added = player.level.addFreshEntity(itemEntity);
         }
         return added;

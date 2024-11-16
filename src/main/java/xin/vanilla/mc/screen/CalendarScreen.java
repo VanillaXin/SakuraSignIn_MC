@@ -1,6 +1,6 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -359,13 +359,13 @@ public class CalendarScreen extends Screen {
      */
     private void renderBackgroundTexture() {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         // 绘制背景纹理，使用缩放后的宽度和高度
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         AbstractGuiUtils.blit(bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 关闭 OpenGL 的混合模式
-        RenderSystem.disableBlend();
+        GlStateManager.disableBlend();
     }
 
     /**
@@ -440,13 +440,13 @@ public class CalendarScreen extends Screen {
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
+        AbstractGuiUtils.drawText(this.font, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
-        this.font.draw(monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
+        AbstractGuiUtils.drawText(this.font, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {

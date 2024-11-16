@@ -1,5 +1,6 @@
 package xin.vanilla.mc.util;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -23,10 +24,14 @@ public class AbstractGuiUtils {
     public final static int ITEM_ICON_SIZE = 16;
 
     public static void blit(int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         AbstractGui.blit(x0, y0, z, destWidth, destHeight, sprite);
     }
 
     public static void blit(int x0, int y0, int z, float u0, float v0, int width, int height, int textureHeight, int textureWidth) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         AbstractGui.blit(x0, y0, z, u0, v0, width, height, textureHeight, textureWidth);
     }
 
@@ -45,10 +50,14 @@ public class AbstractGuiUtils {
      * @param textureHeight 整个纹理的高度，用于计算纹理坐标。
      */
     public static void blit(int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         AbstractGui.blit(x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
     }
 
     public static void blit(int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         AbstractGui.blit(x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
     }
 
@@ -177,6 +186,20 @@ public class AbstractGuiUtils {
         fontRenderer.draw(text, x, y, color);
     }
 
+    public static void drawText(FontRenderer font, String text, float x, float y, int color) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        font.draw(text, x, y, color);
+        GlStateManager.clearCurrentColor();
+    }
+
+    public static void drawTextAndShadow(FontRenderer font, String text, float x, float y, int color) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        font.drawShadow(text, x, y, color);
+        GlStateManager.clearCurrentColor();
+    }
+
     /**
      * 绘制效果图标
      *
@@ -189,6 +212,9 @@ public class AbstractGuiUtils {
      * @param showText       是否显示效果等级和持续时间
      */
     public static void drawEffectIcon(FontRenderer fontRenderer, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
+        // 禁用混合模式，避免颜色叠加问题
+        GlStateManager.disableLighting();
+        GlStateManager.disableBlend();
         ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
         if (effectIcon == null) {
             Minecraft.getInstance().getTextureManager().bind(textureLocation);
@@ -205,7 +231,7 @@ public class AbstractGuiUtils {
                 int amplifierWidth = fontRenderer.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
-                fontRenderer.drawShadow(amplifierString, fontX, fontY, 0xFFFFFF);
+                AbstractGuiUtils.drawTextAndShadow(fontRenderer, amplifierString, fontX, fontY, 0xFFFFFFFF);
             }
             // 效果持续时间
             if (effectInstance.getDuration() > 0) {
@@ -213,9 +239,11 @@ public class AbstractGuiUtils {
                 int durationWidth = fontRenderer.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
-                fontRenderer.drawShadow(durationString, fontX, fontY, 0xFFFFFF);
+                AbstractGuiUtils.drawTextAndShadow(fontRenderer, durationString, fontX, fontY, 0xFFFFFFFF);
             }
         }
+        GlStateManager.enableLighting();
+        GlStateManager.enableBlend();
     }
 
     /**
@@ -232,6 +260,9 @@ public class AbstractGuiUtils {
      * @param showText        是否显示物品数量等信息
      */
     public static void drawCustomIcon(FontRenderer fontRenderer, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
+        // 禁用混合模式，避免颜色叠加问题
+        GlStateManager.disableLighting();
+        GlStateManager.disableBlend();
         Minecraft.getInstance().getTextureManager().bind(textureLocation);
         AbstractGuiUtils.blit(x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
@@ -239,8 +270,10 @@ public class AbstractGuiUtils {
             int numWidth = fontRenderer.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - fontRenderer.lineHeight + 2;
-            fontRenderer.drawShadow(num, fontX, fontY, 0xFFFFFF);
+            AbstractGuiUtils.drawTextAndShadow(fontRenderer, num, fontX, fontY, 0xFFFFFFFF);
         }
+        GlStateManager.enableLighting();
+        GlStateManager.enableBlend();
     }
 
     /**
@@ -254,6 +287,8 @@ public class AbstractGuiUtils {
      * @param showText     是否显示物品数量等信息
      */
     public static void renderCustomReward(ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             itemRenderer.renderGuiItem(itemStack, x, y);
