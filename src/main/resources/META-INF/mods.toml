@@ -5,13 +5,11 @@
 # Find more information on toml format here:  https://github.com/toml-lang/toml
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader = "javafml" #mandatory
-# A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion = "${loader_version_range}" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+# A version range to match for said mod loader - for regular FML @Mod it will be the the FML version. This is currently 47.
+loaderVersion = "${loader_version_range}" #mandatory
 # The license for you mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
 # Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
 license = "${mod_license}"
-# A logo to display on the mod's information page, relative to the resources folder.
-logoFile = "logo.png"
 # A URL to refer people to when problems occur with this mod
 #issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
 # A list of mods - how many allowed here is determined by the individual mod loader
@@ -22,50 +20,66 @@ modId = "${mod_id}" #mandatory
 version = "${mod_version}" #mandatory
 # A display name for the mod
 displayName = "${mod_name}" #mandatory
-# A URL to query for updates for this mod. See the JSON update specification https://docs.minecraftforge.net/en/latest/misc/updatechecker/
+# A URL to query for updates for this mod. See the JSON update specification https://docs.neoforge.net/docs/misc/updatechecker/
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 # A URL for the "homepage" for this mod, displayed in the mod UI
 displayURL = "https://mc.vanilla.xin/sakura_sign_in" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-#logoFile="sakura_sign_in.png" #optional
+logoFile = "logo.png" #optional
 # A text field displayed in the mod UI
-#credits="Thanks for this example mod goes to Java" #optional
+#credits="" #optional
 # A text field displayed in the mod UI
 authors = "${mod_authors}" #optional
+# Display Test controls the display for your mod in the server connection screen
+# MATCH_VERSION means that your mod will cause a red X if the versions on client and server differ. This is the default behaviour and should be what you choose if you have server and client elements to your mod.
+# IGNORE_SERVER_VERSION means that your mod will not cause a red X if it's present on the server but not on the client. This is what you should use if you're a server only mod.
+# IGNORE_ALL_VERSION means that your mod will not cause a red X if it's present on the client or the server. This is a special case and should only be used if your mod has no server component.
+# NONE means that no display test is set on your mod. You need to do this yourself, see IExtensionPoint.DisplayTest for more information. You can define any scheme you wish with this value.
+# IMPORTANT NOTE: this is NOT an instruction as to which environments (CLIENT or DEDICATED SERVER) your mod loads on. Your mod should load (and maybe do nothing!) whereever it finds itself.
+#displayTest="MATCH_VERSION" # MATCH_VERSION is the default if nothing is specified (#optional)
+
 # The description text for the mod (multi line!) (#mandatory)
 description = '''${mod_description}'''
+
 clientRequired = false
-# 依赖项 - 使用 .来指示特定 modid 的依赖关系。依赖项是可选的。
+
+# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies."${mod_id}"]] #optional
-# 依赖的 Modid
-modId = "forge" #mandatory
-# 此依赖项是否必须存在 - 如果不存在，则必须指定以下顺序
-mandatory = true # 强制的
-# 依赖项的版本范围
-versionRange = "${forge_version_range}" #mandatory
-# 依赖项的排序关系 - 如果依赖项不是必需的，则需要 BEFORE 或 AFTER
-# BEFORE - 此 mod 在依赖项之前加载
-# AFTER - 此 mod 在依赖项之后加载
+# the modid of the dependency
+modId = "neoforge" #mandatory
+# The type of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case insensitive).
+# 'required' requires the mod to exist, 'optional' does not
+# 'incompatible' will prevent the game from loading when the mod exists, and 'discouraged' will show a warning
+type = "required" #mandatory
+# Optional field describing why the dependency is required or why it is incompatible
+# reason="..."
+# The version range of the dependency
+versionRange = "${neo_version_range}" #mandatory
+# An ordering relationship for the dependency.
+# BEFORE - This mod is loaded BEFORE the dependency
+# AFTER - This mod is loaded AFTER the dependency
 ordering = "NONE"
-# 此依赖项应用于 BOTH、CLIENT 或 SERVER 的一侧
-side = "BOTH"# 这是另一个依赖项
-# 依赖配置部分
+# Side this dependency is applied on - BOTH, CLIENT, or SERVER
+side = "BOTH"
+# Here's another dependency
 [[dependencies."${mod_id}"]]
 modId = "minecraft"
-mandatory = true
-# 此版本范围声明了当前 minecraft 版本的最低版本，但不包括下一个主要版本
+type = "required"
+# This version range declares a minimum of the current minecraft version up to but not including the next major version
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+# 强制模组在服务器端运行
 [[dependencies."${mod_id}"]]
 modId = "${mod_id}" # 模组ID
-mandatory = true # 模组必须在服务器上安装
+type = "required" # 模组必须在服务器上安装
 versionRange = "[1.0.0,)"
 ordering = "NONE"
-side = "SERVER" # 强制模组在服务器端运行
+side = "SERVER"
+# 客户端安装是可选的
 [[dependencies."${mod_id}"]]
 modId = "${mod_id}" # 模组ID
-mandatory = false # 客户端可以不安装
+type = "optional" # 客户端可以不安装
 versionRange = "[1.0.0,)"
 ordering = "NONE"
-side = "CLIENT" # 客户端安装是可选的
+side = "CLIENT"
