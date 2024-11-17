@@ -1,71 +1,70 @@
 package xin.vanilla.mc.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.config.Configuration;
 
-/**
- * 客户端配置
- */
+import java.io.File;
+
 public class ClientConfig {
-    public static final ForgeConfigSpec CLIENT_CONFIG;
-    /**
-     * 主题设置
-     */
-    public static final ForgeConfigSpec.ConfigValue<String> THEME;
-    /**
-     * 是否使用内置主题特殊图标
-     */
-    public static final ForgeConfigSpec.BooleanValue SPECIAL_THEME;
-    /**
-     * 签到页面显示上月奖励
-     */
-    public static final ForgeConfigSpec.BooleanValue SHOW_LAST_REWARD;
-    /**
-     * 签到页面显示下月奖励
-     */
-    public static final ForgeConfigSpec.BooleanValue SHOW_NEXT_REWARD;
-    /**
-     * 自动领取
-     */
-    public static final ForgeConfigSpec.BooleanValue AUTO_REWARDED;
 
-    static {
-        ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
+    public static Configuration config;
 
-        // 定义客户端配置项
-        CLIENT_BUILDER.comment("Client Settings").push("client");
+    // 配置项
+    public static String theme;
+    public static boolean specialTheme;
+    public static boolean showLastReward;
+    public static boolean showNextReward;
+    public static boolean autoRewarded;
 
-        // 主题
-        THEME = CLIENT_BUILDER
-                .comment("theme textures path, can be external path: config/sakura_sign_in/themes/your_theme.png"
-                        , "主题材质路径，可为外部路径： config/sakura_sign_in/themes/your_theme.png")
-                .define("theme", "textures/gui/sign_in_calendar_sakura.png");
+    // 初始化配置方法
+    public static void init(File configFile) {
+        config = new Configuration(configFile);
+        loadConfig();
+    }
 
-        // 内置主题特殊图标
-        SPECIAL_THEME = CLIENT_BUILDER
-                .comment("Whether or not to use the built-in theme special icons."
-                        , "是否使用内置主题特殊图标。")
-                .define("specialTheme", false);
+    // 加载配置文件
+    private static void loadConfig() {
+        try {
+            config.load();
 
-        // 签到页面显示上月奖励
-        SHOW_LAST_REWARD = CLIENT_BUILDER
-                .comment("The sign-in page displays last month's rewards. Someone said it didn't look good on display."
-                        , "签到页面是否显示上个月的奖励，有人说它显示出来不好看。")
-                .define("showLastReward", false);
+            // 主题
+            theme = config.getString("theme", "client", "textures/gui/sign_in_calendar_sakura.png",
+                    "theme textures path, can be external path: config/sakura_sign_in/themes/your_theme.png\n" +
+                            "主题材质路径，可为外部路径： config/sakura_sign_in/themes/your_theme.png");
 
-        // 签到页面显示下月奖励
-        SHOW_NEXT_REWARD = CLIENT_BUILDER
-                .comment("The sign-in page displays next month's rewards. Someone said it didn't look good on display."
-                        , "签到页面是否显示下个月的奖励，有人说它显示出来不好看。")
-                .define("showNextReward", false);
+            // 内置主题特殊图标
+            specialTheme = config.getBoolean("specialTheme", "client", false,
+                    "Whether or not to use the built-in theme special icons.\n" +
+                            "是否使用内置主题特殊图标。");
 
-        // 自动领取
-        AUTO_REWARDED = CLIENT_BUILDER
-                .comment("Whether the rewards will be automatically claimed when you sign in or re-sign-in."
-                        , "签到或补签时是否自动领取奖励。")
-                .define("autoRewarded", false);
+            // 显示上月奖励
+            showLastReward = config.getBoolean("showLastReward", "client", false,
+                    "The sign-in page displays last month's rewards. Someone said it didn't look good on display.\n" +
+                            "签到页面是否显示上个月的奖励，有人说它显示出来不好看。");
 
-        CLIENT_BUILDER.pop();
+            // 显示下月奖励
+            showNextReward = config.getBoolean("showNextReward", "client", false,
+                    "The sign-in page displays next month's rewards. Someone said it didn't look good on display.\n" +
+                            "签到页面是否显示下个月的奖励，有人说它显示出来不好看。");
 
-        CLIENT_CONFIG = CLIENT_BUILDER.build();
+            // 自动领取
+            autoRewarded = config.getBoolean("autoRewarded", "client", false,
+                    "Whether the rewards will be automatically claimed when you sign in or re-sign-in.\n" +
+                            "签到或补签时是否自动领取奖励。");
+
+        } catch (Exception e) {
+            System.out.println("Error loading client config file!");
+        } finally {
+            if (config.hasChanged()) {
+                config.save();
+            }
+        }
+    }
+
+    // 更新配置
+    public static void reloadConfig() {
+        if (config != null) {
+            loadConfig();
+            config.save();
+        }
     }
 }

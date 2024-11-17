@@ -3,20 +3,14 @@ package xin.vanilla.mc;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.common.event.*;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.command.SignInCommand;
@@ -26,13 +20,21 @@ import xin.vanilla.mc.config.SignInDataManager;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.ModNetworkHandler;
 
+import java.io.File;
 import java.nio.file.Path;
 
-@Mod(SakuraSignIn.MODID)
+@Mod(modid = SakuraSignIn.MODID, name = SakuraSignIn.MODNAME, version = SakuraSignIn.MODVERSION)
 public class SakuraSignIn {
-
     public static final String MODID = "sakura_sign_in";
+    public static final String MODNAME = "樱花签";
+    public static final String MODVERSION = "1.12.2-0.0.2-beta.1";
     public static final String PNG_CHUNK_NAME = "vacb";
+
+    /**
+     * This is the instance of your mod as created by Forge. It will never be null.
+     */
+    @Mod.Instance(MODID)
+    public static SakuraSignIn INSTANCE;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -43,29 +45,42 @@ public class SakuraSignIn {
     @Setter
     private static boolean enabled;
 
-    public SakuraSignIn() {
-
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
         // 注册网络通道
         ModNetworkHandler.registerPackets();
 
-        // 注册服务器启动和关闭事件
-        MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
-        MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
-
-        // 注册当前实例到MinecraftForge的事件总线，以便监听和处理游戏内的各种事件
-        MinecraftForge.EVENT_BUS.register(this);
-
         // 注册服务器和客户端配置
-        // MinecraftForge.EVENT_BUS.addListener(this::onLoadConfig);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.SERVER_CONFIG);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
+        File serverConfigFile = new File(event.getModConfigurationDirectory(), String.format("%s-server.cfg", MODID));
+        ServerConfig.init(serverConfigFile);
 
-        // 注册客户端设置事件到MOD事件总线
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+        File clientConfigFile = new File(event.getModConfigurationDirectory(), String.format("%s-client.cfg", MODID));
+        ClientConfig.init(clientConfigFile);
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        // 仅在客户端执行的代码
+        if (event.getSide().isClient()) {
+            // 注册键盘按键绑定
+            ClientEventHandler.registerKeyBindings();
+            // 创建配置文件目录
+            ClientEventHandler.createConfigPath();
+        }
+    }
+
+    /**
+     * This is the final initialization event. Register actions from other mods here
+     */
+    @Mod.EventHandler
+    public void postinit(FMLPostInitializationEvent event) {
+
     }
 
     // 服务器启动时加载数据
-    private void onServerStarting(FMLServerStartingEvent event) {
+    @Mod.EventHandler
+    public void onServerStarting(FMLServerStartingEvent event) {
+        // 加载签到数据
         SignInDataManager.loadSignInData();
         LOGGER.debug("SignIn data loaded.");
         LOGGER.debug("Registering commands");
@@ -74,22 +89,9 @@ public class SakuraSignIn {
     }
 
     // 服务器关闭时保存数据
-    private void onServerStopping(FMLServerStoppingEvent event) {
+    @Mod.EventHandler
+    public void onServerStopping(FMLServerStoppingEvent event) {
         // SignInDataManager.saveSignInData();
-    }
-
-    /**
-     * 在客户端设置阶段触发的事件处理方法
-     * 此方法主要用于接收 FML 客户端设置事件，并执行相应的初始化操作
-     */
-    @SubscribeEvent
-    public void onClientSetup(final FMLClientSetupEvent event) {
-        LOGGER.debug("Got game settings {}", event.getMinecraftSupplier().get().options);
-        // 注册键绑定
-        LOGGER.debug("Registering key bindings");
-        ClientEventHandler.registerKeyBindings();
-        // 创建配置文件目录
-        ClientEventHandler.createConfigPath();
     }
 
     /**
@@ -101,7 +103,7 @@ public class SakuraSignIn {
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LOGGER.debug("Player has logged out.");
         // 获取退出的玩家对象
-        PlayerEntity player = event.getPlayer();
+        EntityPlayer player = event.getPlayer();
         // 判断是否在客户端并且退出的玩家是客户端的当前玩家
         if (player.getCommandSenderWorld().isClientSide) {
             if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
@@ -118,7 +120,7 @@ public class SakuraSignIn {
      * @param event 世界卸载事件对象，通过该对象可以获取到卸载的世界对象
      */
     @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
+    @SideOnly(Side.CLIENT)
     public void onWorldUnload(WorldEvent.Unload event) {
         LOGGER.debug("World has unloaded.");
         // 当玩家离开世界时
@@ -128,7 +130,7 @@ public class SakuraSignIn {
     /**
      * 打开指定路径的文件夹
      */
-    @OnlyIn(Dist.CLIENT)
+    @SideOnly(Side.CLIENT)
     public static void openFolder(Path path) {
         try {
             // Windows

@@ -1,0 +1,20 @@
+[
+  {
+    "modid": "${mod_id}",
+    "name": "${mod_name}",
+    "description": "${mod_description}",
+    "version": "${mod_version}",
+    "mcversion": "${minecraft_version_range}",
+    "url": "https://mc.vanilla.xin/sakura_sign_in",
+    "updateUrl": "",
+    "authorList": [
+      "${mod_authors}"
+    ],
+    "credits": "",
+    "logoFile": "logo.png",
+    "dependencies": [
+      "required-after:forge@[${forge_version_range},)",
+      "required-after:minecraft@[${minecraft_version_range},)"
+    ]
+  }
+]
