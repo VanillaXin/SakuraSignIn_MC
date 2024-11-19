@@ -283,4 +283,17 @@ public class AbstractGuiUtils {
             AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
         }
     }
+
+    /**
+     * 绘制一个“像素”矩形
+     *
+     * @param matrixStack 用于变换绘制坐标系的矩阵堆栈
+     * @param x           像素的 X 坐标
+     * @param y           像素的 Y 坐标
+     * @param color       像素的颜色
+     */
+    public static void drawPixel(MatrixStack matrixStack, int x, int y, int color) {
+        AbstractGui.fill(matrixStack, x, y, x + 1, y + 1, color);
+    }
+
 }

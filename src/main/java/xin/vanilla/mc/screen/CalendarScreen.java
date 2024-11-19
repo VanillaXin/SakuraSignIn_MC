@@ -28,10 +28,7 @@ import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
-import xin.vanilla.mc.util.AbstractGuiUtils;
-import xin.vanilla.mc.util.DateUtils;
-import xin.vanilla.mc.util.PNGUtils;
-import xin.vanilla.mc.util.TextureUtils;
+import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
@@ -413,6 +410,31 @@ public class CalendarScreen extends Screen {
         matrixStack.popPose();
     }
 
+    private void renderTremblingTexture(MatrixStack matrixStack, TextureCoordinate coordinate) {
+        double x = bgX + coordinate.getX() * this.scale;
+        double y = bgY + coordinate.getY() * this.scale;
+        int width = (int) (coordinate.getWidth() * this.scale);
+        int height = (int) (coordinate.getHeight() * this.scale);
+        float u0 = (float) coordinate.getU0();
+        float v0 = (float) coordinate.getV0();
+        int uWidth = (int) coordinate.getUWidth();
+        int vHeight = (int) coordinate.getVHeight();
+        Random random = new Random();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        matrixStack.pushPose();
+        // 添加偏移
+        if (WorldUtils.getEnvironmentBrightness(Minecraft.getInstance().player) > 4) {
+            x = x + random.nextFloat() * 4 - 2;
+            y = y + random.nextFloat() * 3 - 1.5;
+        }
+        matrixStack.translate(x, y, 0);
+        // 绘制纹理
+        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        matrixStack.popPose();
+        RenderSystem.disableBlend();
+    }
+
     /**
      * 获取操作按钮的纹理坐标
      */
@@ -460,7 +482,7 @@ public class CalendarScreen extends Screen {
             boolean flipHorizontal = false;
             // 垂直翻转
             boolean flipVertical = false;
-            switch (valueOf(op)) {
+            switch (OperationButtonType.valueOf(op)) {
                 case RIGHT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
                     if (coordinate.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
@@ -515,7 +537,7 @@ public class CalendarScreen extends Screen {
                 case THEME_MAPLE_BUTTON:
                 case THEME_CHAOS_BUTTON:
                     // 如选中主题为当前主题则设置为鼠标按下(选中)状态
-                    if (BACKGROUND_TEXTURE.getPath().equalsIgnoreCase(valueOf(op).getPath())) {
+                    if (BACKGROUND_TEXTURE.getPath().equalsIgnoreCase(OperationButtonType.valueOf(op).getPath())) {
                         button.setNormalV(button.getTapV());
                         button.setHoverV(button.getTapV());
                     } else {
@@ -532,7 +554,11 @@ public class CalendarScreen extends Screen {
             }
             button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
             button.setX(coordinate.getX()).setY(coordinate.getY());
-            this.renderRotatedTexture(matrixStack, coordinate, angle, flipHorizontal, flipVertical);
+            if (op == THEME_CHAOS_BUTTON.getCode() && button.isMouseOver((mouseX - bgX) / this.scale, (mouseY - bgY) / this.scale)) {
+                this.renderTremblingTexture(matrixStack, coordinate);
+            } else {
+                this.renderRotatedTexture(matrixStack, coordinate, angle, flipHorizontal, flipVertical);
+            }
         }
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
