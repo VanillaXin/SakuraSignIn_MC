@@ -176,7 +176,7 @@ public class SignInScreen extends Screen {
     }
 
     public SignInScreen() {
-        super(new TranslationTextComponent("screen.sakura_sign_in.calendar_title"));
+        super(new TranslationTextComponent("screen.sakura_sign_in.sign_in_title"));
     }
 
     @Override

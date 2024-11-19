@@ -28,7 +28,7 @@ public class ClientEventHandler {
     private static final String CATEGORIES = "key.sakura_sign_in.categories";
 
     // 定义按键绑定
-    public static KeyBinding CALENDAR_KEY = new KeyBinding("key.sakura_sign_in.calendar",
+    public static KeyBinding CALENDAR_KEY = new KeyBinding("key.sakura_sign_in.sign_in",
             GLFW.GLFW_KEY_H, CATEGORIES);
 
     /**

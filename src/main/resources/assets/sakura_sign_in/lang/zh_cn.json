@@ -1,9 +1,9 @@
 {
   "key.sakura_sign_in.categories": "樱花签到",
   "key.sakura_sign_in.sign_in": "打开签到页面",
-  "key.sakura_sign_in.calendar": "打开日历页面",
-  "screen.sakura_sign_in.calendar_title": "日历",
-  "screen.sakura_sign_in.test_title": "测试",
+  "key.sakura_sign_in.reward_option": "打开奖励配置页面",
+  "screen.sakura_sign_in.sign_in_title": "签到",
+  "screen.sakura_sign_in.reward_option_title": "奖励配置",
   "screen.sakura_sign_in.theme_selector.empty": "未找到主题文件！\n鼠标右键点击\n以打开文件夹",
   "command.sakura_sign_in.va_help": "获取帮助信息",
   "command.sakura_sign_in.sign": "详见/va sign",

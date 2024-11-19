@@ -1,9 +1,9 @@
 {
   "key.sakura_sign_in.categories": "Sakura Sign-In",
   "key.sakura_sign_in.sign_in": "Open Sign-In Screen",
-  "key.sakura_sign_in.calendar": "Open Calendar Screen",
-  "screen.sakura_sign_in.calendar_title": "Calendar",
-  "screen.sakura_sign_in.test_title": "Test",
+  "key.sakura_sign_in.reward_option": "Open Reward Option Screen",
+  "screen.sakura_sign_in.sign_in_title": "Calendar",
+  "screen.sakura_sign_in.reward_option_title": "Reward Option",
   "screen.sakura_sign_in.theme_selector.empty": "No theme \nfiles found!\nRight-click to \nopen the \ntheme folder.",
   "command.sakura_sign_in.va_help": "Get help information",
   "command.sakura_sign_in.sign": "Like /va sign",
