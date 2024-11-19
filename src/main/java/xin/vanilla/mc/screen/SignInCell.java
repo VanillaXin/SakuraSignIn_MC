@@ -22,7 +22,7 @@ import java.util.Date;
 
 @Data
 @Accessors(chain = true)
-public class CalendarCell {
+public class SignInCell {
     private final ResourceLocation BACKGROUND_TEXTURE;
     private final CalendarTextureCoordinate textureCoordinate;
 
@@ -52,7 +52,7 @@ public class CalendarCell {
     private int previousMouseX;
     private int previousMouseY;
 
-    public CalendarCell(ResourceLocation resourceLocation, CalendarTextureCoordinate textureCoordinate, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
+    public SignInCell(ResourceLocation resourceLocation, CalendarTextureCoordinate textureCoordinate, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
         BACKGROUND_TEXTURE = resourceLocation;
         this.textureCoordinate = textureCoordinate;
         this.x = x;

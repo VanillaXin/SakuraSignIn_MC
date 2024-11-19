@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
-import xin.vanilla.mc.screen.CalendarScreen;
+import xin.vanilla.mc.screen.SignInScreen;
 
 import java.io.File;
 
@@ -59,7 +59,7 @@ public class ClientEventHandler {
         if (CALENDAR_KEY.consumeClick()) {
             // 打开日历界面
             if (SakuraSignIn.isEnabled()) {
-                Minecraft.getInstance().setScreen(new CalendarScreen());
+                Minecraft.getInstance().setScreen(new SignInScreen());
             } else {
                 ClientPlayerEntity player = Minecraft.getInstance().player;
                 if (player != null) {

@@ -38,10 +38,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
-import static xin.vanilla.mc.screen.CalendarScreen.OperationButtonType.*;
+import static xin.vanilla.mc.screen.SignInScreen.OperationButtonType.*;
 
 @OnlyIn(Dist.CLIENT)
-public class CalendarScreen extends Screen {
+public class SignInScreen extends Screen {
 
     // region 变量定义
 
@@ -58,7 +58,7 @@ public class CalendarScreen extends Screen {
     /**
      * 日历单元格集合
      */
-    private final List<CalendarCell> calendarCells = new ArrayList<>();
+    private final List<SignInCell> signInCells = new ArrayList<>();
     /**
      * 背景材质
      */
@@ -175,7 +175,7 @@ public class CalendarScreen extends Screen {
         }
     }
 
-    public CalendarScreen() {
+    public SignInScreen() {
         super(new TranslationTextComponent("screen.sakura_sign_in.calendar_title"));
     }
 
@@ -252,7 +252,7 @@ public class CalendarScreen extends Screen {
      */
     private void createCalendarCells(Date current) {
         // 清除原有格子，避免重复添加
-        calendarCells.clear();
+        signInCells.clear();
 
         double startX = bgX + textureCoordinate.getCellCoordinate().getX() * this.scale;
         double startY = bgY + textureCoordinate.getCellCoordinate().getY() * this.scale;
@@ -343,10 +343,10 @@ public class CalendarScreen extends Screen {
                     }
 
                     // 创建物品格子
-                    CalendarCell cell = new CalendarCell(BACKGROUND_TEXTURE, textureCoordinate, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
+                    SignInCell cell = new SignInCell(BACKGROUND_TEXTURE, textureCoordinate, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
                     cell.setShowIcon(showIcon).setShowText(showText).setShowHover(showHover);
                     // 添加到列表
-                    calendarCells.add(cell);
+                    signInCells.add(cell);
                 }
             }
         }
@@ -563,11 +563,11 @@ public class CalendarScreen extends Screen {
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
         // 渲染所有格子
-        for (CalendarCell cell : calendarCells) {
+        for (SignInCell cell : signInCells) {
             cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
         }
         // 渲染格子弹出层
-        for (CalendarCell cell : calendarCells) {
+        for (SignInCell cell : signInCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
                 cell.renderTooltip(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
             }
@@ -653,7 +653,7 @@ public class CalendarScreen extends Screen {
             });
             if (!flag.get()) {
                 // 日历格子
-                for (CalendarCell cell : calendarCells) {
+                for (SignInCell cell : signInCells) {
                     if (cell.isShowIcon() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
                         if (player != null) {
                             this.handleSignIn(button, cell, player);
@@ -803,7 +803,7 @@ public class CalendarScreen extends Screen {
         }
     }
 
-    private void handleSignIn(int button, CalendarCell cell, ClientPlayerEntity player) {
+    private void handleSignIn(int button, SignInCell cell, ClientPlayerEntity player) {
         Date cellDate = DateUtils.getDate(cell.year, cell.month, cell.day);
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -885,12 +885,12 @@ public class CalendarScreen extends Screen {
         }
 
         // 奖励悬浮层
-        for (CalendarCell cell : calendarCells) {
+        for (SignInCell cell : signInCells) {
             if (cell.isShowIcon() && cell.isShowHover() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
                 if (delta > 0) {
                     cell.setTooltipScrollOffset(Math.max(cell.getTooltipScrollOffset() - 1, 0));
                 } else if (delta < 0) {
-                    cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - CalendarCell.TOOLTIP_MAX_VISIBLE_ITEMS));
+                    cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - SignInCell.TOOLTIP_MAX_VISIBLE_ITEMS));
                 }
             }
         }
