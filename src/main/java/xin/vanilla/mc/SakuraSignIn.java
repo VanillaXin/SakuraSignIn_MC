@@ -28,6 +28,7 @@ import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.ModNetworkHandler;
 
 import java.nio.file.Path;
+import java.util.Date;
 
 @Mod(SakuraSignIn.MODID)
 public class SakuraSignIn {
@@ -35,7 +36,7 @@ public class SakuraSignIn {
     public static final String MODID = "sakura_sign_in";
     public static final String PNG_CHUNK_NAME = "vacb";
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * 是否有对应的服务端
@@ -43,6 +44,18 @@ public class SakuraSignIn {
     @Getter
     @Setter
     private static boolean enabled;
+    /**
+     * 奖励配置页面侧边栏是否开启
+     */
+    @Getter
+    @Setter
+    private static boolean rewardOptionBarOpened = false;
+    /**
+     * 签到页面当前显示的日期
+     */
+    @Getter
+    @Setter
+    private static Date calendarCurrentDate;
 
     public SakuraSignIn() {
 

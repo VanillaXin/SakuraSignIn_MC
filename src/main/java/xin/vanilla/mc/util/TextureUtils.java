@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,9 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class TextureUtils {
     /**
@@ -120,5 +119,33 @@ public class TextureUtils {
             effectIcon = null;
         }
         return effectIcon;
+    }
+
+    private static final Map<ResourceLocation, NativeImage> CACHE = new HashMap<>();
+
+    /**
+     * 从资源中加载纹理并转换为 NativeImage。
+     *
+     * @param texture 纹理的 ResourceLocation
+     * @return 纹理对应的 NativeImage 或 null
+     */
+    public static NativeImage getTextureImage(ResourceLocation texture) {
+        // 优先从缓存中获取
+        if (CACHE.containsKey(texture)) {
+            return CACHE.get(texture);
+        }
+        try {
+            // 获取资源管理器
+            IResource resource = Minecraft.getInstance().getResourceManager().getResource(texture);
+            // 打开资源输入流并加载为 NativeImage
+            try (InputStream inputStream = resource.getInputStream()) {
+                NativeImage nativeImage = NativeImage.read(inputStream);
+                CACHE.put(texture, nativeImage);
+                return nativeImage;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load texture: {}", texture);
+            return null;
+        }
     }
 }

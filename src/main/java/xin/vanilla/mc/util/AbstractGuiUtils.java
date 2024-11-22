@@ -1,6 +1,7 @@
 package xin.vanilla.mc.util;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponent;
 import xin.vanilla.mc.enums.ERewardType;
@@ -16,6 +18,8 @@ import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.CalendarTextureCoordinate;
 import xin.vanilla.mc.screen.TextureCoordinate;
+
+import java.util.Random;
 
 /**
  * AbstractGui工具类
@@ -296,4 +300,111 @@ public class AbstractGuiUtils {
         AbstractGui.fill(matrixStack, x, y, x + 1, y + 1, color);
     }
 
+    /**
+     * 绘制旋转的纹理
+     *
+     * @param matrixStack       矩阵栈
+     * @param texture           纹理
+     * @param textureCoordinate 纹理坐标
+     * @param coordinate        绘制相对坐标
+     * @param baseX             绘制的基础坐标X
+     * @param baseY             绘制的基础坐标Y
+     * @param scale             Screen纹理缩放比例
+     * @param angle             旋转角度
+     * @param flipHorizontal    水平翻转
+     * @param flipVertical      垂直翻转
+     */
+    public static void renderRotatedTexture(MatrixStack matrixStack, ResourceLocation texture, CalendarTextureCoordinate textureCoordinate, TextureCoordinate coordinate, double baseX, double baseY, double scale, double angle, boolean flipHorizontal, boolean flipVertical) {
+        double x = baseX + coordinate.getX() * scale;
+        double y = baseY + coordinate.getY() * scale;
+        int width = (int) (coordinate.getWidth() * scale);
+        int height = (int) (coordinate.getHeight() * scale);
+        float u0 = (float) coordinate.getU0();
+        float v0 = (float) coordinate.getV0();
+        int uWidth = (int) coordinate.getUWidth();
+        int vHeight = (int) coordinate.getVHeight();
+        // 绑定纹理
+        Minecraft.getInstance().getTextureManager().bind(texture);
+        // 保存当前矩阵状态
+        matrixStack.pushPose();
+        // 平移到旋转中心 (x + width / 2, y + height / 2)
+        matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
+        // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
+        matrixStack.mulPose(Vector3f.ZP.rotationDegrees((float) angle));
+        // 左右翻转
+        if (flipHorizontal) {
+            u0 += uWidth;
+            uWidth = -uWidth;
+        }
+        // 上下翻转
+        if (flipVertical) {
+            v0 += vHeight;
+            vHeight = -vHeight;
+        }
+        // 平移回原点
+        matrixStack.translate(-width / 2.0, -height / 2.0, 0);
+        // 绘制纹理
+        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        // 恢复矩阵状态
+        matrixStack.popPose();
+    }
+
+    /**
+     * 绘制 颤抖的 纹理
+     *
+     * @param matrixStack        矩阵栈
+     * @param texture            纹理
+     * @param textureCoordinate  纹理坐标
+     * @param coordinate         绘制相对坐标
+     * @param baseX              绘制的基础坐标X
+     * @param baseY              绘制的基础坐标Y
+     * @param scale              Screen纹理缩放比例
+     * @param affectLight        是否受光照影响
+     * @param tremblingAmplitude 颤抖幅度
+     */
+    public static void renderTremblingTexture(MatrixStack matrixStack, ResourceLocation texture, CalendarTextureCoordinate textureCoordinate, TextureCoordinate coordinate, double baseX, double baseY, double scale, boolean affectLight, double tremblingAmplitude) {
+        double x = baseX + coordinate.getX() * scale;
+        double y = baseY + coordinate.getY() * scale;
+        int width = (int) (coordinate.getWidth() * scale);
+        int height = (int) (coordinate.getHeight() * scale);
+        float u0 = (float) coordinate.getU0();
+        float v0 = (float) coordinate.getV0();
+        int uWidth = (int) coordinate.getUWidth();
+        int vHeight = (int) coordinate.getVHeight();
+        Random random = new Random();
+        // 绑定纹理
+        Minecraft.getInstance().getTextureManager().bind(texture);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        matrixStack.pushPose();
+        // 添加偏移
+        if (tremblingAmplitude > 0) {
+            if (!affectLight || WorldUtils.getEnvironmentBrightness(Minecraft.getInstance().player) > 4) {
+                x += (random.nextFloat() - 0.5) * tremblingAmplitude;
+                y += (random.nextFloat() - 0.5) * tremblingAmplitude;
+            }
+        }
+        matrixStack.translate(x, y, 0);
+        // 绘制纹理
+        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        matrixStack.popPose();
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * 绘制一个矩形边框
+     *
+     * @param thickness 边框厚度
+     * @param color     边框颜色
+     */
+    public static void fillOutLine(MatrixStack matrixStack, int x, int y, int width, int height, int thickness, int color) {
+        // 上边
+        AbstractGui.fill(matrixStack, x, y, x + width, y + thickness, color);
+        // 下边
+        AbstractGui.fill(matrixStack, x, y + height - thickness, x + width, y + height, color);
+        // 左边
+        AbstractGui.fill(matrixStack, x, y, x + thickness, y + height, color);
+        // 右边
+        AbstractGui.fill(matrixStack, x + width - thickness, y, x + width, y + height, color);
+    }
 }

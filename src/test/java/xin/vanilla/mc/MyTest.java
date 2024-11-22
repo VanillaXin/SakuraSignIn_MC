@@ -123,10 +123,10 @@ public class MyTest {
     @Test
     public void pngTest() throws IOException, ClassNotFoundException {
         // testWriteZTxt("original");
-        testWriteChunk("original");
+        // testWriteChunk("original");
         testWriteChunk("sakura");
-        testWriteChunk("clover");
-        testWriteChunk("maple");
+        // testWriteChunk("clover");
+        // testWriteChunk("maple");
         // testWriteChunk("chaos");
     }
 }

@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -28,7 +27,10 @@ import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
-import xin.vanilla.mc.util.*;
+import xin.vanilla.mc.util.AbstractGuiUtils;
+import xin.vanilla.mc.util.DateUtils;
+import xin.vanilla.mc.util.PNGUtils;
+import xin.vanilla.mc.util.TextureUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
@@ -86,11 +88,6 @@ public class SignInScreen extends Screen {
     private int bgW = Math.max(bgH * 5 / 6, 100);
     private int bgX = (this.width - bgW) / 2;
     private int bgY = 0;
-
-    /**
-     * 当前显示的日期
-     */
-    private Date currentDate;
 
     /**
      * UI缩放比例
@@ -182,21 +179,9 @@ public class SignInScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        currentDate = RewardManager.getCompensateDate(new Date());
         themeSelectorMaxWidth = font.width("cal_text_width");
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
-
-        BUTTONS.put(LEFT_ARROW.getCode(), new OperationButton(LEFT_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getLeftArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
-        BUTTONS.put(RIGHT_ARROW.getCode(), new OperationButton(RIGHT_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getRightArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
-        BUTTONS.put(UP_ARROW.getCode(), new OperationButton(UP_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getUpArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
-        BUTTONS.put(DOWN_ARROW.getCode(), new OperationButton(DOWN_ARROW.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getDownArrowCoordinate(), textureCoordinate.getArrowUV(), textureCoordinate.getArrowHoverUV(), textureCoordinate.getArrowTapUV()));
-
-        BUTTONS.put(THEME_ORIGINAL_BUTTON.getCode(), new OperationButton(THEME_ORIGINAL_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
-        BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
-        BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
-        BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
-        BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), BACKGROUND_TEXTURE, textureCoordinate.getThemeCoordinate(), textureCoordinate.getThemeUV(), textureCoordinate.getThemeHoverUV(), textureCoordinate.getThemeTapUV()));
 
         this.themeFileList = TextureUtils.getPngFilesInDirectory(TextureUtils.CUSTOM_THEME_DIR);
 
@@ -227,6 +212,64 @@ public class SignInScreen extends Screen {
             textureCoordinate.getNotSignedInUV().setX(0);
             textureCoordinate.getSignedInUV().setX(0);
         }
+        // 更新按钮信息
+        this.updateButtons();
+    }
+
+    /**
+     * 更新按钮信息
+     */
+    private void updateButtons() {
+        BUTTONS.put(LEFT_ARROW.getCode(), new OperationButton(LEFT_ARROW.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getLeftArrowCoordinate())
+                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight())
+                .setFlipHorizontal(true));
+        BUTTONS.put(RIGHT_ARROW.getCode(), new OperationButton(RIGHT_ARROW.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getRightArrowCoordinate())
+                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight()));
+        BUTTONS.put(UP_ARROW.getCode(), new OperationButton(UP_ARROW.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getUpArrowCoordinate())
+                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight())
+                .setRotatedAngle(270));
+        BUTTONS.put(DOWN_ARROW.getCode(), new OperationButton(DOWN_ARROW.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getDownArrowCoordinate())
+                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight())
+                .setRotatedAngle(90).setFlipVertical(true));
+
+        BUTTONS.put(THEME_ORIGINAL_BUTTON.getCode(), new OperationButton(THEME_ORIGINAL_BUTTON.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getThemeCoordinate())
+                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight()));
+        BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getThemeCoordinate())
+                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight()));
+        BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getThemeCoordinate())
+                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight()));
+        BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getThemeCoordinate())
+                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight()));
+        BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), BACKGROUND_TEXTURE)
+                .setCoordinate(textureCoordinate.getThemeCoordinate())
+                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
+                .setTextureWidth(textureCoordinate.getTotalWidth())
+                .setTextureHeight(textureCoordinate.getTotalHeight())
+                .setTremblingAmplitude(3.5));
     }
 
     /**
@@ -242,7 +285,7 @@ public class SignInScreen extends Screen {
         // 更新缩放比例
         this.scale = bgH * 1.0f / textureCoordinate.getBgUV().getVHeight();
         // 创建或更新格子位置
-        this.createCalendarCells(currentDate);
+        this.createCalendarCells(SakuraSignIn.getCalendarCurrentDate());
     }
 
     /**
@@ -366,92 +409,6 @@ public class SignInScreen extends Screen {
         RenderSystem.disableBlend();
     }
 
-    /**
-     * 绘制旋转的纹理
-     *
-     * @param matrixStack    矩阵栈
-     * @param coordinate     纹理坐标
-     * @param angle          旋转角度
-     * @param flipHorizontal 水平翻转
-     * @param flipVertical   垂直翻转
-     */
-    private void renderRotatedTexture(MatrixStack matrixStack, TextureCoordinate coordinate, float angle, boolean flipHorizontal, boolean flipVertical) {
-        double x = bgX + coordinate.getX() * this.scale;
-        double y = bgY + coordinate.getY() * this.scale;
-        int width = (int) (coordinate.getWidth() * this.scale);
-        int height = (int) (coordinate.getHeight() * this.scale);
-        float u0 = (float) coordinate.getU0();
-        float v0 = (float) coordinate.getV0();
-        int uWidth = (int) coordinate.getUWidth();
-        int vHeight = (int) coordinate.getVHeight();
-        // 绑定纹理
-        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        // 保存当前矩阵状态
-        matrixStack.pushPose();
-        // 平移到旋转中心 (x + width / 2, y + height / 2)
-        matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
-        // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
-        matrixStack.mulPose(Vector3f.ZP.rotationDegrees(angle));
-        // 左右翻转
-        if (flipHorizontal) {
-            u0 += uWidth;
-            uWidth = -uWidth;
-        }
-        // 上下翻转
-        if (flipVertical) {
-            v0 += vHeight;
-            vHeight = -vHeight;
-        }
-        // 平移回原点
-        matrixStack.translate(-width / 2.0, -height / 2.0, 0);
-        // 绘制纹理
-        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
-        // 恢复矩阵状态
-        matrixStack.popPose();
-    }
-
-    private void renderTremblingTexture(MatrixStack matrixStack, TextureCoordinate coordinate) {
-        double x = bgX + coordinate.getX() * this.scale;
-        double y = bgY + coordinate.getY() * this.scale;
-        int width = (int) (coordinate.getWidth() * this.scale);
-        int height = (int) (coordinate.getHeight() * this.scale);
-        float u0 = (float) coordinate.getU0();
-        float v0 = (float) coordinate.getV0();
-        int uWidth = (int) coordinate.getUWidth();
-        int vHeight = (int) coordinate.getVHeight();
-        Random random = new Random();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        matrixStack.pushPose();
-        // 添加偏移
-        if (WorldUtils.getEnvironmentBrightness(Minecraft.getInstance().player) > 4) {
-            x = x + random.nextFloat() * 4 - 2;
-            y = y + random.nextFloat() * 3 - 1.5;
-        }
-        matrixStack.translate(x, y, 0);
-        // 绘制纹理
-        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
-        matrixStack.popPose();
-        RenderSystem.disableBlend();
-    }
-
-    /**
-     * 获取操作按钮的纹理坐标
-     */
-    private TextureCoordinate getCoordinate(OperationButton button, int mouseX, int mouseY) {
-        TextureCoordinate coordinate = new TextureCoordinate().setX(button.getX()).setY(button.getY()).setWidth(button.getWidth()).setHeight(button.getHeight());
-        double mouseX1 = (mouseX - bgX) / this.scale;
-        double mouseY1 = (mouseY - bgY) / this.scale;
-        if (button.isMouseOver(mouseX1, mouseY1) && button.isPressed()) {
-            coordinate.setU0(button.getTapU()).setV0(button.getTapV()).setUWidth(button.getTapWidth()).setVHeight(button.getTapHeight());
-        } else if (button.isMouseOver(mouseX1, mouseY1)) {
-            coordinate.setU0(button.getHoverU()).setV0(button.getHoverV()).setUWidth(button.getHoverWidth()).setVHeight(button.getHoverHeight());
-        } else {
-            coordinate.setU0(button.getNormalU()).setV0(button.getNormalV()).setUWidth(button.getNormalWidth()).setVHeight(button.getNormalHeight());
-        }
-        return coordinate;
-    }
-
     @Override
     @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
@@ -463,73 +420,58 @@ public class SignInScreen extends Screen {
         // 渲染年份
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
-        String yearTitle = DateUtils.toLocalStringYear(currentDate, Minecraft.getInstance().options.languageCode);
+        String yearTitle = DateUtils.toLocalStringYear(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
         this.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
-        String monthTitle = DateUtils.toLocalStringMonth(currentDate, Minecraft.getInstance().options.languageCode);
+        String monthTitle = DateUtils.toLocalStringMonth(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
         this.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
             OperationButton button = BUTTONS.get(op);
-            TextureCoordinate coordinate = this.getCoordinate(button, mouseX, mouseY);
-            // 旋转角度
-            int angle;
-            // 水平翻转
-            boolean flipHorizontal = false;
-            // 垂直翻转
-            boolean flipVertical = false;
             switch (OperationButtonType.valueOf(op)) {
                 case RIGHT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
-                    if (coordinate.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
-                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    if (button.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && button.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
+                        button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与月份相同，则将坐标设置为月份右边的位置
-                    if (coordinate.getX() == textureCoordinate.getMonthCoordinate().getX() && coordinate.getY() == textureCoordinate.getMonthCoordinate().getY()) {
-                        coordinate.setX((monthX - bgX + font.width(monthTitle) + 1) / this.scale);
+                    if (button.getX() == textureCoordinate.getMonthCoordinate().getX() && button.getY() == textureCoordinate.getMonthCoordinate().getY()) {
+                        button.setX((monthX - bgX + font.width(monthTitle) + 1) / this.scale);
                     }
-                    angle = 0;
                     break;
                 case DOWN_ARROW:
                     // 如果宽度和高度与年份相同，则将大小设置为字体行高
-                    if (coordinate.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
-                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    if (button.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && button.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
+                        button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与年份相同，则将坐标设置为年份右边的位置
-                    if (coordinate.getX() == textureCoordinate.getYearCoordinate().getX() && coordinate.getY() == textureCoordinate.getYearCoordinate().getY()) {
-                        coordinate.setX((yearX - bgX + font.width(yearTitle) + 1) / this.scale);
+                    if (button.getX() == textureCoordinate.getYearCoordinate().getX() && button.getY() == textureCoordinate.getYearCoordinate().getY()) {
+                        button.setX((yearX - bgX + font.width(yearTitle) + 1) / this.scale);
                     }
-                    angle = 90;
-                    flipVertical = true;
                     break;
                 case LEFT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
-                    if (coordinate.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
-                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    if (button.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && button.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
+                        button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与月份相同，则将坐标设置为月份左边的位置
-                    if (coordinate.getX() == textureCoordinate.getMonthCoordinate().getX() && coordinate.getY() == textureCoordinate.getMonthCoordinate().getY()) {
-                        coordinate.setX((monthX - bgX - 1) / this.scale - coordinate.getWidth());
+                    if (button.getX() == textureCoordinate.getMonthCoordinate().getX() && button.getY() == textureCoordinate.getMonthCoordinate().getY()) {
+                        button.setX((monthX - bgX - 1) / this.scale - button.getWidth());
                     }
-                    angle = 0;
-                    flipHorizontal = true;
                     break;
                 case UP_ARROW:
                     // 如果宽度和高度与年份相同，则将大小设置为字体行高
-                    if (coordinate.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && coordinate.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
-                        coordinate.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
+                    if (button.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && button.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
+                        button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与年份相同，则将坐标设置为年份左边的位置
-                    if (coordinate.getX() == textureCoordinate.getYearCoordinate().getX() && coordinate.getY() == textureCoordinate.getYearCoordinate().getY()) {
-                        coordinate.setX((yearX - bgX - 1) / this.scale - coordinate.getWidth());
+                    if (button.getX() == textureCoordinate.getYearCoordinate().getX() && button.getY() == textureCoordinate.getYearCoordinate().getY()) {
+                        button.setX((yearX - bgX - 1) / this.scale - button.getWidth());
                     }
-                    angle = 90;
-                    flipHorizontal = true;
-                    flipVertical = true;
                     break;
                 case THEME_ORIGINAL_BUTTON:
                 case THEME_SAKURA_BUTTON:
@@ -548,20 +490,13 @@ public class SignInScreen extends Screen {
                     button.setHoverU((op - 100) * textureCoordinate.getThemeHoverUV().getUWidth());
                     button.setTapU((op - 100) * textureCoordinate.getThemeTapUV().getUWidth());
                     button.setX((op - 100) * (textureCoordinate.getThemeCoordinate().getWidth() + textureCoordinate.getThemeHMargin()) + textureCoordinate.getThemeCoordinate().getX());
-                    coordinate = this.getCoordinate(button, mouseX, mouseY);
-                default:
-                    angle = 0;
             }
-            button.setWidth(coordinate.getWidth()).setHeight(coordinate.getHeight());
-            button.setX(coordinate.getX()).setY(coordinate.getY());
-            if (op == THEME_CHAOS_BUTTON.getCode() && button.isMouseOver((mouseX - bgX) / this.scale, (mouseY - bgY) / this.scale)) {
-                this.renderTremblingTexture(matrixStack, coordinate);
-            } else {
-                this.renderRotatedTexture(matrixStack, coordinate, angle, flipHorizontal, flipVertical);
-            }
+            button.setBaseX(bgX);
+            button.setBaseY(bgY);
+            button.setScale(this.scale);
+            button.render(matrixStack, mouseX, mouseY);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
         // 渲染所有格子
         for (SignInCell cell : signInCells) {
             cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
@@ -607,26 +542,12 @@ public class SignInScreen extends Screen {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        double mouseX1 = (mouseX - bgX) / this.scale;
-        double mouseY1 = (mouseY - bgY) / this.scale;
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             BUTTONS.forEach((key, value) -> {
-                if (value.isMouseOver(mouseX1, mouseY1)) {
+                if (value.isHovered()) {
                     value.setPressed(true);
                 }
             });
-        } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            if (BUTTONS.get(THEME_ORIGINAL_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
-                BUTTONS.get(THEME_ORIGINAL_BUTTON.getCode()).setPressed(true);
-            } else if (BUTTONS.get(THEME_SAKURA_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
-                BUTTONS.get(THEME_SAKURA_BUTTON.getCode()).setPressed(true);
-            } else if (BUTTONS.get(THEME_CLOVER_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
-                BUTTONS.get(THEME_CLOVER_BUTTON.getCode()).setPressed(true);
-            } else if (BUTTONS.get(THEME_MAPLE_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
-                BUTTONS.get(THEME_MAPLE_BUTTON.getCode()).setPressed(true);
-            } else if (BUTTONS.get(THEME_CHAOS_BUTTON.getCode()).isMouseOver(mouseX1, mouseY1)) {
-                BUTTONS.get(THEME_CHAOS_BUTTON.getCode()).setPressed(true);
-            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -636,8 +557,6 @@ public class SignInScreen extends Screen {
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        double mouseX1 = (mouseX - bgX) / this.scale;
-        double mouseY1 = (mouseY - bgY) / this.scale;
         AtomicBoolean updateLayout = new AtomicBoolean(false);
         AtomicBoolean updateTextureAndCoordinate = new AtomicBoolean(false);
         AtomicBoolean flag = new AtomicBoolean(false);
@@ -646,7 +565,7 @@ public class SignInScreen extends Screen {
             ClientPlayerEntity player = Minecraft.getInstance().player;
             // 控制按钮
             BUTTONS.forEach((key, value) -> {
-                if (value.isMouseOver(mouseX1, mouseY1) && value.isPressed()) {
+                if (value.isHovered() && value.isPressed()) {
                     this.handleOperation(mouseX, mouseY, button, value, updateLayout, updateTextureAndCoordinate, flag);
                 }
                 value.setPressed(false);
@@ -721,7 +640,7 @@ public class SignInScreen extends Screen {
         // 上个月
         if (value.getOperation() == LEFT_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                currentDate = DateUtils.addMonth(currentDate, -1);
+                SakuraSignIn.setCalendarCurrentDate(DateUtils.addMonth(SakuraSignIn.getCalendarCurrentDate(), -1));
                 updateLayout.set(true);
                 flag.set(true);
             }
@@ -729,7 +648,7 @@ public class SignInScreen extends Screen {
         // 下个月
         else if (value.getOperation() == RIGHT_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                currentDate = DateUtils.addMonth(currentDate, 1);
+                SakuraSignIn.setCalendarCurrentDate(DateUtils.addMonth(SakuraSignIn.getCalendarCurrentDate(), 1));
                 updateLayout.set(true);
                 flag.set(true);
             }
@@ -737,7 +656,7 @@ public class SignInScreen extends Screen {
         // 上一年
         else if (value.getOperation() == UP_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                currentDate = DateUtils.addYear(currentDate, -1);
+                SakuraSignIn.setCalendarCurrentDate(DateUtils.addYear(SakuraSignIn.getCalendarCurrentDate(), -1));
                 updateLayout.set(true);
                 flag.set(true);
             }
@@ -745,7 +664,7 @@ public class SignInScreen extends Screen {
         // 下一年
         else if (value.getOperation() == DOWN_ARROW.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                currentDate = DateUtils.addYear(currentDate, 1);
+                SakuraSignIn.setCalendarCurrentDate(DateUtils.addYear(SakuraSignIn.getCalendarCurrentDate(), 1));
                 updateLayout.set(true);
                 flag.set(true);
             }
@@ -870,6 +789,7 @@ public class SignInScreen extends Screen {
                 }
             }
         }
+        BUTTONS.forEach((key, value) -> value.setHovered(value.isMouseOverEx(mouseX, mouseY)));
         super.mouseMoved(mouseX, mouseY);
     }
 
@@ -906,13 +826,13 @@ public class SignInScreen extends Screen {
      * @param modifiers 按键时按下的修饰键（如Shift、Ctrl等）
      * @return boolean 表示是否消耗了该按键事件
      * <p>
-     * 此方法主要监听特定的按键事件，当按下CALENDAR_KEY或E键时，触发onClose方法，执行一些关闭操作
+     * 此方法主要监听特定的按键事件，当按下SIGN_IN_SCREEN_KEY或E键时，触发onClose方法，执行一些关闭操作
      * 对于其他按键，则交由父类处理
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // 当按键等于CALENDAR_KEY键的值或Inventory键时，调用onClose方法，并返回true，表示该按键事件已被消耗
-        if (keyCode == ClientEventHandler.CALENDAR_KEY.getKey().getValue() || keyCode == Minecraft.getInstance().options.keyInventory.getKey().getValue()) {
+        // 当按键等于SIGN_IN_SCREEN_KEY键的值或Inventory键时，调用onClose方法，并返回true，表示该按键事件已被消耗
+        if (keyCode == ClientEventHandler.SIGN_IN_SCREEN_KEY.getKey().getValue() || keyCode == Minecraft.getInstance().options.keyInventory.getKey().getValue()) {
             this.onClose();
             return true;
         } else {
@@ -924,19 +844,19 @@ public class SignInScreen extends Screen {
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            currentDate = DateUtils.addMonth(currentDate, -1);
+            SakuraSignIn.setCalendarCurrentDate(DateUtils.addMonth(SakuraSignIn.getCalendarCurrentDate(), -1));
             updateLayout();
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-            currentDate = DateUtils.addMonth(currentDate, 1);
+            SakuraSignIn.setCalendarCurrentDate(DateUtils.addMonth(SakuraSignIn.getCalendarCurrentDate(), 1));
             updateLayout();
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_UP) {
-            currentDate = DateUtils.addYear(currentDate, -1);
+            SakuraSignIn.setCalendarCurrentDate(DateUtils.addYear(SakuraSignIn.getCalendarCurrentDate(), -1));
             updateLayout();
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_DOWN) {
-            currentDate = DateUtils.addYear(currentDate, 1);
+            SakuraSignIn.setCalendarCurrentDate(DateUtils.addYear(SakuraSignIn.getCalendarCurrentDate(), 1));
             updateLayout();
             return true;
         } else {

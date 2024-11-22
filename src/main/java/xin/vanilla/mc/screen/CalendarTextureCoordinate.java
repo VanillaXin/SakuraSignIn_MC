@@ -21,7 +21,7 @@ public class CalendarTextureCoordinate implements Serializable {
     /**
      * 纹理图片总高度
      */
-    private int totalHeight = 880;
+    private int totalHeight = 1000;
     /**
      * 周起始日
      * 7: 周日
@@ -218,6 +218,12 @@ public class CalendarTextureCoordinate implements Serializable {
      */
     @NonNull
     private TextureCoordinate themeTapUV = new TextureCoordinate().setU0(0).setV0(736).setUWidth(40).setVHeight(48);
+
+    /**
+     * 设置页面背景纹理坐标
+     */
+    @NonNull
+    private TextureCoordinate optionBgUV = new TextureCoordinate().setU0(0).setV0(880).setUWidth(120).setVHeight(120);
 
     /**
      * 获取默认配置
