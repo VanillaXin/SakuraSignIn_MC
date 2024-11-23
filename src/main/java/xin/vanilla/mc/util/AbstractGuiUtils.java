@@ -15,17 +15,22 @@ import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.CalendarTextureCoordinate;
 import xin.vanilla.mc.screen.TextureCoordinate;
 
+import java.util.Collection;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * AbstractGui工具类
  */
+@OnlyIn(Dist.CLIENT)
 public class AbstractGuiUtils {
 
     public final static int ITEM_ICON_SIZE = 16;
@@ -126,6 +131,10 @@ public class AbstractGuiUtils {
         AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, EDepth.FOREGROUND);
     }
 
+    public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, boolean shadow) {
+        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, shadow, EDepth.FOREGROUND);
+    }
+
     public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, EDepth depth) {
         AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, true, depth);
     }
@@ -149,11 +158,11 @@ public class AbstractGuiUtils {
     /**
      * 获取多行文本的高度，以\n为换行符
      *
-     * @param fontRenderer  字体渲染器
+     * @param font          字体渲染器
      * @param textComponent 要绘制的文本
      */
-    public static int multilineTextHeight(FontRenderer fontRenderer, TextComponent textComponent) {
-        return AbstractGuiUtils.multilineTextHeight(fontRenderer, textComponent.getString());
+    public static int multilineTextHeight(FontRenderer font, TextComponent textComponent) {
+        return AbstractGuiUtils.multilineTextHeight(font, textComponent.getString());
     }
 
     /**
@@ -166,27 +175,51 @@ public class AbstractGuiUtils {
         return StringUtils.replaceLine(text).split("\n").length * fontRenderer.lineHeight;
     }
 
-    /**
-     * 获取多行文本的宽度，以\n为换行符
-     *
-     * @param fontRenderer  字体渲染器
-     * @param textComponent 要绘制的文本
-     */
-    public static int multilineTextWidth(FontRenderer fontRenderer, TextComponent textComponent) {
-        return AbstractGuiUtils.multilineTextWidth(fontRenderer, textComponent.getString());
+    public static int getTextWidth(FontRenderer font, Collection<String> texts) {
+        int width = 0;
+        for (String s : texts) {
+            width = Math.max(width, font.width(s));
+        }
+        return width;
+    }
+
+    public static int getTextHeight(FontRenderer font, Collection<String> texts) {
+        return AbstractGuiUtils.multilineTextHeight(font, String.join("\n", texts));
+    }
+
+    public static int getTextComponentWidth(FontRenderer font, Collection<ITextComponent> texts) {
+        int width = 0;
+        for (ITextComponent s : texts) {
+            width = Math.max(width, font.width(s));
+        }
+        return width;
+    }
+
+    public static int getTextComponentHeight(FontRenderer font, Collection<ITextComponent> texts) {
+        return AbstractGuiUtils.multilineTextHeight(font, texts.stream().map(ITextComponent::getString).collect(Collectors.joining("\n")));
     }
 
     /**
      * 获取多行文本的宽度，以\n为换行符
      *
-     * @param fontRenderer 字体渲染器
-     * @param text         要绘制的文本
+     * @param font          字体渲染器
+     * @param textComponent 要绘制的文本
      */
-    public static int multilineTextWidth(FontRenderer fontRenderer, String text) {
+    public static int multilineTextWidth(FontRenderer font, TextComponent textComponent) {
+        return AbstractGuiUtils.multilineTextWidth(font, textComponent.getString());
+    }
+
+    /**
+     * 获取多行文本的宽度，以\n为换行符
+     *
+     * @param font 字体渲染器
+     * @param text 要绘制的文本
+     */
+    public static int multilineTextWidth(FontRenderer font, String text) {
         int width = 0;
         if (StringUtils.isNotNullOrEmpty(text)) {
             for (String s : StringUtils.replaceLine(text).split("\n")) {
-                width = Math.max(width, fontRenderer.width(s));
+                width = Math.max(width, font.width(s));
             }
         }
         return width;
@@ -196,27 +229,27 @@ public class AbstractGuiUtils {
      * 绘制多行文本，以\n为换行符
      *
      * @param matrixStack   渲染矩阵
-     * @param fontRenderer  字体渲染器
+     * @param font          字体渲染器
      * @param textComponent 要绘制的文本
      * @param x             绘制的X坐标
      * @param y             绘制的Y坐标
      * @param colors        文本颜色
      */
-    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer fontRenderer, TextComponent textComponent, float x, float y, int... colors) {
-        AbstractGuiUtils.drawMultilineText(matrixStack, fontRenderer, textComponent.getString(), x, y, colors);
+    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer font, TextComponent textComponent, float x, float y, int... colors) {
+        AbstractGuiUtils.drawMultilineText(matrixStack, font, textComponent.getString(), x, y, colors);
     }
 
     /**
      * 绘制多行文本，以\n为换行符
      *
-     * @param matrixStack  渲染矩阵
-     * @param fontRenderer 字体渲染器
-     * @param text         要绘制的文本
-     * @param x            绘制的X坐标
-     * @param y            绘制的Y坐标
-     * @param colors       文本颜色
+     * @param matrixStack 渲染矩阵
+     * @param font        字体渲染器
+     * @param text        要绘制的文本
+     * @param x           绘制的X坐标
+     * @param y           绘制的Y坐标
+     * @param colors      文本颜色
      */
-    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer fontRenderer, String text, float x, float y, int... colors) {
+    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int... colors) {
         if (StringUtils.isNotNullOrEmpty(text)) {
             String[] lines = StringUtils.replaceLine(text).split("\n");
             for (int i = 0; i < lines.length; i++) {
@@ -228,7 +261,7 @@ public class AbstractGuiUtils {
                 } else {
                     color = 0xFFFFFF;
                 }
-                fontRenderer.draw(matrixStack, lines[i], x, y + i * fontRenderer.lineHeight, color);
+                font.draw(matrixStack, lines[i], x, y + i * font.lineHeight, color);
             }
         }
     }
@@ -340,7 +373,7 @@ public class AbstractGuiUtils {
      * 绘制效果图标
      *
      * @param matrixStack    用于变换绘制坐标系的矩阵堆栈
-     * @param fontRenderer   字体渲染器
+     * @param font           字体渲染器
      * @param effectInstance 待绘制的效果实例
      * @param x              矩形的左上角x坐标
      * @param y              矩形的左上角y坐标
@@ -348,7 +381,7 @@ public class AbstractGuiUtils {
      * @param height         目标矩形的高度，决定了图像在屏幕上的高度
      * @param showText       是否显示效果等级和持续时间
      */
-    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer fontRenderer, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
+    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer font, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
         ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
         if (effectIcon == null) {
             Minecraft.getInstance().getTextureManager().bind(textureLocation);
@@ -362,18 +395,18 @@ public class AbstractGuiUtils {
             // 效果等级
             if (effectInstance.getAmplifier() >= 0) {
                 StringTextComponent amplifierString = new StringTextComponent(StringUtils.intToRoman(effectInstance.getAmplifier() + 1));
-                int amplifierWidth = fontRenderer.width(amplifierString);
+                int amplifierWidth = font.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
-                fontRenderer.drawShadow(matrixStack, amplifierString, fontX, fontY, 0xFFFFFF);
+                font.drawShadow(matrixStack, amplifierString, fontX, fontY, 0xFFFFFF);
             }
             // 效果持续时间
             if (effectInstance.getDuration() > 0) {
                 StringTextComponent durationString = new StringTextComponent(DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
-                int durationWidth = fontRenderer.width(durationString);
+                int durationWidth = font.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
-                fontRenderer.drawShadow(matrixStack, durationString, fontX, fontY, 0xFFFFFF);
+                font.drawShadow(matrixStack, durationString, fontX, fontY, 0xFFFFFF);
             }
         }
     }
@@ -382,7 +415,7 @@ public class AbstractGuiUtils {
      * 绘制自定义图标
      *
      * @param matrixStack     用于变换绘制坐标系的矩阵堆栈
-     * @param fontRenderer    字体渲染器
+     * @param font            字体渲染器
      * @param reward          待绘制的奖励
      * @param textureLocation 纹理位置
      * @param textureUV       纹理坐标
@@ -392,15 +425,15 @@ public class AbstractGuiUtils {
      * @param totalHeight     纹理总高度
      * @param showText        是否显示物品数量等信息
      */
-    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer fontRenderer, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
+    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer font, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
         Minecraft.getInstance().getTextureManager().bind(textureLocation);
         AbstractGuiUtils.blit(matrixStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
             StringTextComponent num = new StringTextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
-            int numWidth = fontRenderer.width(num);
+            int numWidth = font.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
-            float fontY = y + (float) ITEM_ICON_SIZE - fontRenderer.lineHeight + 2;
-            fontRenderer.drawShadow(matrixStack, num, fontX, fontY, 0xFFFFFF);
+            float fontY = y + (float) ITEM_ICON_SIZE - font.lineHeight + 2;
+            font.drawShadow(matrixStack, num, fontX, fontY, 0xFFFFFF);
         }
     }
 
@@ -541,6 +574,102 @@ public class AbstractGuiUtils {
     }
 
     /**
+     * 绘制一个正方形
+     */
+    public static void fill(MatrixStack matrixStack, int x, int y, int width, int color) {
+        AbstractGuiUtils.fill(matrixStack, x, y, width, width, color);
+    }
+
+    /**
+     * 绘制一个矩形
+     */
+    public static void fill(MatrixStack matrixStack, int x, int y, int width, int height, int color) {
+        AbstractGuiUtils.fill(matrixStack, x, y, width, height, color, 0);
+    }
+
+    /**
+     * 绘制一个圆角矩形
+     *
+     * @param matrixStack 矩阵栈
+     * @param x           矩形的左上角X坐标
+     * @param y           矩形的左上角Y坐标
+     * @param width       矩形的宽度
+     * @param height      矩形的高度
+     * @param color       矩形的颜色
+     * @param radius      圆角半径(0-10)
+     */
+    public static void fill(MatrixStack matrixStack, int x, int y, int width, int height, int color, int radius) {
+        if (radius <= 0) {
+            // 如果半径为0，则直接绘制普通矩形
+            AbstractGui.fill(matrixStack, x, y, x + width, y + height, color);
+            return;
+        }
+
+        // 限制半径最大值为10
+        radius = Math.min(radius, 10);
+
+        // 1. 绘制中间的矩形部分（去掉圆角占用的区域）
+        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + radius + 1, width - 2 * (radius + 1), height - 2 * (radius + 1), color);
+
+        // 2. 绘制四条边（去掉圆角占用的部分）
+        // 上边
+        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y, width - 2 * radius - 2, radius, color);
+        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + radius, width - 2 * (radius + 1), 1, color);
+        // 下边
+        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + height - radius, width - 2 * radius - 2, radius, color);
+        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + height - radius - 1, width - 2 * (radius + 1), 1, color);
+        // 左边
+        AbstractGuiUtils.fill(matrixStack, x, y + radius + 1, radius, height - 2 * radius - 2, color);
+        AbstractGuiUtils.fill(matrixStack, x + radius, y + radius + 1, 1, height - 2 * (radius + 1), color);
+        // 右边
+        AbstractGuiUtils.fill(matrixStack, x + width - radius, y + radius + 1, radius, height - 2 * radius - 2, color);
+        AbstractGuiUtils.fill(matrixStack, x + width - radius - 1, y + radius + 1, 1, height - 2 * (radius + 1), color);
+
+        // 3. 绘制四个圆角
+        // 左上角
+        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + radius, y + radius, radius, color, 1);
+        // 右上角
+        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + width - radius - 1, y + radius, radius, color, 2);
+        // 左下角
+        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + radius, y + height - radius - 1, radius, color, 3);
+        // 右下角
+        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + width - radius - 1, y + height - radius - 1, radius, color, 4);
+    }
+
+    /**
+     * 绘制一个圆的四分之一部分（圆角辅助函数）
+     *
+     * @param matrixStack 矩阵栈
+     * @param centerX     圆角中心点X坐标
+     * @param centerY     圆角中心点Y坐标
+     * @param radius      圆角半径
+     * @param color       圆角颜色
+     * @param quadrant    指定绘制的象限（1=左上，2=右上，3=左下，4=右下）
+     */
+    private static void drawCircleQuadrant(MatrixStack matrixStack, int centerX, int centerY, int radius, int color, int quadrant) {
+        for (int dx = 0; dx <= radius; dx++) {
+            for (int dy = 0; dy <= radius; dy++) {
+                if (dx * dx + dy * dy <= radius * radius) {
+                    switch (quadrant) {
+                        case 1: // 左上角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY - dy, color);
+                            break;
+                        case 2: // 右上角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY - dy, color);
+                            break;
+                        case 3: // 左下角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY + dy, color);
+                            break;
+                        case 4: // 右下角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY + dy, color);
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * 绘制一个矩形边框
      *
      * @param thickness 边框厚度
@@ -548,13 +677,89 @@ public class AbstractGuiUtils {
      */
     public static void fillOutLine(MatrixStack matrixStack, int x, int y, int width, int height, int thickness, int color) {
         // 上边
-        AbstractGui.fill(matrixStack, x, y, x + width, y + thickness, color);
+        AbstractGuiUtils.fill(matrixStack, x, y, width, thickness, color);
         // 下边
-        AbstractGui.fill(matrixStack, x, y + height - thickness, x + width, y + height, color);
+        AbstractGuiUtils.fill(matrixStack, x, y + height - thickness, width, thickness, color);
         // 左边
-        AbstractGui.fill(matrixStack, x, y, x + thickness, y + height, color);
+        AbstractGuiUtils.fill(matrixStack, x, y, thickness, height, color);
         // 右边
-        AbstractGui.fill(matrixStack, x + width - thickness, y, x + width, y + height, color);
+        AbstractGuiUtils.fill(matrixStack, x + width - thickness, y, thickness, height, color);
+    }
+
+    /**
+     * 绘制一个圆角矩形边框
+     *
+     * @param matrixStack 矩阵栈
+     * @param x           矩形左上角X坐标
+     * @param y           矩形左上角Y坐标
+     * @param width       矩形宽度
+     * @param height      矩形高度
+     * @param thickness   边框厚度
+     * @param color       边框颜色
+     * @param radius      圆角半径（0-10）
+     */
+    public static void fillOutLine(MatrixStack matrixStack, int x, int y, int width, int height, int thickness, int color, int radius) {
+        if (radius <= 0) {
+            // 如果没有圆角，直接绘制普通边框
+            AbstractGuiUtils.fillOutLine(matrixStack, x, y, width, height, thickness, color);
+        } else {
+            // 限制圆角半径的最大值为10
+            radius = Math.min(radius, 10);
+
+            // 1. 绘制四条边（去掉圆角区域）
+            // 上边
+            AbstractGuiUtils.fill(matrixStack, x + radius, y, width - 2 * radius, thickness, color);
+            // 下边
+            AbstractGuiUtils.fill(matrixStack, x + radius, y + height - thickness, width - 2 * radius, thickness, color);
+            // 左边
+            AbstractGuiUtils.fill(matrixStack, x, y + radius, thickness, height - 2 * radius, color);
+            // 右边
+            AbstractGuiUtils.fill(matrixStack, x + width - thickness, y + radius, thickness, height - 2 * radius, color);
+
+            // 2. 绘制四个圆角
+            // 左上角
+            drawCircleBorder(matrixStack, x + radius, y + radius, radius, thickness, color, 1);
+            // 右上角
+            drawCircleBorder(matrixStack, x + width - radius - 1, y + radius, radius, thickness, color, 2);
+            // 左下角
+            drawCircleBorder(matrixStack, x + radius, y + height - radius - 1, radius, thickness, color, 3);
+            // 右下角
+            drawCircleBorder(matrixStack, x + width - radius - 1, y + height - radius - 1, radius, thickness, color, 4);
+        }
+    }
+
+    /**
+     * 绘制一个圆角的边框区域（辅助函数）
+     *
+     * @param matrixStack 矩阵栈
+     * @param centerX     圆角中心点X坐标
+     * @param centerY     圆角中心点Y坐标
+     * @param radius      圆角半径
+     * @param thickness   边框厚度
+     * @param color       边框颜色
+     * @param quadrant    指定绘制的象限（1=左上，2=右上，3=左下，4=右下）
+     */
+    private static void drawCircleBorder(MatrixStack matrixStack, int centerX, int centerY, int radius, int thickness, int color, int quadrant) {
+        for (int dx = 0; dx <= radius; dx++) {
+            for (int dy = 0; dy <= radius; dy++) {
+                if (Math.sqrt(dx * dx + dy * dy) <= radius && Math.sqrt(dx * dx + dy * dy) >= radius - thickness) {
+                    switch (quadrant) {
+                        case 1: // 左上角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY - dy, color);
+                            break;
+                        case 2: // 右上角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY - dy, color);
+                            break;
+                        case 3: // 左下角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY + dy, color);
+                            break;
+                        case 4: // 右下角
+                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY + dy, color);
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     /**

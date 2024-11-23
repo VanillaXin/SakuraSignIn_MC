@@ -6,6 +6,8 @@ import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.StringUtils;
 import xin.vanilla.mc.util.TextureUtils;
@@ -17,6 +19,7 @@ import java.util.function.Function;
  */
 @Data
 @Accessors(chain = true)
+@OnlyIn(Dist.CLIENT)
 public class OperationButton {
     /**
      * 渲染辅助类：用于向自定义渲染函数传递上下文

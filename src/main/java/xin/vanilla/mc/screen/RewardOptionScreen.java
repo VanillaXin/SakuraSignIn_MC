@@ -58,7 +58,12 @@ public class RewardOptionScreen extends Screen {
     /**
      * 右侧边栏宽度
      */
-    private int rightBarWidth = 20;
+    private final int rightBarWidth = 20;
+
+    /**
+     * 弹出层选项
+     */
+    private PopupOption popupOption;
 
     // region 奖励列表相关参数
     // 物品图标的大小
@@ -127,7 +132,8 @@ public class RewardOptionScreen extends Screen {
         YEAR_REWARD(204),
         MONTH_REWARD(205),
         WEEK_REWARD(206),
-        DATE_TIME_REWARD(207);
+        DATE_TIME_REWARD(207),
+        OFFSET_Y(301);
 
         final int code;
 
@@ -427,8 +433,22 @@ public class RewardOptionScreen extends Screen {
         }
         // 左侧边栏奖励规则类型按钮
         else if (value.getOperation() >= OperationButtonType.BASE_REWARD.getCode() && value.getOperation() <= OperationButtonType.DATE_TIME_REWARD.getCode()) {
-            this.currOpButton = value.getOperation();
-            updateLayout.set(true);
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                this.currOpButton = value.getOperation();
+                updateLayout.set(true);
+            } else {
+                // 绘制弹出层选项
+                popupOption.clear();
+                popupOption.addOption("清空");
+                popupOption.addOption("测试1");
+                popupOption.addOption("测试2");
+                popupOption.addOption("测试3");
+                popupOption.resize(super.font, mouseX, mouseY);
+            }
+        }
+        // 重置偏移量
+        else if (value.getOperation() == OperationButtonType.OFFSET_Y.getCode()) {
+            this.setYOffset(0);
         }
     }
 
@@ -475,13 +495,12 @@ public class RewardOptionScreen extends Screen {
     @Override
     protected void init() {
         this.cursor = MouseCursor.init();
+        this.popupOption = PopupOption.init(super.font);
         super.init();
         this.leftBarTitleHeight = 5 * 2 + super.font.lineHeight;
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
-        OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> {
-            return null;
-        })
+        OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> null)
                 .setX(leftBarWidth).setY(0).setWidth(super.width - leftBarWidth - rightMargin).setHeight(super.height)
                 .setTransparentCheck(false));
         OP_BUTTONS.put(OperationButtonType.OPEN.getCode(), new OperationButton(OperationButtonType.OPEN.getCode(), BACKGROUND_TEXTURE)
@@ -520,6 +539,13 @@ public class RewardOptionScreen extends Screen {
         OP_BUTTONS.put(OperationButtonType.DATE_TIME_REWARD.getCode()
                 , new OperationButton(OperationButtonType.DATE_TIME_REWARD.getCode(), this.generateCustomRenderFunction("具体时间签到奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 6).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
+        OP_BUTTONS.put(OperationButtonType.OFFSET_Y.getCode(), new OperationButton(OperationButtonType.OFFSET_Y.getCode(), context -> {
+            AbstractGuiUtils.drawString(context.matrixStack, super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
+            AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, String.valueOf((int) yOffset), super.width - rightBarWidth + 1, super.height - font.lineHeight - 2, 0xFFACACAC, rightBarWidth);
+            return null;
+        })
+                .setX(super.width - rightBarWidth).setY(super.height - font.lineHeight * 2 - 2).setWidth(rightBarWidth).setHeight(font.lineHeight * 2 + 2)
+                .setTransparentCheck(false));
         this.updateLayout();
     }
 
@@ -546,25 +572,33 @@ public class RewardOptionScreen extends Screen {
         // 绘制右侧边栏列表背景
         AbstractGui.fill(matrixStack, super.width - rightBarWidth, 0, super.width, super.height, 0xAA000000);
         AbstractGuiUtils.fillOutLine(matrixStack, super.width - rightBarWidth, 0, rightBarWidth, super.height, 1, 0xFF000000);
-        AbstractGuiUtils.drawString(matrixStack, super.font, "OY:", super.width - rightBarWidth, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
-        AbstractGuiUtils.drawLimitedText(matrixStack, super.font, String.valueOf((int) yOffset), super.width - rightBarWidth, super.height - font.lineHeight - 2, 0xFFACACAC, rightBarWidth);
 
         // 渲染操作按钮
         for (Integer op : OP_BUTTONS.keySet()) {
             OperationButton button = OP_BUTTONS.get(op);
-            if (op == OperationButtonType.OPEN.getCode()) {
+            // 展开类按钮仅在关闭时绘制
+            if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.OPEN.getCode()))) {
                 if (!SakuraSignIn.isRewardOptionBarOpened()) {
                     button.render(matrixStack, mouseX, mouseY);
                 }
-            } else if (op == OperationButtonType.CLOSE.getCode()) {
+            }
+            // 收起类按钮仅在展开时绘制
+            else if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.CLOSE.getCode()))) {
                 if (SakuraSignIn.isRewardOptionBarOpened()) {
                     button.render(matrixStack, mouseX, mouseY);
                 }
-            } else if (SakuraSignIn.isRewardOptionBarOpened()) {
+            }
+            // 绘制其他按钮
+            else {
+                if (op == OperationButtonType.OFFSET_Y.getCode()) {
+                    button.setTooltip(String.format("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
+                }
                 button.render(matrixStack, mouseX, mouseY);
             }
         }
 
+        // 绘制弹出选项
+        popupOption.render(matrixStack, mouseX, mouseY);
         // 绘制鼠标光标
         cursor.draw(matrixStack, mouseX, mouseY);
     }
@@ -601,6 +635,10 @@ public class RewardOptionScreen extends Screen {
                 }
             });
         }
+        // 清空弹出选项
+        if (!popupOption.isSelected()) {
+            popupOption.clear();
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -612,15 +650,16 @@ public class RewardOptionScreen extends Screen {
         cursor.mouseReleased(mouseX, mouseY, button);
         AtomicBoolean updateLayout = new AtomicBoolean(false);
         AtomicBoolean flag = new AtomicBoolean(false);
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (popupOption.isSelected()) {
+            SakuraSignIn.LOGGER.debug("选择了弹出选项: {}", popupOption.getSelectedIndex());
+            popupOption.clear();
+        } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             // 控制按钮
             OP_BUTTONS.forEach((key, value) -> {
                 if (value.isHovered() && value.isPressed()) {
                     this.handleOperation(mouseX, mouseY, button, value, updateLayout, flag);
                 }
                 value.setPressed(false);
-                this.mouseDownX = -1;
-                this.mouseDownY = -1;
             });
             // 奖励按钮
             REWARD_BUTTONS.forEach((key, value) -> {
@@ -629,6 +668,8 @@ public class RewardOptionScreen extends Screen {
                 }
                 value.setPressed(false);
             });
+            this.mouseDownX = -1;
+            this.mouseDownY = -1;
         }
         if (updateLayout.get()) this.updateLayout();
         return flag.get() ? flag.get() : super.mouseReleased(mouseX, mouseY, button);
@@ -696,16 +737,6 @@ public class RewardOptionScreen extends Screen {
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         return super.keyReleased(keyCode, scanCode, modifiers);
     }
-
-    // /**
-    //  * 窗口缩放时重新计算布局
-    //  */
-    // @Override
-    // @ParametersAreNonnullByDefault
-    // public void resize(Minecraft mc, int width, int height) {
-    //     super.resize(mc, width, height);
-    //     SakuraSignIn.LOGGER.debug("{},{}", super.width, super.height);
-    // }
 
     /**
      * 窗口打开时是否暂停游戏
