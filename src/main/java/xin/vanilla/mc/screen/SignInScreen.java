@@ -525,7 +525,7 @@ public class SignInScreen extends Screen {
                     // 绘制文件名
                     String name = themeFileList.get(index).getName();
                     name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
-                    AbstractGuiUtils.drawLimitedText(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 }
             }
             // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
@@ -864,20 +864,20 @@ public class SignInScreen extends Screen {
             return super.keyReleased(keyCode, scanCode, modifiers);
         }
     }
-
-    /**
-     * 窗口缩放时重新计算布局
-     */
-    @Override
-    @ParametersAreNonnullByDefault
-    public void resize(Minecraft mc, int width, int height) {
-        super.resize(mc, width, height);
-        this.width = width;
-        this.height = height;
-        // 在窗口大小变化时更新布局
-        updateLayout();
-        LOGGER.debug("{},{}", this.width, this.height);
-    }
+    //
+    // /**
+    //  * 窗口缩放时重新计算布局
+    //  */
+    // @Override
+    // @ParametersAreNonnullByDefault
+    // public void resize(Minecraft mc, int width, int height) {
+    //     super.resize(mc, width, height);
+    //     this.width = width;
+    //     this.height = height;
+    //     // 在窗口大小变化时更新布局
+    //     updateLayout();
+    //     LOGGER.debug("{},{}", this.width, this.height);
+    // }
 
     /**
      * 窗口打开时是否暂停游戏

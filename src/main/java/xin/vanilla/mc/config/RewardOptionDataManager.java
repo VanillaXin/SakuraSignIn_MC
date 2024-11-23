@@ -20,17 +20,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 
-public class SignInDataManager {
+public class RewardOptionDataManager {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final String FILE_NAME = "sign_in_data.json";
+    private static final String FILE_NAME = "reward_option_data.json";
 
     @Getter
     @Setter
     @NonNull
-    private static SignInData signInData = new SignInData();
+    private static RewardOptionData rewardOptionData = new RewardOptionData();
 
     /**
      * 获取配置文件路径
@@ -43,17 +43,17 @@ public class SignInDataManager {
      * 加载 JSON 数据
      */
     public static void loadSignInData() {
-        File file = new File(SignInDataManager.getConfigDirectory().toFile(), FILE_NAME);
+        File file = new File(RewardOptionDataManager.getConfigDirectory().toFile(), FILE_NAME);
         if (file.exists()) {
             try {
-                signInData = SignInDataManager.deserializeSignInData(new String(Files.readAllBytes(Paths.get(file.getPath()))));
+                rewardOptionData = RewardOptionDataManager.deserializeSignInData(new String(Files.readAllBytes(Paths.get(file.getPath()))));
             } catch (IOException e) {
                 LOGGER.error("Error loading sign-in data: ", e);
             }
         } else {
             // 如果文件不存在，初始化默认值
-            signInData = SignInData.getDefault();
-            SignInDataManager.saveSignInData();
+            rewardOptionData = RewardOptionData.getDefault();
+            RewardOptionDataManager.saveSignInData();
         }
     }
 
@@ -61,7 +61,7 @@ public class SignInDataManager {
      * 保存 JSON 数据
      */
     public static void saveSignInData() {
-        File dir = SignInDataManager.getConfigDirectory().toFile();
+        File dir = RewardOptionDataManager.getConfigDirectory().toFile();
         if (!dir.exists()) {
             dir.mkdirs();
         }
@@ -69,7 +69,7 @@ public class SignInDataManager {
         try (FileWriter writer = new FileWriter(file)) {
             // 格式化输出
             Gson gson = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
-            writer.write(gson.toJson(signInData.toJsonObject()));
+            writer.write(gson.toJson(rewardOptionData.toJsonObject()));
         } catch (IOException e) {
             LOGGER.error("Error saving sign-in data: ", e);
         }
@@ -78,15 +78,15 @@ public class SignInDataManager {
     /**
      * 序列化 SignInData
      */
-    public static String serializeSignInData(SignInData signInData) {
-        return GSON.toJson(signInData.toJsonObject());
+    public static String serializeSignInData(RewardOptionData rewardOptionData) {
+        return GSON.toJson(rewardOptionData.toJsonObject());
     }
 
     /**
      * 反序列化 SignInData
      */
-    public static SignInData deserializeSignInData(String jsonString) {
-        SignInData result = new SignInData();
+    public static RewardOptionData deserializeSignInData(String jsonString) {
+        RewardOptionData result = new RewardOptionData();
         if (StringUtils.isNotNullOrEmpty(jsonString)) {
             try {
                 JsonObject jsonObject = GSON.fromJson(jsonString, JsonObject.class);
@@ -109,8 +109,8 @@ public class SignInDataManager {
             }
         } else {
             // 如果文件不存在，初始化默认值
-            result = SignInData.getDefault();
-            SignInDataManager.saveSignInData();
+            result = RewardOptionData.getDefault();
+            RewardOptionDataManager.saveSignInData();
         }
         return result;
     }

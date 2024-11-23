@@ -3,9 +3,11 @@ package xin.vanilla.mc.screen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
 import xin.vanilla.mc.util.AbstractGuiUtils;
+import xin.vanilla.mc.util.StringUtils;
 import xin.vanilla.mc.util.TextureUtils;
 
 import java.util.function.Function;
@@ -42,6 +44,10 @@ public class OperationButton {
      * 按钮材质资源
      */
     private ResourceLocation texture;
+    /**
+     * 按钮区域透明像素检测
+     */
+    private boolean transparentCheck;
     /**
      * 材质总宽度
      */
@@ -91,6 +97,11 @@ public class OperationButton {
      */
     private double tremblingAmplitude;
 
+    /**
+     * 鼠标提示
+     */
+    private String tooltip;
+
     public OperationButton(int operation, Function<RenderContext, Void> customRenderFunction) {
         this.operation = operation;
         this.customRenderFunction = customRenderFunction;
@@ -103,6 +114,7 @@ public class OperationButton {
     public OperationButton(int operation, ResourceLocation resource) {
         this.operation = operation;
         this.texture = resource;
+        this.transparentCheck = true;
     }
 
     /**
@@ -265,6 +277,8 @@ public class OperationButton {
             return false;
         } else if (texture == null) {
             return true;
+        } else if (!transparentCheck) {
+            return true;
         }
         // 映射到纹理的局部坐标
         int textureX = (int) (((this.getRealMouseX(mouseX, mouseY) - this.getRealX()) / (this.getRealWidth() / this.getHoverWidth())) + hoverU);
@@ -334,6 +348,18 @@ public class OperationButton {
                 AbstractGuiUtils.renderTremblingTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());
             } else {
                 AbstractGuiUtils.renderRotatedTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
+            }
+        }
+        this.renderPopup(matrixStack, mouseX, mouseY);
+    }
+
+    /**
+     * 绘制弹出层
+     */
+    public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY) {
+        if (this.isHovered() && StringUtils.isNotNullOrEmpty(tooltip)) {
+            if (Minecraft.getInstance().screen != null) {
+                AbstractGuiUtils.drawPopupMessage(matrixStack, Minecraft.getInstance().font, tooltip, (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
             }
         }
     }

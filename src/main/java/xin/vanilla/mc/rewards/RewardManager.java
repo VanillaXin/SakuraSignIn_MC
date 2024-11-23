@@ -14,8 +14,8 @@ import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
 import xin.vanilla.mc.config.ServerConfig;
-import xin.vanilla.mc.config.SignInData;
-import xin.vanilla.mc.config.SignInDataManager;
+import xin.vanilla.mc.config.RewardOptionData;
+import xin.vanilla.mc.config.RewardOptionDataManager;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.enums.ETimeCoolingMethod;
@@ -220,7 +220,7 @@ public class RewardManager {
     @NonNull
     public static RewardList getRewardListByDate(Date currentDay, IPlayerSignInData playerData, boolean onlyHistory) {
         RewardList result = new RewardList();
-        SignInData serverData = SignInDataManager.getSignInData();
+        RewardOptionData serverData = RewardOptionDataManager.getRewardOptionData();
         int nowCompensate8 = RewardManager.getCompensateDateInt();
         // long nowCompensate14 = DateUtils.toDateTimeInt(nowCompensate);
         // 本月总天数

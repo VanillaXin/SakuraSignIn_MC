@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Data
-public class SignInData implements Serializable {
+public class RewardOptionData implements Serializable {
     /**
      * 每次签到基础奖励
      */
@@ -125,7 +125,7 @@ public class SignInData implements Serializable {
     @Expose(deserialize = false)
     private Map<String, String> dateTimeRewardsRelation;
 
-    public SignInData() {
+    public RewardOptionData() {
         this.baseRewards = new RewardList();
         this.continuousRewards = new LinkedHashMap<>();
         this.continuousRewardsRelation = new LinkedHashMap<>();
@@ -277,8 +277,8 @@ public class SignInData implements Serializable {
         });
     }
 
-    public static SignInData getDefault() {
-        return new SignInData() {{
+    public static RewardOptionData getDefault() {
+        return new RewardOptionData() {{
             setBaseRewards(new RewardList() {{
                 add(new Reward() {{
                     setContent(new ItemRewardParser().serialize(new ItemStack(Items.APPLE, 1)));

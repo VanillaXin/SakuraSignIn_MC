@@ -1,6 +1,8 @@
 package xin.vanilla.mc.util;
 
 
+import lombok.NonNull;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.SecureRandom;
@@ -303,6 +305,20 @@ public class StringUtils {
 
     public static String toString(String s, String emptyDefault) {
         return StringUtils.isNullOrEmpty(s) ? emptyDefault : s;
+    }
+
+    /**
+     * 替换换行符
+     */
+    @NonNull
+    public static String replaceLine(String s) {
+        if (s == null) return "";
+        return s.replaceAll("<br>", "\n")
+                .replaceAll("\\\\n", "\n")
+                .replaceAll("\\\\r", "\r")
+                .replaceAll("\\n", "\n")
+                .replaceAll("\\r", "\r")
+                .replaceAll("\r\n", "\n");
     }
 
     public static String getAvatarUrl(long qq, int size) {
