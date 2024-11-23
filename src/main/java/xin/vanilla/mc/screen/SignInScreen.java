@@ -84,9 +84,9 @@ public class SignInScreen extends Screen {
     private static final int rows = 6;
 
     // 背景渲染坐标大小定义
-    private int bgH = Math.max(this.height - 20, 120);
+    private int bgH = Math.max(super.height - 20, 120);
     private int bgW = Math.max(bgH * 5 / 6, 100);
-    private int bgX = (this.width - bgW) / 2;
+    private int bgX = (super.width - bgW) / 2;
     private int bgY = 0;
 
     /**
@@ -126,7 +126,7 @@ public class SignInScreen extends Screen {
     /**
      * 渲染坐标x
      */
-    private int themeSelectorX = this.width / 2 - 50;
+    private int themeSelectorX = super.width / 2 - 50;
     /**
      * 渲染坐标y
      */
@@ -277,11 +277,11 @@ public class SignInScreen extends Screen {
      */
     private void updateLayout() {
         // 限制背景高度大于120
-        bgH = Math.max(this.height - 20, 120);
+        bgH = Math.max(super.height - 20, 120);
         // 限制背景宽度大于100
         bgW = Math.max(bgH * 5 / 6, 100);
         // 使背景水平居中
-        bgX = (this.width - bgW) / 2;
+        bgX = (super.width - bgW) / 2;
         // 更新缩放比例
         this.scale = bgH * 1.0f / textureCoordinate.getBgUV().getVHeight();
         // 创建或更新格子位置
@@ -421,13 +421,13 @@ public class SignInScreen extends Screen {
         double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
         double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        this.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
+        super.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        this.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
+        super.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -499,12 +499,12 @@ public class SignInScreen extends Screen {
 
         // 渲染所有格子
         for (SignInCell cell : signInCells) {
-            cell.render(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
+            cell.render(matrixStack, super.font, this.itemRenderer, mouseX, mouseY);
         }
         // 渲染格子弹出层
         for (SignInCell cell : signInCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
-                cell.renderTooltip(matrixStack, this.font, this.itemRenderer, mouseX, mouseY);
+                cell.renderTooltip(matrixStack, super.font, this.itemRenderer, mouseX, mouseY);
             }
         }
 
@@ -872,11 +872,11 @@ public class SignInScreen extends Screen {
     // @ParametersAreNonnullByDefault
     // public void resize(Minecraft mc, int width, int height) {
     //     super.resize(mc, width, height);
-    //     this.width = width;
-    //     this.height = height;
+    //     super.width = width;
+    //     super.height = height;
     //     // 在窗口大小变化时更新布局
     //     updateLayout();
-    //     LOGGER.debug("{},{}", this.width, this.height);
+    //     LOGGER.debug("{},{}", super.width, super.height);
     // }
 
     /**

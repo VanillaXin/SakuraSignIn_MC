@@ -252,16 +252,16 @@ public class RewardOptionScreen extends Screen {
      */
     private void addRewardTitleButton(String title, int i, int index) {
         REWARD_BUTTONS.put(String.format("标题,%s", i), new OperationButton(-i, context -> {
-            if (context.button.getRealY() < this.height && context.button.getRealY() + context.button.getRealHeight() >= 0) {
+            if (context.button.getRealY() < super.height && context.button.getRealY() + context.button.getRealHeight() >= 0) {
                 AbstractGui.fill(this.ms, (int) context.button.getRealX(), (int) (context.button.getRealY()), (int) (context.button.getRealX() + context.button.getRealWidth()), (int) (context.button.getRealY() + 1), 0xAC000000);
-                AbstractGuiUtils.drawLimitedText(this.ms, this.font, title, (int) context.button.getRealX(), (int) (context.button.getRealY() + (context.button.getRealHeight() - this.font.lineHeight) / 2), 0xAC000000, (int) context.button.getRealWidth(), false);
-                AbstractGui.fill(this.ms, (int) context.button.getRealX(), (int) (context.button.getRealY() + context.button.getRealHeight()), (int) (context.button.getRealX() + this.font.width(title)), (int) (context.button.getRealY() + context.button.getRealHeight() - 1), 0xAC000000);
+                AbstractGuiUtils.drawLimitedText(this.ms, super.font, title, (int) context.button.getRealX(), (int) (context.button.getRealY() + (context.button.getRealHeight() - super.font.lineHeight) / 2), 0xAC000000, (int) context.button.getRealWidth(), false);
+                AbstractGui.fill(this.ms, (int) context.button.getRealX(), (int) (context.button.getRealY() + context.button.getRealHeight()), (int) (context.button.getRealX() + super.font.width(title)), (int) (context.button.getRealY() + context.button.getRealHeight() - 1), 0xAC000000);
             }
             return null;
         })
                 .setX(leftMargin)
                 .setY(topMargin + (itemIconSize + itemBottomMargin) * Math.floor((double) index / lineItemCount))
-                .setWidth(this.width - leftBarWidth - leftMargin - rightMargin)
+                .setWidth(super.width - leftBarWidth - leftMargin - rightMargin)
                 .setHeight(titleHeight)
                 .setBaseX(leftBarWidth));
     }
@@ -276,9 +276,9 @@ public class RewardOptionScreen extends Screen {
     private void addRewardButton(Map<String, RewardList> rewardMap, String key, AtomicInteger index) {
         for (int j = 0; j < rewardMap.get(key).size(); j++, index.incrementAndGet()) {
             REWARD_BUTTONS.put(String.format("%s,%s", key, j), new OperationButton(j, context -> {
-                if (context.button.getRealY() < this.height && context.button.getRealY() + context.button.getRealHeight() >= 0) {
+                if (context.button.getRealY() < super.height && context.button.getRealY() + context.button.getRealHeight() >= 0) {
                     Reward reward = rewardMap.get(key).get(context.button.getOperation());
-                    AbstractGuiUtils.renderCustomReward(this.ms, this.itemRenderer, this.font, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) context.button.getRealX(), (int) context.button.getRealY(), true);
+                    AbstractGuiUtils.renderCustomReward(this.ms, this.itemRenderer, super.font, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) context.button.getRealX(), (int) context.button.getRealY(), true);
                 }
                 return null;
             })
@@ -451,21 +451,21 @@ public class RewardOptionScreen extends Screen {
             if (context.button.isHovered()) {
                 AbstractGui.fill(context.matrixStack, realX, realY, realX2, realY2, 0x99ACACAC);
             }
-            AbstractGuiUtils.drawLimitedText(context.matrixStack, this.font, content, realX + 4, (int) (realY + (realHeight - this.font.lineHeight) / 2), 0xFFEBD4B1, (int) (realWidth - 22));
+            AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, content, realX + 4, (int) (realY + (realHeight - super.font.lineHeight) / 2), 0xFFEBD4B1, (int) (realWidth - 22));
             return null;
         };
     }
 
     private void updateLayout() {
         this.leftBarWidth = SakuraSignIn.isRewardOptionBarOpened() ? 100 : 20;
-        this.lineItemCount = (this.width - leftBarWidth - leftMargin - rightMargin) / (itemIconSize + itemRightMargin);
-        this.lineCount = (this.height - topMargin - bottomMargin) / (itemIconSize + itemBottomMargin);
+        this.lineItemCount = (super.width - leftBarWidth - leftMargin - rightMargin) / (itemIconSize + itemRightMargin);
+        this.lineCount = (super.height - topMargin - bottomMargin) / (itemIconSize + itemBottomMargin);
         this.updateRewardList();
     }
 
     private void setYOffset(double offset) {
         // y坐标往上(-)不应该超过奖励高度+屏幕高度, 往下(+)不应该超过屏幕高度
-        this.yOffset = Math.min(Math.max(offset, -(this.topMargin + (double) this.rewardListIndex.get() / this.lineItemCount * (this.itemIconSize + this.itemBottomMargin) + this.height)), this.height);
+        this.yOffset = Math.min(Math.max(offset, -(this.topMargin + (double) this.rewardListIndex.get() / this.lineItemCount * (this.itemIconSize + this.itemBottomMargin) + super.height)), super.height);
     }
 
     public RewardOptionScreen() {
@@ -476,23 +476,23 @@ public class RewardOptionScreen extends Screen {
     protected void init() {
         this.cursor = MouseCursor.init();
         super.init();
-        this.leftBarTitleHeight = 5 * 2 + this.font.lineHeight;
+        this.leftBarTitleHeight = 5 * 2 + super.font.lineHeight;
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
         OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> {
             return null;
         })
-                .setX(leftBarWidth).setY(0).setWidth(this.width - leftBarWidth - rightMargin).setHeight(this.height)
+                .setX(leftBarWidth).setY(0).setWidth(super.width - leftBarWidth - rightMargin).setHeight(super.height)
                 .setTransparentCheck(false));
         OP_BUTTONS.put(OperationButtonType.OPEN.getCode(), new OperationButton(OperationButtonType.OPEN.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(new TextureCoordinate().setX(4).setY((this.height - 16) / 2.0).setWidth(16).setHeight(16))
+                .setCoordinate(new TextureCoordinate().setX(4).setY((super.height - 16) / 2.0).setWidth(16).setHeight(16))
                 .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
                 .setTextureWidth(textureCoordinate.getTotalWidth())
                 .setTextureHeight(textureCoordinate.getTotalHeight())
                 .setTransparentCheck(false)
                 .setTooltip("展开侧边栏"));
         OP_BUTTONS.put(OperationButtonType.CLOSE.getCode(), new OperationButton(OperationButtonType.CLOSE.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(new TextureCoordinate().setX(80).setY((5 * 2 + this.font.lineHeight - 16) / 2.0).setWidth(16).setHeight(16))
+                .setCoordinate(new TextureCoordinate().setX(80).setY((5 * 2 + super.font.lineHeight - 16) / 2.0).setWidth(16).setHeight(16))
                 .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
                 .setTextureWidth(textureCoordinate.getTotalWidth())
                 .setTextureHeight(textureCoordinate.getTotalHeight())
@@ -536,18 +536,18 @@ public class RewardOptionScreen extends Screen {
         this.renderRewardList(matrixStack, mouseX, mouseY);
 
         // 绘制左侧边栏列表背景
-        AbstractGui.fill(matrixStack, 0, 0, leftBarWidth, this.height, 0xAA000000);
-        AbstractGuiUtils.fillOutLine(matrixStack, 0, 0, leftBarWidth, this.height, 1, 0xFF000000);
+        AbstractGui.fill(matrixStack, 0, 0, leftBarWidth, super.height, 0xAA000000);
+        AbstractGuiUtils.fillOutLine(matrixStack, 0, 0, leftBarWidth, super.height, 1, 0xFF000000);
         // 绘制左侧边栏列表标题
         if (SakuraSignIn.isRewardOptionBarOpened()) {
-            AbstractGui.drawString(matrixStack, this.font, "奖励规则类型", 4, 5, 0xFFACACAC);
+            AbstractGui.drawString(matrixStack, super.font, "奖励规则类型", 4, 5, 0xFFACACAC);
             AbstractGui.fill(matrixStack, 0, leftBarTitleHeight, leftBarWidth, leftBarTitleHeight - 1, 0xAA000000);
         }
         // 绘制右侧边栏列表背景
-        AbstractGui.fill(matrixStack, this.width - rightBarWidth, 0, this.width, this.height, 0xAA000000);
-        AbstractGuiUtils.fillOutLine(matrixStack, this.width - rightBarWidth, 0, rightBarWidth, this.height, 1, 0xFF000000);
-        AbstractGuiUtils.drawString(matrixStack, this.font, "OY:", this.width - rightBarWidth, this.height - font.lineHeight * 2 - 2, 0xFFACACAC);
-        AbstractGuiUtils.drawLimitedText(matrixStack, this.font, String.valueOf((int) yOffset), this.width - rightBarWidth, this.height - font.lineHeight - 2, 0xFFACACAC, rightBarWidth);
+        AbstractGui.fill(matrixStack, super.width - rightBarWidth, 0, super.width, super.height, 0xAA000000);
+        AbstractGuiUtils.fillOutLine(matrixStack, super.width - rightBarWidth, 0, rightBarWidth, super.height, 1, 0xFF000000);
+        AbstractGuiUtils.drawString(matrixStack, super.font, "OY:", super.width - rightBarWidth, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
+        AbstractGuiUtils.drawLimitedText(matrixStack, super.font, String.valueOf((int) yOffset), super.width - rightBarWidth, super.height - font.lineHeight - 2, 0xFFACACAC, rightBarWidth);
 
         // 渲染操作按钮
         for (Integer op : OP_BUTTONS.keySet()) {
@@ -704,7 +704,7 @@ public class RewardOptionScreen extends Screen {
     // @ParametersAreNonnullByDefault
     // public void resize(Minecraft mc, int width, int height) {
     //     super.resize(mc, width, height);
-    //     SakuraSignIn.LOGGER.debug("{},{}", this.width, this.height);
+    //     SakuraSignIn.LOGGER.debug("{},{}", super.width, super.height);
     // }
 
     /**
