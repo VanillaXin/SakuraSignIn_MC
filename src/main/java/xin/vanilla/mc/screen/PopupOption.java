@@ -2,6 +2,7 @@ package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
+import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.text.ITextComponent;
@@ -25,52 +26,78 @@ public class PopupOption {
     private final int rightPadding = 5;
     private final int margin = 2;
     private final List<ITextComponent> optionList = new ArrayList<>();
+    /**
+     * 标识
+     */
+    @Getter
+    private String id;
     private FontRenderer font;
     private int width = -leftPadding - rightPadding;
     private int height = -topPadding - bottomPadding;
     private int screenWidth;
     private int screenHeight;
+    private double x;
+    private double y;
     private double adjustedX = -1;
     private double adjustedY = -1;
+    private int maxWidth = -1;
+    private int maxHeight = -1;
     // 当前选中项
-    @Getter
     private int selectedIndex = -1;
+    /**
+     * 滚动偏移量
+     */
+    private int scrollOffset;
+    /**
+     * 最大行数，如果超过最大行数，则滚动
+     */
+    private int maxLines;
 
     private PopupOption(FontRenderer font) {
         this.font = font;
     }
 
-    private PopupOption calculateSize(double x, double y) {
+    private PopupOption setPosition(double x, double y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    private PopupOption calculateSize() {
         assert Minecraft.getInstance().screen != null;
-        screenWidth = Minecraft.getInstance().screen.width;
-        screenHeight = Minecraft.getInstance().screen.height;
+        this.screenWidth = Minecraft.getInstance().screen.width;
+        this.screenHeight = Minecraft.getInstance().screen.height;
         // 计算弹出层的宽度和高度
-        width = AbstractGuiUtils.getTextComponentWidth(this.font, optionList) + leftPadding + rightPadding;
-        height = AbstractGuiUtils.getTextComponentHeight(this.font, optionList) + optionList.size() - 1 + topPadding + bottomPadding;
+        if (this.maxWidth <= 0) this.maxWidth = this.screenWidth - this.margin * 2;
+        if (this.maxHeight <= 0) this.maxHeight = this.screenHeight - this.margin * 2;
+        this.width = Math.min(AbstractGuiUtils.getTextComponentWidth(this.font, this.optionList) + this.leftPadding + this.rightPadding, this.maxWidth);
+        this.height = Math.min(AbstractGuiUtils.getTextComponentHeight(this.font, this.optionList) + this.optionList.size() - 1 + this.topPadding + this.bottomPadding, this.maxHeight);
+        // 计算弹出层的最大行数
+        this.maxLines = ((this.height - this.topPadding - this.bottomPadding) + 1) / (this.font.lineHeight + 1);
         // 初始化调整后的坐标
-        adjustedX = x + 2;
-        adjustedY = y + 2;
+        this.adjustedX = this.x + 2;
+        this.adjustedY = this.y + 2;
         // 检查顶部空间是否充足
-        boolean hasTopSpace = adjustedY >= margin;
+        boolean hasTopSpace = this.adjustedY >= this.margin;
         // 检查左右空间是否充足
-        boolean hasLeftSpace = adjustedX >= margin;
-        boolean hasRightSpace = adjustedX + width <= screenWidth - margin;
+        boolean hasLeftSpace = this.adjustedX >= this.margin;
+        boolean hasRightSpace = this.adjustedX + this.width <= this.screenWidth - this.margin;
         if (!hasTopSpace) {
             // 如果顶部空间不足，调整到鼠标下方
-            adjustedY = y + 1 + 5;
+            this.adjustedY = this.y + 1 + 5;
         } else {
             // 如果顶部空间充足
             if (!hasLeftSpace) {
                 // 如果左侧空间不足，靠右
-                adjustedX = margin;
+                this.adjustedX = this.margin;
             } else if (!hasRightSpace) {
                 // 如果右侧空间不足，靠左
-                adjustedX = screenWidth - width - margin;
+                this.adjustedX = this.screenWidth - this.width - this.margin;
             }
         }
         // 如果调整后仍然超出屏幕范围，强制限制在屏幕内
-        adjustedX = Math.max(margin, Math.min(adjustedX, screenWidth - width - margin));
-        adjustedY = Math.max(margin, Math.min(adjustedY, screenHeight - height - margin));
+        this.adjustedX = Math.max(this.margin, Math.min(this.adjustedX, this.screenWidth - this.width - this.margin));
+        this.adjustedY = Math.max(this.margin, Math.min(this.adjustedY, this.screenHeight - this.height - this.margin));
         return this;
     }
 
@@ -79,22 +106,53 @@ public class PopupOption {
     }
 
     public static PopupOption init(FontRenderer font, double x, double y) {
-        return new PopupOption(font).calculateSize(x, y);
+        return new PopupOption(font).setPosition(x, y).calculateSize();
     }
 
-    public PopupOption resize(FontRenderer font, double x, double y) {
-        this.font = font;
-        return this.calculateSize(x, y);
-    }
-
-    public PopupOption addOption(ITextComponent text) {
+    public PopupOption addOption(@NonNull ITextComponent text) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         optionList.add(text);
         return this;
     }
 
-    public PopupOption addOption(String text) {
-        optionList.add(new StringTextComponent(text));
+    public PopupOption addOption(@NonNull String... text) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
+        for (String s : text) {
+            optionList.add(new StringTextComponent(s));
+        }
         return this;
+    }
+
+    public PopupOption setMaxWidth(int maxWidth) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The setMaxWidth method must be called before the resize method.");
+        this.maxWidth = maxWidth;
+        return this;
+    }
+
+    public PopupOption setMaxHeight(int maxHeight) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The setMaxHeight method must be called before the resize method.");
+        this.maxHeight = maxHeight;
+        return this;
+    }
+
+    /**
+     * 重新计算位置并准备渲染
+     *
+     * @param font 字体
+     * @param x    横坐标
+     * @param y    纵坐标
+     * @param id   标识
+     */
+    public PopupOption resize(FontRenderer font, double x, double y, String id) {
+        if (CollectionUtils.isNullOrEmpty(this.optionList))
+            throw new RuntimeException("The resize method must be called after the addOption method.");
+        this.font = font;
+        this.id = id;
+        return this.setPosition(x, y).calculateSize();
     }
 
     public void clear() {
@@ -103,12 +161,62 @@ public class PopupOption {
         this.height = -topPadding * 2;
         this.screenWidth = 0;
         this.screenHeight = 0;
+        this.x = -1;
+        this.y = -1;
         this.adjustedX = -1;
         this.adjustedY = -1;
+        this.maxWidth = -1;
+        this.maxHeight = -1;
+        this.selectedIndex = -1;
+        this.scrollOffset = 0;
+        this.maxLines = 0;
     }
 
-    public boolean isSelected() {
-        return !optionList.isEmpty() && selectedIndex >= 0;
+    public boolean isHovered() {
+        return !CollectionUtils.isNullOrEmpty(optionList) && selectedIndex >= 0;
+    }
+
+    public int getSelectedIndex() {
+        return CollectionUtils.isNullOrEmpty(optionList) ? -1 : this.selectedIndex;
+    }
+
+    @NonNull
+    public String getSelectedString() {
+        return !CollectionUtils.isNullOrEmpty(optionList)
+                && this.getSelectedIndex() >= 0
+                && this.getSelectedIndex() < this.optionList.size()
+                ? this.optionList.get(selectedIndex).getString() : "";
+    }
+
+    /**
+     * 添加滚动偏移量
+     *
+     * @param delta 滚动偏移量
+     * @return 是否成功添加滚动偏移量
+     */
+    public boolean addScrollOffset(double delta) {
+        boolean result = false;
+        // 主题选择器
+        if (this.isHovered()) {
+            // 选项过多时滚动单位合理增大
+            int scrollUnit;
+            // 当 optionList.size() 远大于 maxLines 时，滚动单位为 maxLines - 1
+            if (optionList.size() / maxLines > 25) {
+                scrollUnit = Math.max(1, maxLines - 1);
+            }
+            // 动态调整滚动单位，滚动速度随选项增多逐渐增加
+            else {
+                scrollUnit = Math.min(Math.max(1, (int) Math.ceil(Math.sqrt(optionList.size() / (double) maxLines))), maxLines - 1);
+            }
+            if (delta > 0) {
+                scrollOffset = Math.max(scrollOffset - scrollUnit, 0);
+                result = true;
+            } else if (delta < 0) {
+                scrollOffset = Math.min(scrollOffset + scrollUnit, optionList.size() - maxLines);
+                result = true;
+            }
+        }
+        return result;
     }
 
     public void render(MatrixStack matrixStack, double mouseX, double mouseY) {
@@ -121,7 +229,7 @@ public class PopupOption {
             int relativeY = (int) (mouseY - this.adjustedY - this.topPadding);
             if (this.adjustedX <= mouseX && mouseX <= this.adjustedX + this.width) {
                 if (relativeY >= 0 && relativeY <= height) {
-                    int index = relativeY / (font.lineHeight + 1);
+                    int index = relativeY / (font.lineHeight + 1) + scrollOffset;
                     if (index < optionList.size()) {
                         selectedIndex = index;
                     }
@@ -132,12 +240,19 @@ public class PopupOption {
         AbstractGuiUtils.setDepth(matrixStack, AbstractGuiUtils.EDepth.TOOLTIP);
         AbstractGuiUtils.fill(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 0x88000000, 2);
         AbstractGuiUtils.fillOutLine(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 1, 0xFF000000, 2);
-        for (int i = 0; i < optionList.size(); i++) {
-            ITextComponent text = optionList.get(i);
-            if (selectedIndex == i) {
-                AbstractGuiUtils.fill(matrixStack, (int) adjustedX + 1, (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), width - 2, this.font.lineHeight, 0x88ACACAC);
+        for (int i = 0; i < this.maxLines; i++) {
+            int index = i + scrollOffset;
+            if (index >= 0 && index < optionList.size()) {
+                ITextComponent text = optionList.get(index);
+                if (selectedIndex == index) {
+                    AbstractGuiUtils.fill(matrixStack, (int) adjustedX + 1, (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), width - 2, this.font.lineHeight, 0x88ACACAC);
+                }
+                if (maxWidth > 0) {
+                    AbstractGuiUtils.drawLimitedText(matrixStack, this.font, text.getString(), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), 0xFFFFFFFF, maxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                } else {
+                    AbstractGuiUtils.drawString(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), 0xFFFFFFFF, false);
+                }
             }
-            AbstractGuiUtils.drawString(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), 0xFFFFFFFF, false);
         }
         AbstractGuiUtils.resetDepth(matrixStack);
     }

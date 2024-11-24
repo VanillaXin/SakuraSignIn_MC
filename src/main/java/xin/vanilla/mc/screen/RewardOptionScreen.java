@@ -439,11 +439,7 @@ public class RewardOptionScreen extends Screen {
             } else {
                 // 绘制弹出层选项
                 popupOption.clear();
-                popupOption.addOption("清空");
-                popupOption.addOption("测试1");
-                popupOption.addOption("测试2");
-                popupOption.addOption("测试3");
-                popupOption.resize(super.font, mouseX, mouseY);
+                popupOption.addOption("清空").resize(super.font, mouseX, mouseY, String.format("奖励规则类型按钮:%s", value.getOperation()));
             }
         }
         // 重置偏移量
@@ -618,26 +614,26 @@ public class RewardOptionScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         cursor.mouseClicked(mouseX, mouseY, button);
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            OP_BUTTONS.forEach((key, value) -> {
-                if (value.isHovered()) {
-                    value.setPressed(true);
-                    if (key == OperationButtonType.REWARD_PANEL.getCode()) {
-                        this.yOffsetOld = this.yOffset;
-                        this.mouseDownX = mouseX;
-                        this.mouseDownY = mouseY;
-                    }
-                }
-            });
-            REWARD_BUTTONS.forEach((key, value) -> {
-                if (value.isHovered()) {
-                    value.setPressed(true);
-                }
-            });
-        }
         // 清空弹出选项
-        if (!popupOption.isSelected()) {
+        if (!popupOption.isHovered()) {
             popupOption.clear();
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                OP_BUTTONS.forEach((key, value) -> {
+                    if (value.isHovered()) {
+                        value.setPressed(true);
+                        if (key == OperationButtonType.REWARD_PANEL.getCode()) {
+                            this.yOffsetOld = this.yOffset;
+                            this.mouseDownX = mouseX;
+                            this.mouseDownY = mouseY;
+                        }
+                    }
+                });
+                REWARD_BUTTONS.forEach((key, value) -> {
+                    if (value.isHovered()) {
+                        value.setPressed(true);
+                    }
+                });
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -650,8 +646,8 @@ public class RewardOptionScreen extends Screen {
         cursor.mouseReleased(mouseX, mouseY, button);
         AtomicBoolean updateLayout = new AtomicBoolean(false);
         AtomicBoolean flag = new AtomicBoolean(false);
-        if (popupOption.isSelected()) {
-            SakuraSignIn.LOGGER.debug("选择了弹出选项: {}", popupOption.getSelectedIndex());
+        if (popupOption.isHovered()) {
+            SakuraSignIn.LOGGER.debug("选择了弹出选项: {}:{}", popupOption.getSelectedIndex(), popupOption.getSelectedString());
             popupOption.clear();
         } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             // 控制按钮
@@ -707,8 +703,10 @@ public class RewardOptionScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         cursor.mouseScrolled(mouseX, mouseY, delta);
-        // y坐标往上(-)不应该超过奖励高度+屏幕高度, 往下(+)不应该超过屏幕高度
-        this.setYOffset(yOffset + delta);
+        if (!popupOption.addScrollOffset(delta)) {
+            // y坐标往上(-)不应该超过奖励高度+屏幕高度, 往下(+)不应该超过屏幕高度
+            this.setYOffset(yOffset + delta);
+        }
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
