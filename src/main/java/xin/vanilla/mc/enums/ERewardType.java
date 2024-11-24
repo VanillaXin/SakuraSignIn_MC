@@ -1,16 +1,34 @@
 package xin.vanilla.mc.enums;
 
+import lombok.Getter;
+
 import java.io.Serializable;
 
 /**
  * 奖励类型
  */
+@Getter
 public enum ERewardType implements Serializable {
-    ITEM,
-    EFFECT,
-    EXP_POINT,
-    EXP_LEVEL,
-    SIGN_IN_CARD,
-    ADVANCEMENT,
-    MESSAGE,
+    ITEM(1),
+    EFFECT(2),
+    EXP_POINT(3),
+    EXP_LEVEL(4),
+    SIGN_IN_CARD(5),
+    ADVANCEMENT(6),
+    MESSAGE(7);
+
+    private final int code;
+
+    ERewardType(int code) {
+        this.code = code;
+    }
+
+    public static ERewardType valueOf(int code) {
+        for (ERewardType type : ERewardType.values()) {
+            if (type.code == code) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Invalid code: " + code);
+    }
 }

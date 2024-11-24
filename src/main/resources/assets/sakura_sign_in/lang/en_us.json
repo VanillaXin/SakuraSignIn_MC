@@ -16,5 +16,12 @@
   "command.sakura_sign_in.va_card_set": "Set the number of Sign-In Card for player",
   "command.sakura_sign_in.va_card_get": "Get the number of Sign-In Card for player",
   "command.sakura_sign_in.va_config_get": "Get the config info of the server",
-  "command.sakura_sign_in.va_config_set_date": "Set the server's time"
+  "command.sakura_sign_in.va_config_set_date": "Set the server's time",
+  "reward.sakura_sign_in.reward_type_1": "Items",
+  "reward.sakura_sign_in.reward_type_2": "Mob Effect",
+  "reward.sakura_sign_in.reward_type_3": "ExpPoint",
+  "reward.sakura_sign_in.reward_type_4": "ExpLevel",
+  "reward.sakura_sign_in.reward_type_5": "Sign-In Card",
+  "reward.sakura_sign_in.reward_type_6": "Advancement",
+  "reward.sakura_sign_in.reward_type_7": "Message"
 }

@@ -6,15 +6,18 @@ import lombok.NonNull;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.CollectionUtils;
+import xin.vanilla.mc.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 弹出层选项框
@@ -26,7 +29,8 @@ public class PopupOption {
     private final int leftPadding = 5;
     private final int rightPadding = 5;
     private final int margin = 2;
-    private final List<ITextComponent> optionList = new ArrayList<>();
+    private final List<IFormattableTextComponent> optionList = new ArrayList<>();
+    private final Map<Integer, IFormattableTextComponent> tipsMap = new HashMap<>();
     @Setter
     private int radius = 2;
     /**
@@ -112,7 +116,7 @@ public class PopupOption {
         return new PopupOption(font).setPosition(x, y).calculateSize();
     }
 
-    public PopupOption addOption(@NonNull ITextComponent text) {
+    public PopupOption addOption(@NonNull IFormattableTextComponent text) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         optionList.add(text);
@@ -124,6 +128,40 @@ public class PopupOption {
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         for (String s : text) {
             optionList.add(new StringTextComponent(s));
+        }
+        return this;
+    }
+
+    public PopupOption addTips(@NonNull IFormattableTextComponent text, int index) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
+        tipsMap.put(index, text);
+        return this;
+    }
+
+    public PopupOption addTips(@NonNull String text, int index) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
+        tipsMap.put(index, new StringTextComponent(text));
+        return this;
+    }
+
+    public PopupOption addTips(@NonNull IFormattableTextComponent text) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
+        int index = tipsMap.keySet().stream().max(Integer::compareTo).orElse(-1);
+        index++;
+        tipsMap.put(index, text);
+        return this;
+    }
+
+    public PopupOption addTips(@NonNull String... text) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
+        int index = tipsMap.keySet().stream().max(Integer::compareTo).orElse(-1);
+        index++;
+        for (int i = 0; i < text.length; i++) {
+            tipsMap.put(index + i, new StringTextComponent(text[i]));
         }
         return this;
     }
@@ -157,9 +195,9 @@ public class PopupOption {
      * @param y    纵坐标
      * @param id   标识
      */
-    public PopupOption resize(FontRenderer font, double x, double y, String id) {
+    public PopupOption build(FontRenderer font, double x, double y, String id) {
         if (CollectionUtils.isNullOrEmpty(this.optionList))
-            throw new RuntimeException("The resize method must be called after the addOption method.");
+            throw new RuntimeException("The build method must be called after the addOption method.");
         this.font = font;
         this.id = id;
         return this.setPosition(x, y).calculateSize();
@@ -167,6 +205,7 @@ public class PopupOption {
 
     public void clear() {
         this.optionList.clear();
+        this.tipsMap.clear();
         this.width = -topPadding * 2;
         this.height = -topPadding * 2;
         this.screenWidth = 0;
@@ -253,15 +292,27 @@ public class PopupOption {
         for (int i = 0; i < this.maxLines; i++) {
             int index = i + scrollOffset;
             if (index >= 0 && index < optionList.size()) {
-                ITextComponent text = optionList.get(index);
+                IFormattableTextComponent text = optionList.get(index);
                 if (selectedIndex == index) {
                     AbstractGuiUtils.fill(matrixStack, (int) adjustedX + 1, (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), width - 2, this.font.lineHeight, 0x88ACACAC);
                 }
+                int color = AbstractGuiUtils.getColor(text, 0xFFFFFFFF);
                 if (maxWidth > 0) {
-                    AbstractGuiUtils.drawLimitedText(matrixStack, this.font, text.getString(), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), 0xFFFFFFFF, maxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(matrixStack, this.font, text.getString(), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, maxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 } else {
-                    AbstractGuiUtils.drawString(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), 0xFFFFFFFF, false);
+                    AbstractGuiUtils.drawString(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, false);
                 }
+            }
+        }
+        // 绘制提示
+        if (this.getSelectedIndex() >= 0 && !tipsMap.isEmpty()) {
+            IFormattableTextComponent text = tipsMap.getOrDefault(this.getSelectedIndex(), new StringTextComponent(""));
+            if (StringUtils.isNullOrEmpty(text.getString())) {
+                text = tipsMap.getOrDefault(this.getSelectedIndex() - optionList.size(), new StringTextComponent(""));
+            }
+            if (StringUtils.isNotNullOrEmpty(text.getString())) {
+                int color = AbstractGuiUtils.getColor(text, 0xFFFFFFFF);
+                AbstractGuiUtils.drawPopupMessage(matrixStack, this.font, text.getString(), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight, 0xAA000000, color);
             }
         }
         AbstractGuiUtils.resetDepth(matrixStack);

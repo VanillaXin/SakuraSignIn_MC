@@ -12,9 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponent;
+import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.enums.ERewardType;
@@ -105,6 +103,18 @@ public class AbstractGuiUtils {
         AbstractGui.blit(matrixStack, x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
     }
 
+    public static IFormattableTextComponent setColor(IFormattableTextComponent textComponent, int color) {
+        return textComponent.withStyle(style -> style.withColor(Color.fromRgb(color)));
+    }
+
+    public static int getColor(IFormattableTextComponent textComponent) {
+        return AbstractGuiUtils.getColor(textComponent, 0xFFFFFFFF);
+    }
+
+    public static int getColor(IFormattableTextComponent textComponent, int defaultColor) {
+        return textComponent.getStyle().getColor() == null ? defaultColor : textComponent.getStyle().getColor().getValue();
+    }
+
     public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color) {
         AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, true);
     }
@@ -187,7 +197,7 @@ public class AbstractGuiUtils {
         return AbstractGuiUtils.multilineTextHeight(font, String.join("\n", texts));
     }
 
-    public static int getTextComponentWidth(FontRenderer font, Collection<ITextComponent> texts) {
+    public static int getTextComponentWidth(FontRenderer font, Collection<? extends ITextComponent> texts) {
         int width = 0;
         for (ITextComponent s : texts) {
             width = Math.max(width, font.width(s));
@@ -195,7 +205,7 @@ public class AbstractGuiUtils {
         return width;
     }
 
-    public static int getTextComponentHeight(FontRenderer font, Collection<ITextComponent> texts) {
+    public static int getTextComponentHeight(FontRenderer font, Collection<? extends ITextComponent> texts) {
         return AbstractGuiUtils.multilineTextHeight(font, texts.stream().map(ITextComponent::getString).collect(Collectors.joining("\n")));
     }
 

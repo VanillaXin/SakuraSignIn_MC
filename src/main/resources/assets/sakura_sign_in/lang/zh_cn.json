@@ -16,5 +16,12 @@
   "command.sakura_sign_in.va_card_set": "设置玩家的补签卡数量",
   "command.sakura_sign_in.va_card_get": "获取玩家的补签卡数量",
   "command.sakura_sign_in.va_config_get": "获取服务器的配置项信息",
-  "command.sakura_sign_in.va_config_set_date": "设置服务器的时间"
+  "command.sakura_sign_in.va_config_set_date": "设置服务器的时间",
+  "reward.sakura_sign_in.reward_type_1": "物品",
+  "reward.sakura_sign_in.reward_type_2": "药水效果",
+  "reward.sakura_sign_in.reward_type_3": "XP经验",
+  "reward.sakura_sign_in.reward_type_4": "XP等级",
+  "reward.sakura_sign_in.reward_type_5": "补签卡",
+  "reward.sakura_sign_in.reward_type_6": "进度",
+  "reward.sakura_sign_in.reward_type_7": "消息"
 }

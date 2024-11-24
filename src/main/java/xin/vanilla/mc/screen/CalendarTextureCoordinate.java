@@ -1,7 +1,8 @@
 package xin.vanilla.mc.screen;
 
-import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
@@ -9,8 +10,10 @@ import java.io.Serializable;
 /**
  * 背景图片坐标配置, 坐标宽高度单位都为像素
  */
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
+@SuppressWarnings("ConstantConditions")
 public class CalendarTextureCoordinate implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -220,10 +223,126 @@ public class CalendarTextureCoordinate implements Serializable {
     private TextureCoordinate themeTapUV = new TextureCoordinate().setU0(0).setV0(736).setUWidth(40).setVHeight(48);
 
     /**
-     * 设置页面背景纹理坐标
+     * 奖励配置页面背景纹理坐标
      */
     @NonNull
     private TextureCoordinate optionBgUV = new TextureCoordinate().setU0(0).setV0(880).setUWidth(120).setVHeight(120);
+
+    // region Always NON-NULL Getter
+
+    public @NonNull TextureCoordinate getYearCoordinate() {
+        return yearCoordinate = yearCoordinate == null ? new TextureCoordinate() : yearCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getMonthCoordinate() {
+        return monthCoordinate = monthCoordinate == null ? new TextureCoordinate() : monthCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getCellCoordinate() {
+        return cellCoordinate = cellCoordinate == null ? new TextureCoordinate() : cellCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getLeftArrowCoordinate() {
+        return leftArrowCoordinate = leftArrowCoordinate == null ? new TextureCoordinate() : leftArrowCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getRightArrowCoordinate() {
+        return rightArrowCoordinate = rightArrowCoordinate == null ? new TextureCoordinate() : rightArrowCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getUpArrowCoordinate() {
+        return upArrowCoordinate = upArrowCoordinate == null ? new TextureCoordinate() : upArrowCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getDownArrowCoordinate() {
+        return downArrowCoordinate = downArrowCoordinate == null ? new TextureCoordinate() : downArrowCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getThemeCoordinate() {
+        return themeCoordinate = themeCoordinate == null ? new TextureCoordinate() : themeCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getBgUV() {
+        return bgUV = bgUV == null ? new TextureCoordinate() : bgUV;
+    }
+
+    public @NonNull TextureCoordinate getTooltipUV() {
+        return tooltipUV = tooltipUV == null ? new TextureCoordinate() : tooltipUV;
+    }
+
+    public @NonNull TextureCoordinate getTooltipCellCoordinate() {
+        return tooltipCellCoordinate = tooltipCellCoordinate == null ? new TextureCoordinate() : tooltipCellCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getTooltipDateCoordinate() {
+        return tooltipDateCoordinate = tooltipDateCoordinate == null ? new TextureCoordinate() : tooltipDateCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getTooltipScrollCoordinate() {
+        return tooltipScrollCoordinate = tooltipScrollCoordinate == null ? new TextureCoordinate() : tooltipScrollCoordinate;
+    }
+
+    public @NonNull TextureCoordinate getArrowUV() {
+        return arrowUV = arrowUV == null ? new TextureCoordinate() : arrowUV;
+    }
+
+    public @NonNull TextureCoordinate getArrowHoverUV() {
+        return arrowHoverUV = arrowHoverUV == null ? new TextureCoordinate() : arrowHoverUV;
+    }
+
+    public @NonNull TextureCoordinate getArrowTapUV() {
+        return arrowTapUV = arrowTapUV == null ? new TextureCoordinate() : arrowTapUV;
+    }
+
+    public @NonNull TextureCoordinate getNotSignedInUV() {
+        return notSignedInUV = notSignedInUV == null ? new TextureCoordinate() : notSignedInUV;
+    }
+
+    public @NonNull TextureCoordinate getSignedInUV() {
+        return signedInUV = signedInUV == null ? new TextureCoordinate() : signedInUV;
+    }
+
+    public @NonNull TextureCoordinate getRewardedUV() {
+        return rewardedUV = rewardedUV == null ? new TextureCoordinate() : rewardedUV;
+    }
+
+    public @NonNull TextureCoordinate getBuffUV() {
+        return buffUV = buffUV == null ? new TextureCoordinate() : buffUV;
+    }
+
+    public @NonNull TextureCoordinate getPointUV() {
+        return pointUV = pointUV == null ? new TextureCoordinate() : pointUV;
+    }
+
+    public @NonNull TextureCoordinate getLevelUV() {
+        return levelUV = levelUV == null ? new TextureCoordinate() : levelUV;
+    }
+
+    public @NonNull TextureCoordinate getCardUV() {
+        return cardUV = cardUV == null ? new TextureCoordinate() : cardUV;
+    }
+
+    public @NonNull TextureCoordinate getMessageUV() {
+        return messageUV = messageUV == null ? new TextureCoordinate() : messageUV;
+    }
+
+    public @NonNull TextureCoordinate getThemeUV() {
+        return themeUV = themeUV == null ? new TextureCoordinate() : themeUV;
+    }
+
+    public @NonNull TextureCoordinate getThemeHoverUV() {
+        return themeHoverUV = themeHoverUV == null ? new TextureCoordinate() : themeHoverUV;
+    }
+
+    public @NonNull TextureCoordinate getThemeTapUV() {
+        return themeTapUV = themeTapUV == null ? new TextureCoordinate() : themeTapUV;
+    }
+
+    public @NonNull TextureCoordinate getOptionBgUV() {
+        return optionBgUV = optionBgUV == null ? new TextureCoordinate() : optionBgUV;
+    }
+
+    // endregion Always NON-NULL Getter
 
     /**
      * 获取默认配置

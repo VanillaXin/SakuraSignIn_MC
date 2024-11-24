@@ -508,7 +508,7 @@ public class SignInScreen extends Screen {
         AtomicBoolean updateTextureAndCoordinate = new AtomicBoolean(false);
         AtomicBoolean flag = new AtomicBoolean(false);
         if (popupOption.isHovered()) {
-            SakuraSignIn.LOGGER.debug("选择了弹出选项: {}:{}", popupOption.getSelectedIndex(), popupOption.getSelectedString());
+            LOGGER.debug("选择了弹出选项:\tIndex: {}\tContent: {}", popupOption.getSelectedIndex(), popupOption.getSelectedString());
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && !CollectionUtils.isNullOrEmpty(themeFileList)) {
                 ClientPlayerEntity player = Minecraft.getInstance().player;
                 String selectedFile = themeFileList.get(popupOption.getSelectedIndex()).getPath();
@@ -657,7 +657,7 @@ public class SignInScreen extends Screen {
                 }
                 popupOption.setMaxWidth(font.width("cal_text_width"))
                         .setMaxLines(5)
-                        .resize(super.font, mouseX, mouseY, String.format("主题选择按钮:%s", value.getOperation()));
+                        .build(super.font, mouseX, mouseY, String.format("主题选择按钮:%s", value.getOperation()));
             }
         }
     }
