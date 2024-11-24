@@ -2,6 +2,7 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
+import net.minecraft.client.resources.I18n;
 import xin.vanilla.mc.rewards.RewardParser;
 
 public class SignInCardRewardParser implements RewardParser<Integer> {
@@ -21,5 +22,10 @@ public class SignInCardRewardParser implements RewardParser<Integer> {
         JsonObject json = new JsonObject();
         json.addProperty("signInCard", reward);
         return json;
+    }
+
+    @Override
+    public String getName(JsonObject json) {
+        return "补签卡";
     }
 }

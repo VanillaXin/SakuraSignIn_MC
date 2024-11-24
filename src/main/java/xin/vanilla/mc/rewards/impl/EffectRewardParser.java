@@ -40,4 +40,9 @@ public class EffectRewardParser implements RewardParser<EffectInstance> {
         json.addProperty("amplifier", reward.getAmplifier());
         return json;
     }
+
+    @Override
+    public String getName(JsonObject json) {
+        return "药水效果: " + this.deserialize(json).getEffect().getDisplayName().getString();
+    }
 }

@@ -340,6 +340,15 @@ public class OperationButton {
      * 绘制按钮
      */
     public void render(MatrixStack matrixStack, double mouseX, double mouseY) {
+        this.render(matrixStack, mouseX, mouseY, false);
+    }
+
+    /**
+     * 绘制按钮
+     *
+     * @param renderPopup 是否绘制弹出层提示
+     */
+    public void render(MatrixStack matrixStack, double mouseX, double mouseY, boolean renderPopup) {
         if (customRenderFunction != null) {
             // 使用自定义渲染逻辑
             customRenderFunction.apply(new RenderContext(matrixStack, mouseX, mouseY, this));
@@ -353,7 +362,9 @@ public class OperationButton {
                 AbstractGuiUtils.renderRotatedTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
             }
         }
-        this.renderPopup(matrixStack, mouseX, mouseY);
+        if (renderPopup) {
+            this.renderPopup(matrixStack, mouseX, mouseY);
+        }
     }
 
     /**

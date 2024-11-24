@@ -302,8 +302,8 @@ public class RewardOptionScreen extends Screen {
                     .setY(topMargin + (itemIconSize + itemBottomMargin) * Math.floor((double) index.get() / lineItemCount))
                     .setWidth(itemIconSize)
                     .setHeight(itemIconSize)
-                    .setBaseX(leftBarWidth));
-
+                    .setBaseX(leftBarWidth)
+                    .setTooltip(rewardMap.get(key).get(j).getName()));
         }
     }
 
@@ -411,6 +411,12 @@ public class RewardOptionScreen extends Screen {
             OperationButton operationButton = REWARD_BUTTONS.get(key);
             // 渲染物品图标
             operationButton.setBaseY(yOffset).render(matrixStack, mouseX, mouseY);
+        }
+        // 渲染Tips
+        for (String key : REWARD_BUTTONS.keySet()) {
+            OperationButton operationButton = REWARD_BUTTONS.get(key);
+            // 渲染物品图标
+            operationButton.setBaseY(yOffset).renderPopup(matrixStack, mouseX, mouseY);
         }
     }
 
@@ -655,7 +661,7 @@ public class RewardOptionScreen extends Screen {
                 , new OperationButton(OperationButtonType.DATE_TIME_REWARD.getCode(), this.generateCustomRenderFunction("具体时间签到奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 6).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
         OP_BUTTONS.put(OperationButtonType.OFFSET_Y.getCode(), new OperationButton(OperationButtonType.OFFSET_Y.getCode(), context -> {
-            AbstractGuiUtils.drawString(context.matrixStack, super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
+            AbstractGuiUtils.drawStringWithoutDepth(context.matrixStack, super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
             AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, String.valueOf((int) yOffset), super.width - rightBarWidth + 1, super.height - font.lineHeight - 2, 0xFFACACAC, rightBarWidth);
             return null;
         })
@@ -709,6 +715,29 @@ public class RewardOptionScreen extends Screen {
                     button.setTooltip(String.format("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
                 }
                 button.render(matrixStack, mouseX, mouseY);
+            }
+        }
+        // 渲染操作按钮 提示
+        for (Integer op : OP_BUTTONS.keySet()) {
+            OperationButton button = OP_BUTTONS.get(op);
+            // 展开类按钮仅在关闭时绘制
+            if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.OPEN.getCode()))) {
+                if (!SakuraSignIn.isRewardOptionBarOpened()) {
+                    button.renderPopup(matrixStack, mouseX, mouseY);
+                }
+            }
+            // 收起类按钮仅在展开时绘制
+            else if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.CLOSE.getCode()))) {
+                if (SakuraSignIn.isRewardOptionBarOpened()) {
+                    button.renderPopup(matrixStack, mouseX, mouseY);
+                }
+            }
+            // 绘制其他按钮
+            else {
+                if (op == OperationButtonType.OFFSET_Y.getCode()) {
+                    button.setTooltip(String.format("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
+                }
+                button.renderPopup(matrixStack, mouseX, mouseY);
             }
         }
 

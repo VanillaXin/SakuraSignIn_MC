@@ -22,4 +22,9 @@ public class ExpLevelRewardParser implements RewardParser<Integer> {
         json.addProperty("expLevel", reward);
         return json;
     }
+
+    @Override
+    public String getName(JsonObject json) {
+        return "EXP等级";
+    }
 }

@@ -464,6 +464,10 @@ public class SignInScreen extends Screen {
             button.setScale(this.scale);
             button.render(matrixStack, mouseX, mouseY);
         }
+        // 渲染操作按钮的弹出提示
+        for (Integer op : BUTTONS.keySet()) {
+            BUTTONS.get(op).renderPopup(matrixStack, mouseX, mouseY);
+        }
 
         // 渲染所有格子
         for (SignInCell cell : signInCells) {

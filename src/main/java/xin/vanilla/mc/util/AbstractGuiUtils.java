@@ -38,7 +38,8 @@ public class AbstractGuiUtils {
         BACKGROUND(1),
         FOREGROUND(10),
         OVERLAY(100),
-        TOOLTIP(200);
+        TOOLTIP(200),
+        POPUP_TIPS(250);
 
         private final int depth;
 
@@ -143,6 +144,30 @@ public class AbstractGuiUtils {
 
     public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, boolean shadow) {
         AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, shadow, EDepth.FOREGROUND);
+    }
+
+    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color) {
+        AbstractGuiUtils.drawStringWithoutDepth(matrixStack, font, text, x, y, color, true);
+    }
+
+    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, boolean shadow) {
+        if (shadow) {
+            font.drawShadow(matrixStack, text, (int) x, (int) y, color);
+        } else {
+            font.draw(matrixStack, text, (int) x, (int) y, color);
+        }
+    }
+
+    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color) {
+        AbstractGuiUtils.drawStringWithoutDepth(matrixStack, font, text, x, y, color, true);
+    }
+
+    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color, boolean shadow) {
+        if (shadow) {
+            font.drawShadow(matrixStack, text, (int) x, (int) y, color);
+        } else {
+            font.draw(matrixStack, text, (int) x, (int) y, color);
+        }
     }
 
     public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, EDepth depth) {
@@ -870,7 +895,7 @@ public class AbstractGuiUtils {
         adjustedX = Math.max(margin, Math.min(adjustedX, screenWidth - msgWidth - margin));
         adjustedY = Math.max(margin, Math.min(adjustedY, screenHeight - msgHeight - margin));
 
-        AbstractGuiUtils.setDepth(matrixStack, EDepth.TOOLTIP);
+        AbstractGuiUtils.setDepth(matrixStack, EDepth.POPUP_TIPS);
         // 在计算完的坐标位置绘制消息框背景
         AbstractGui.fill(matrixStack, adjustedX, adjustedY, adjustedX + msgWidth, adjustedY + msgHeight, bgColor);
         // 绘制消息文字

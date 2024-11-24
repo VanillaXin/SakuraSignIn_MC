@@ -57,6 +57,10 @@ public class Reward implements Cloneable, Serializable {
         }
     }
 
+    public String getName() {
+        return RewardManager.getRewardName(this);
+    }
+
     public static Reward getDefault() {
         return new Reward(RewardManager.serializeReward(new ItemStack(Items.AIR), ERewardType.ITEM), ERewardType.ITEM);
     }

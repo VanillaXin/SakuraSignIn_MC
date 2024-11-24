@@ -300,10 +300,11 @@ public class PopupOption {
                 if (maxWidth > 0) {
                     AbstractGuiUtils.drawLimitedText(matrixStack, this.font, text.getString(), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, maxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 } else {
-                    AbstractGuiUtils.drawString(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, false);
+                    AbstractGuiUtils.drawStringWithoutDepth(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, false);
                 }
             }
         }
+        AbstractGuiUtils.resetDepth(matrixStack);
         // 绘制提示
         if (this.getSelectedIndex() >= 0 && !tipsMap.isEmpty()) {
             IFormattableTextComponent text = tipsMap.getOrDefault(this.getSelectedIndex(), new StringTextComponent(""));
@@ -315,6 +316,5 @@ public class PopupOption {
                 AbstractGuiUtils.drawPopupMessage(matrixStack, this.font, text.getString(), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight, 0xAA000000, color);
             }
         }
-        AbstractGuiUtils.resetDepth(matrixStack);
     }
 }

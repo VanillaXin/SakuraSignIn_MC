@@ -13,9 +13,9 @@ import net.minecraft.util.text.StringTextComponent;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
-import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
+import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.enums.ETimeCoolingMethod;
@@ -67,6 +67,15 @@ public class RewardManager {
             throw new JsonParseException("Unknown reward type: " + type);
         }
         return parser.serialize(reward);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> String getRewardName(Reward reward) {
+        RewardParser<T> parser = (RewardParser<T>) rewardParsers.get(reward.getType());
+        if (parser == null) {
+            throw new JsonParseException("Unknown reward type: " + reward.getType());
+        }
+        return parser.getName(reward.getContent());
     }
 
     /**

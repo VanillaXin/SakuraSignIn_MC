@@ -51,4 +51,9 @@ public class MessageRewardParser implements RewardParser<StringTextComponent> {
         result.add("style", styleJson);
         return result;
     }
+
+    @Override
+    public String getName(JsonObject json) {
+        return "消息提示";
+    }
 }

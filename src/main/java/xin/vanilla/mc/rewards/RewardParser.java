@@ -19,4 +19,6 @@ public interface RewardParser<T> {
      * 序列化奖励对象
      */
     JsonObject serialize(T reward);
+
+    String getName(JsonObject json);
 }

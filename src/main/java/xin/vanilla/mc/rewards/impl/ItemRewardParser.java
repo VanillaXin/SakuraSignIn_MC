@@ -64,4 +64,9 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
         }
         return json;
     }
+
+    @Override
+    public String getName(JsonObject json) {
+        return this.deserialize(json).getDisplayName().getString().replaceAll("\\[(.*)]", "$1");
+    }
 }
