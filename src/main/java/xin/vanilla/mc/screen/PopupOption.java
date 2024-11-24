@@ -3,6 +3,7 @@ package xin.vanilla.mc.screen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.text.ITextComponent;
@@ -26,6 +27,8 @@ public class PopupOption {
     private final int rightPadding = 5;
     private final int margin = 2;
     private final List<ITextComponent> optionList = new ArrayList<>();
+    @Setter
+    private int radius = 2;
     /**
      * 标识
      */
@@ -139,6 +142,13 @@ public class PopupOption {
         return this;
     }
 
+    public PopupOption setMaxLines(int maxLines) {
+        if (this.x >= 0 || this.y >= 0)
+            throw new RuntimeException("The setMaxLines method must be called before the resize method.");
+        this.maxHeight = maxLines * (this.font.lineHeight + 1) + this.topPadding + this.bottomPadding - 1;
+        return this;
+    }
+
     /**
      * 重新计算位置并准备渲染
      *
@@ -238,8 +248,8 @@ public class PopupOption {
         }
 
         AbstractGuiUtils.setDepth(matrixStack, AbstractGuiUtils.EDepth.TOOLTIP);
-        AbstractGuiUtils.fill(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 0x88000000, 2);
-        AbstractGuiUtils.fillOutLine(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 1, 0xFF000000, 2);
+        AbstractGuiUtils.fill(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 0x88000000, radius);
+        AbstractGuiUtils.fillOutLine(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 1, 0xFF000000, radius);
         for (int i = 0; i < this.maxLines; i++) {
             int index = i + scrollOffset;
             if (index >= 0 && index < optionList.size()) {

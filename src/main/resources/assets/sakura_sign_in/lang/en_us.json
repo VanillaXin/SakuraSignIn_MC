@@ -4,7 +4,7 @@
   "key.sakura_sign_in.reward_option": "Open Reward Option Screen",
   "screen.sakura_sign_in.sign_in_title": "Calendar",
   "screen.sakura_sign_in.reward_option_title": "Reward Option",
-  "screen.sakura_sign_in.theme_selector.empty": "No theme \nfiles found!\nRight-click to \nopen the \ntheme folder.",
+  "screen.sakura_sign_in.theme_selector.empty": "No theme \nfiles found!\nclick to \nopen the \ntheme folder.",
   "command.sakura_sign_in.va_help": "Get help information",
   "command.sakura_sign_in.sign": "Like /va sign",
   "command.sakura_sign_in.reward": "Like /va reward",

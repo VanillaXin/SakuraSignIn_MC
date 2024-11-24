@@ -27,10 +27,7 @@ import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
-import xin.vanilla.mc.util.AbstractGuiUtils;
-import xin.vanilla.mc.util.DateUtils;
-import xin.vanilla.mc.util.PNGUtils;
-import xin.vanilla.mc.util.TextureUtils;
+import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
@@ -99,43 +96,14 @@ public class SignInScreen extends Screen {
      */
     private final Map<Integer, OperationButton> BUTTONS = new HashMap<>();
 
-    // region 主题选择相关
     /**
-     * 主题选择器可视状态
+     * 弹出层选项
      */
-    private boolean themeSelectorVisible = false;
+    private PopupOption popupOption;
     /**
      * 主题文件列表
      */
     private List<File> themeFileList;
-    /**
-     * 当前滚动偏移量
-     */
-    private int themeSelectorScrollOffset = 0;
-    /**
-     * 当前鼠标悬停的文件索引，用于绘制高亮效果
-     * -1表示没有文件被悬停
-     * -2表示首次显示
-     * -3表示主题文件列表为空并且鼠标位于主题选择器内部
-     */
-    private int themeSelectorHoveredIndex = -1;
-    /**
-     * 显示的最大文件数
-     */
-    private static final int THEME_SELECTOR_MAX_VISIBLE_ITEMS = 5;
-    /**
-     * 渲染坐标x
-     */
-    private int themeSelectorX = super.width / 2 - 50;
-    /**
-     * 渲染坐标y
-     */
-    private int themeSelectorY = 30;
-    /**
-     * 显示的最大宽度
-     */
-    private int themeSelectorMaxWidth;
-    // endregion 主题选择相关
 
     // endregion
 
@@ -179,7 +147,7 @@ public class SignInScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        themeSelectorMaxWidth = font.width("cal_text_width");
+        this.popupOption = PopupOption.init(super.font);
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
 
@@ -508,33 +476,8 @@ public class SignInScreen extends Screen {
             }
         }
 
-        // 渲染自定义背景文件列表，根据 scrollOffset 显示文件名
-        if (themeSelectorVisible) {
-            // 绘制背景
-            fill(matrixStack, themeSelectorX - 2, themeSelectorY - 2, themeSelectorX + themeSelectorMaxWidth + 2, themeSelectorY + THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2), 0x88000000);
-            for (int i = 0; i < THEME_SELECTOR_MAX_VISIBLE_ITEMS; i++) {
-                int index = i + themeSelectorScrollOffset;
-                if (index >= 0 && index < themeFileList.size()) {
-                    int x = themeSelectorX;
-                    int y = themeSelectorY + i * (font.lineHeight + 2);
-
-                    // 检测鼠标悬停状态，高亮显示
-                    if (index == themeSelectorHoveredIndex) {
-                        fill(matrixStack, x - 2, y - 2, x + themeSelectorMaxWidth + 2, y + font.lineHeight + 2, 0xAAAAAAAA);
-                    }
-                    // 绘制文件名
-                    String name = themeFileList.get(index).getName();
-                    name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
-                    AbstractGuiUtils.drawLimitedText(matrixStack, font, name, x, y, 0xFFFFFF, themeSelectorMaxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
-                }
-            }
-            // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
-            if (themeFileList.isEmpty()) {
-                TranslationTextComponent textComponent = new TranslationTextComponent("screen.sakura_sign_in.theme_selector.empty");
-                int textHeight = AbstractGuiUtils.multilineTextHeight(font, textComponent);
-                AbstractGuiUtils.drawMultilineText(matrixStack, font, textComponent, themeSelectorX, themeSelectorY + (THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2) - textHeight) / 2, 0xFFFFFF);
-            }
-        }
+        // 绘制弹出选项
+        popupOption.render(matrixStack, mouseX, mouseY);
     }
 
     /**
@@ -542,12 +485,16 @@ public class SignInScreen extends Screen {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            BUTTONS.forEach((key, value) -> {
-                if (value.isHovered()) {
-                    value.setPressed(true);
-                }
-            });
+        // 清空弹出选项
+        if (!popupOption.isHovered()) {
+            popupOption.clear();
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                BUTTONS.forEach((key, value) -> {
+                    if (value.isHovered()) {
+                        value.setPressed(true);
+                    }
+                });
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -560,8 +507,27 @@ public class SignInScreen extends Screen {
         AtomicBoolean updateLayout = new AtomicBoolean(false);
         AtomicBoolean updateTextureAndCoordinate = new AtomicBoolean(false);
         AtomicBoolean flag = new AtomicBoolean(false);
+        if (popupOption.isHovered()) {
+            SakuraSignIn.LOGGER.debug("选择了弹出选项: {}:{}", popupOption.getSelectedIndex(), popupOption.getSelectedString());
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && !CollectionUtils.isNullOrEmpty(themeFileList)) {
+                ClientPlayerEntity player = Minecraft.getInstance().player;
+                String selectedFile = themeFileList.get(popupOption.getSelectedIndex()).getPath();
+                if (player != null) {
+                    player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
+                    ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
+                    if (TextureUtils.isTextureAvailable(resourceLocation)) {
+                        ClientConfig.THEME.set(selectedFile);
+                        updateTextureAndCoordinate.set(true);
+                        updateLayout.set(true);
+                    }
+                }
+            } else {
+                SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
+            }
+            popupOption.clear();
+        }
         // 左键签到, 右键补签(如果服务器允许且有补签卡), 右键领取奖励(如果是已签到未领取状态)
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             ClientPlayerEntity player = Minecraft.getInstance().player;
             // 控制按钮
             BUTTONS.forEach((key, value) -> {
@@ -580,44 +546,7 @@ public class SignInScreen extends Screen {
                         flag.set(true);
                     }
                 }
-                // 主题选择器
-                if (!flag.get()) {
-                    if (themeSelectorVisible && themeSelectorHoveredIndex >= 0) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            String selectedFile = themeFileList.get(themeSelectorHoveredIndex).getPath();
-                            if (player != null) {
-                                player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
-                                ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
-                                if (TextureUtils.isTextureAvailable(resourceLocation)) {
-                                    ClientConfig.THEME.set(themeFileList.get(themeSelectorHoveredIndex).getPath());
-                                    updateTextureAndCoordinate.set(true);
-                                    updateLayout.set(true);
-                                    themeSelectorVisible = false;
-                                }
-                            }
-                        } else {
-                            SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
-                            themeSelectorVisible = false;
-                        }
-                        flag.set(true);
-                    }
-                    // 若为首次显示
-                    else if (themeSelectorHoveredIndex == -2) {
-                        themeSelectorHoveredIndex = -1;
-                    }
-                    // 若为主题文件为空
-                    else if (themeSelectorHoveredIndex == -3 && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
-                        themeSelectorVisible = false;
-                        flag.set(true);
-                    } else {
-                        themeSelectorVisible = false;
-                    }
-                } else {
-                    themeSelectorVisible = false;
-                }
-            } else {
-                themeSelectorVisible = false;
+
             }
         }
         if (updateTextureAndCoordinate.get()) this.updateTextureAndCoordinate();
@@ -713,11 +642,22 @@ public class SignInScreen extends Screen {
                 updateTexture.set(true);
                 flag.set(true);
             } else {
-                themeSelectorVisible = true;
-                // 设置为-2, 表示首次显示, 用于此次事件的后续判断
-                themeSelectorHoveredIndex = -2;
-                themeSelectorX = (int) (mouseX - themeSelectorMaxWidth - 4);
-                themeSelectorY = (int) ((mouseY - THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) - (mouseY - value.getY() * this.scale) - 2);
+                // 绘制弹出层选项
+                popupOption.clear();
+                // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
+                if (CollectionUtils.isNullOrEmpty(themeFileList)) {
+                    TranslationTextComponent textComponent = new TranslationTextComponent("screen.sakura_sign_in.theme_selector.empty");
+                    popupOption.addOption(StringUtils.replaceLine(textComponent.getString()).split("\n"));
+                } else {
+                    popupOption.addOption(themeFileList.stream().map(file -> {
+                        String name = file.getName();
+                        name = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
+                        return name;
+                    }).toArray(String[]::new));
+                }
+                popupOption.setMaxWidth(font.width("cal_text_width"))
+                        .setMaxLines(5)
+                        .resize(super.font, mouseX, mouseY, String.format("主题选择按钮:%s", value.getOperation()));
             }
         }
     }
@@ -774,47 +714,24 @@ public class SignInScreen extends Screen {
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-        if (themeSelectorVisible) {
-            // 计算当前鼠标悬停的文件索引
-            themeSelectorHoveredIndex = -1;
-            int relativeY = (int) (mouseY - themeSelectorY);
-            if (themeSelectorX <= mouseX && mouseX <= themeSelectorX + themeSelectorMaxWidth) {
-                if (relativeY >= 0 && relativeY < THEME_SELECTOR_MAX_VISIBLE_ITEMS * (font.lineHeight + 2)) {
-                    int index = themeSelectorScrollOffset + relativeY / (font.lineHeight + 2);
-                    if (index < themeFileList.size()) {
-                        themeSelectorHoveredIndex = index;
-                    } else if (themeFileList.isEmpty()) {
-                        themeSelectorHoveredIndex = -3;
-                    }
-                }
-            }
-        }
         BUTTONS.forEach((key, value) -> value.setHovered(value.isMouseOverEx(mouseX, mouseY)));
         super.mouseMoved(mouseX, mouseY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        // 主题选择器
-        if (themeSelectorVisible) {
-            if (delta > 0) {
-                themeSelectorScrollOffset = Math.max(themeSelectorScrollOffset - 1, 0);
-            } else if (delta < 0) {
-                themeSelectorScrollOffset = Math.min(themeSelectorScrollOffset + 1, themeFileList.size() - THEME_SELECTOR_MAX_VISIBLE_ITEMS);
-            }
-        }
-
-        // 奖励悬浮层
-        for (SignInCell cell : signInCells) {
-            if (cell.isShowIcon() && cell.isShowHover() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
-                if (delta > 0) {
-                    cell.setTooltipScrollOffset(Math.max(cell.getTooltipScrollOffset() - 1, 0));
-                } else if (delta < 0) {
-                    cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - SignInCell.TOOLTIP_MAX_VISIBLE_ITEMS));
+        if (!popupOption.addScrollOffset(delta)) {
+            // 奖励悬浮层
+            for (SignInCell cell : signInCells) {
+                if (cell.isShowIcon() && cell.isShowHover() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
+                    if (delta > 0) {
+                        cell.setTooltipScrollOffset(Math.max(cell.getTooltipScrollOffset() - 1, 0));
+                    } else if (delta < 0) {
+                        cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - SignInCell.TOOLTIP_MAX_VISIBLE_ITEMS));
+                    }
                 }
             }
         }
-
         return true;
     }
 
