@@ -3,6 +3,7 @@ package xin.vanilla.mc.util;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
+import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -12,13 +13,17 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.text.*;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.CalendarTextureCoordinate;
+import xin.vanilla.mc.screen.Text;
 import xin.vanilla.mc.screen.TextureCoordinate;
 
 import java.util.Collection;
@@ -104,84 +109,63 @@ public class AbstractGuiUtils {
         AbstractGui.blit(matrixStack, x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
     }
 
-    public static IFormattableTextComponent setColor(IFormattableTextComponent textComponent, int color) {
+    public static IFormattableTextComponent setTextComponentColor(IFormattableTextComponent textComponent, int color) {
         return textComponent.withStyle(style -> style.withColor(Color.fromRgb(color)));
     }
 
-    public static int getColor(IFormattableTextComponent textComponent) {
-        return AbstractGuiUtils.getColor(textComponent, 0xFFFFFFFF);
+    public static int getTextComponentColor(IFormattableTextComponent textComponent) {
+        return AbstractGuiUtils.getTextComponentColor(textComponent, 0xFFFFFFFF);
     }
 
-    public static int getColor(IFormattableTextComponent textComponent, int defaultColor) {
+    public static int getTextComponentColor(IFormattableTextComponent textComponent, int defaultColor) {
         return textComponent.getStyle().getColor() == null ? defaultColor : textComponent.getStyle().getColor().getValue();
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color) {
-        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, true);
+    public static IFormattableTextComponent textToComponent(Text text) {
+        return new StringTextComponent(text.getContent()).setStyle(Style.EMPTY
+                .withColor(Color.fromRgb(text.getColor()))
+                .withBold(text.isBold())
+                .withItalic(text.isItalic())
+                .withUnderlined(text.isUnderlined())
+                .setStrikethrough(text.isStrikethrough())
+                .setObfuscated(text.isObfuscated())
+        );
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color, EDepth depth) {
-        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, true, depth);
+    public static Text componentToText(IFormattableTextComponent component) {
+        return Text.literal(component.getString())
+                .setColor(AbstractGuiUtils.getTextComponentColor(component))
+                .setBold(component.getStyle().isBold())
+                .setItalic(component.getStyle().isItalic())
+                .setUnderlined(component.getStyle().isUnderlined())
+                .setStrikethrough(component.getStyle().isStrikethrough())
+                .setObfuscated(component.getStyle().isObfuscated());
+    }
+
+    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y) {
+        AbstractGuiUtils.drawString(Text.literal(text).setMatrixStack(matrixStack).setFont(font), x, y);
+    }
+
+    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color) {
+        AbstractGuiUtils.drawString(Text.literal(text).setColor(color).setMatrixStack(matrixStack).setFont(font), x, y);
+    }
+
+    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, boolean shadow) {
+        AbstractGuiUtils.drawString(Text.literal(text).setShadow(shadow).setMatrixStack(matrixStack).setFont(font), x, y);
     }
 
     public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color, boolean shadow) {
-        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, shadow, EDepth.FOREGROUND);
+        AbstractGuiUtils.drawString(Text.literal(text).setColor(color).setShadow(shadow).setMatrixStack(matrixStack).setFont(font), x, y);
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color, boolean shadow, EDepth depth) {
-        AbstractGuiUtils.setDepth(matrixStack, depth);
-        if (shadow) {
-            font.drawShadow(matrixStack, text, x, y, color);
-        } else {
-            font.draw(matrixStack, text, x, y, color);
-        }
-        AbstractGuiUtils.resetDepth(matrixStack);
+    public static void drawString(Text text, float x, float y, EDepth depth) {
+        if (depth != null) AbstractGuiUtils.setDepth(text.getMatrixStack(), depth);
+        AbstractGuiUtils.drawString(text, x, y);
+        if (depth != null) AbstractGuiUtils.resetDepth(text.getMatrixStack());
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color) {
-        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, EDepth.FOREGROUND);
-    }
-
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, boolean shadow) {
-        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, shadow, EDepth.FOREGROUND);
-    }
-
-    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color) {
-        AbstractGuiUtils.drawStringWithoutDepth(matrixStack, font, text, x, y, color, true);
-    }
-
-    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, boolean shadow) {
-        if (shadow) {
-            font.drawShadow(matrixStack, text, (int) x, (int) y, color);
-        } else {
-            font.draw(matrixStack, text, (int) x, (int) y, color);
-        }
-    }
-
-    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color) {
-        AbstractGuiUtils.drawStringWithoutDepth(matrixStack, font, text, x, y, color, true);
-    }
-
-    public static void drawStringWithoutDepth(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color, boolean shadow) {
-        if (shadow) {
-            font.drawShadow(matrixStack, text, (int) x, (int) y, color);
-        } else {
-            font.draw(matrixStack, text, (int) x, (int) y, color);
-        }
-    }
-
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, EDepth depth) {
-        AbstractGuiUtils.drawString(matrixStack, font, text, x, y, color, true, depth);
-    }
-
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, ITextComponent text, float x, float y, int color, boolean shadow, EDepth depth) {
-        AbstractGuiUtils.setDepth(matrixStack, depth);
-        if (shadow) {
-            font.drawShadow(matrixStack, text, (int) x, (int) y, color);
-        } else {
-            font.draw(matrixStack, text, (int) x, (int) y, color);
-        }
-        AbstractGuiUtils.resetDepth(matrixStack);
+    public static void drawString(Text text, float x, float y) {
+        AbstractGuiUtils.drawLimitedText(text, x, y, 0, 0, null);
     }
 
     public enum EllipsisPosition {
@@ -193,24 +177,23 @@ public class AbstractGuiUtils {
     /**
      * 获取多行文本的高度，以\n为换行符
      *
-     * @param font          字体渲染器
-     * @param textComponent 要绘制的文本
+     * @param text 要绘制的文本
      */
-    public static int multilineTextHeight(FontRenderer font, TextComponent textComponent) {
-        return AbstractGuiUtils.multilineTextHeight(font, textComponent.getString());
+    public static int multilineTextHeight(Text text) {
+        return AbstractGuiUtils.multilineTextHeight(text.getFont(), text.getContent());
     }
 
     /**
      * 获取多行文本的高度，以\n为换行符
      *
-     * @param fontRenderer 字体渲染器
-     * @param text         要绘制的文本
+     * @param font 字体渲染器
+     * @param text 要绘制的文本
      */
-    public static int multilineTextHeight(FontRenderer fontRenderer, String text) {
-        return StringUtils.replaceLine(text).split("\n").length * fontRenderer.lineHeight;
+    public static int multilineTextHeight(FontRenderer font, String text) {
+        return StringUtils.replaceLine(text).split("\n").length * font.lineHeight;
     }
 
-    public static int getTextWidth(FontRenderer font, Collection<String> texts) {
+    public static int getStringWidth(FontRenderer font, Collection<String> texts) {
         int width = 0;
         for (String s : texts) {
             width = Math.max(width, font.width(s));
@@ -218,30 +201,29 @@ public class AbstractGuiUtils {
         return width;
     }
 
-    public static int getTextHeight(FontRenderer font, Collection<String> texts) {
+    public static int getStringHeight(FontRenderer font, Collection<String> texts) {
         return AbstractGuiUtils.multilineTextHeight(font, String.join("\n", texts));
     }
 
-    public static int getTextComponentWidth(FontRenderer font, Collection<? extends ITextComponent> texts) {
+    public static int getTextWidth(FontRenderer font, Collection<Text> texts) {
         int width = 0;
-        for (ITextComponent s : texts) {
-            width = Math.max(width, font.width(s));
+        for (Text s : texts) {
+            width = Math.max(width, font.width(s.getContent()));
         }
         return width;
     }
 
-    public static int getTextComponentHeight(FontRenderer font, Collection<? extends ITextComponent> texts) {
-        return AbstractGuiUtils.multilineTextHeight(font, texts.stream().map(ITextComponent::getString).collect(Collectors.joining("\n")));
+    public static int getTextHeight(FontRenderer font, Collection<Text> texts) {
+        return AbstractGuiUtils.multilineTextHeight(font, texts.stream().map(Text::getContent).collect(Collectors.joining("\n")));
     }
 
     /**
      * 获取多行文本的宽度，以\n为换行符
      *
-     * @param font          字体渲染器
-     * @param textComponent 要绘制的文本
+     * @param text 要绘制的文本
      */
-    public static int multilineTextWidth(FontRenderer font, TextComponent textComponent) {
-        return AbstractGuiUtils.multilineTextWidth(font, textComponent.getString());
+    public static int multilineTextWidth(Text text) {
+        return AbstractGuiUtils.multilineTextWidth(text.getFont(), text.getContent());
     }
 
     /**
@@ -263,20 +245,6 @@ public class AbstractGuiUtils {
     /**
      * 绘制多行文本，以\n为换行符
      *
-     * @param matrixStack   渲染矩阵
-     * @param font          字体渲染器
-     * @param textComponent 要绘制的文本
-     * @param x             绘制的X坐标
-     * @param y             绘制的Y坐标
-     * @param colors        文本颜色
-     */
-    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer font, TextComponent textComponent, float x, float y, int... colors) {
-        AbstractGuiUtils.drawMultilineText(matrixStack, font, textComponent.getString(), x, y, colors);
-    }
-
-    /**
-     * 绘制多行文本，以\n为换行符
-     *
      * @param matrixStack 渲染矩阵
      * @param font        字体渲染器
      * @param text        要绘制的文本
@@ -285,8 +253,20 @@ public class AbstractGuiUtils {
      * @param colors      文本颜色
      */
     public static void drawMultilineText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int... colors) {
-        if (StringUtils.isNotNullOrEmpty(text)) {
-            String[] lines = StringUtils.replaceLine(text).split("\n");
+        AbstractGuiUtils.drawMultilineText(Text.literal(text).setMatrixStack(matrixStack).setFont(font), x, y, colors);
+    }
+
+    /**
+     * 绘制多行文本，以\n为换行符
+     *
+     * @param text   要绘制的文本
+     * @param x      绘制的X坐标
+     * @param y      绘制的Y坐标
+     * @param colors 文本颜色
+     */
+    public static void drawMultilineText(@NonNull Text text, float x, float y, int... colors) {
+        if (StringUtils.isNotNullOrEmpty(text.getContent())) {
+            String[] lines = StringUtils.replaceLine(text.getContent()).split("\n");
             for (int i = 0; i < lines.length; i++) {
                 int color;
                 if (colors.length == lines.length) {
@@ -294,9 +274,9 @@ public class AbstractGuiUtils {
                 } else if (colors.length > 0) {
                     color = colors[i % colors.length];
                 } else {
-                    color = 0xFFFFFF;
+                    color = text.getColor();
                 }
-                font.draw(matrixStack, lines[i], x, y + i * font.lineHeight, color);
+                AbstractGuiUtils.drawString(text.copy().setText(lines[i]).setColor(color), x, y + i * text.getFont().lineHeight);
             }
         }
     }
@@ -312,8 +292,8 @@ public class AbstractGuiUtils {
      * @param maxWidth    文本显示的最大宽度
      * @param color       文本颜色
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int color, int maxWidth) {
-        AbstractGuiUtils.drawLimitedText(matrixStack, font, text, x, y, color, maxWidth, true);
+    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, int color) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(true), x, y, maxWidth, 0, EllipsisPosition.END);
     }
 
     /**
@@ -326,9 +306,10 @@ public class AbstractGuiUtils {
      * @param y           绘制的Y坐标
      * @param maxWidth    文本显示的最大宽度
      * @param color       文本颜色
+     * @param shadow      是否显示阴影
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int color, int maxWidth, boolean shadow) {
-        AbstractGuiUtils.drawLimitedText(matrixStack, font, text, x, y, color, maxWidth, shadow, EllipsisPosition.END);
+    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, int color, boolean shadow) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(shadow), x, y, maxWidth, 0, EllipsisPosition.END);
     }
 
     /**
@@ -340,11 +321,11 @@ public class AbstractGuiUtils {
      * @param x           绘制的X坐标
      * @param y           绘制的Y坐标
      * @param maxWidth    文本显示的最大宽度
-     * @param color       文本颜色
      * @param position    省略号位置（开头、中间、结尾）
+     * @param color       文本颜色
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int color, int maxWidth, EllipsisPosition position) {
-        AbstractGuiUtils.drawLimitedText(matrixStack, font, text, x, y, color, maxWidth, true, position);
+    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, EllipsisPosition position, int color) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(true), x, y, maxWidth, 0, position);
     }
 
     /**
@@ -356,51 +337,138 @@ public class AbstractGuiUtils {
      * @param x           绘制的X坐标
      * @param y           绘制的Y坐标
      * @param maxWidth    文本显示的最大宽度
-     * @param color       文本颜色
      * @param position    省略号位置（开头、中间、结尾）
+     * @param color       文本颜色
+     * @param shadow      是否显示阴影
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int color, int maxWidth, boolean shadow, EllipsisPosition position) {
-        String ellipsis = "...";
-        int ellipsisWidth = font.width(ellipsis);
+    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, EllipsisPosition position, int color, boolean shadow) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(shadow), x, y, maxWidth, 0, position);
+    }
 
-        if (font.width(text) > maxWidth) {
-            switch (position) {
-                case START:
-                    while (font.width(ellipsis + text) > maxWidth && text.length() > 1) {
-                        // 从头部截取字符
-                        text = text.substring(1);
-                    }
-                    text = ellipsis + text;
-                    break;
-                case MIDDLE:
-                    int halfWidth = (maxWidth - ellipsisWidth) / 2;
-                    String start = text;
-                    String end = text;
+    /**
+     * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
+     *
+     * @param text     要绘制的文本
+     * @param x        绘制的X坐标
+     * @param y        绘制的Y坐标
+     * @param maxWidth 文本显示的最大宽度
+     */
+    public static void drawLimitedText(Text text, float x, float y, int maxWidth) {
+        AbstractGuiUtils.drawLimitedText(text, x, y, maxWidth, 0, EllipsisPosition.END);
+    }
 
-                    while (font.width(start) > halfWidth && start.length() > 1) {
-                        // 截取前半部分
-                        start = start.substring(0, start.length() - 1);
+    /**
+     * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
+     *
+     * @param text     要绘制的文本
+     * @param x        绘制的X坐标
+     * @param y        绘制的Y坐标
+     * @param maxWidth 文本显示的最大宽度
+     * @param maxLine  文本显示的最大行数
+     */
+    public static void drawLimitedText(Text text, float x, float y, int maxWidth, int maxLine) {
+        AbstractGuiUtils.drawLimitedText(text, x, y, maxWidth, maxLine, EllipsisPosition.END);
+    }
+
+    /**
+     * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
+     *
+     * @param text     要绘制的文本
+     * @param x        绘制的X坐标
+     * @param y        绘制的Y坐标
+     * @param maxWidth 文本显示的最大宽度
+     * @param position 省略号位置（开头、中间、结尾）
+     */
+    public static void drawLimitedText(Text text, float x, float y, int maxWidth, EllipsisPosition position) {
+        AbstractGuiUtils.drawLimitedText(text, x, y, maxWidth, 0, position);
+    }
+
+    /**
+     * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
+     *
+     * @param text     要绘制的文本
+     * @param x        绘制的X坐标
+     * @param y        绘制的Y坐标
+     * @param maxWidth 文本显示的最大宽度
+     * @param maxLine  文本显示的最大行数
+     * @param position 省略号位置（开头、中间、结尾）
+     */
+    public static void drawLimitedText(Text text, float x, float y, int maxWidth, int maxLine, EllipsisPosition position) {
+        if (StringUtils.isNotNullOrEmpty(text.getContent())) {
+            String ellipsis = "...";
+            FontRenderer font = text.getFont();
+            int ellipsisWidth = font.width(ellipsis);
+            String[] lines = StringUtils.replaceLine(text.getContent()).split("\n");
+            int index = -1;
+            for (int i = 0; i < lines.length; i++) {
+                boolean skip = false;
+                String line = lines[i];
+                // 计算文本长度
+                if (position != null) {
+                    switch (position) {
+                        case START:
+                            // 15 , 8   < 7
+                            if (maxLine > 0 && lines.length >= maxLine && i < lines.length - maxLine) {
+                                // 如果不是第一行就跳过
+                                if (i == 0) line = ellipsis;
+                                else skip = true;
+                            } else if (maxWidth > 0 && font.width(line) > maxWidth) {
+                                while (font.width(line + ellipsis) > maxWidth && line.length() > 1) {
+                                    // 从头部截取字符
+                                    line = line.substring(1);
+                                }
+                                line = ellipsis + line;
+                            }
+                            break;
+                        case MIDDLE:
+                            // 15 , 9   < 4   > 10.5
+                            // 15 , 8   < 4   > 11
+                            if (maxLine > 0 && lines.length >= maxLine && i >= maxLine / 2 && i < lines.length - maxLine / 2.0) {
+                                // 如果不是中间行就跳过
+                                if (i == Math.ceil(maxLine / 2.0)) line = ellipsis;
+                                else skip = true;
+                            } else if (maxWidth > 0 && font.width(line) > maxWidth) {
+                                int halfWidth = (maxWidth - ellipsisWidth) / 2;
+                                String start = line;
+                                String end = line;
+
+                                while (font.width(start) > halfWidth && start.length() > 1) {
+                                    // 截取前半部分
+                                    start = start.substring(0, start.length() - 1);
+                                }
+                                while (font.width(end) > halfWidth && end.length() > 1) {
+                                    // 截取后半部分
+                                    end = end.substring(1);
+                                }
+                                line = start + ellipsis + end;
+                            }
+                            break;
+                        case END:
+                        default:
+                            // 15 , 8   > 8 - 1
+                            if (maxLine > 0 && lines.length >= maxLine && i > maxLine - 1) {
+                                // 如果不是最后一行就跳过
+                                if (i == maxLine - 1) line = ellipsis;
+                                else skip = true;
+                            } else if (maxWidth > 0 && font.width(line) > maxWidth) {
+                                while (font.width(line + ellipsis) > maxWidth && line.length() > 1) {
+                                    // 从尾部截取字符
+                                    line = line.substring(0, line.length() - 1);
+                                }
+                                line = line + ellipsis;
+                            }
+                            break;
                     }
-                    while (font.width(end) > halfWidth && end.length() > 1) {
-                        // 截取后半部分
-                        end = end.substring(1);
-                    }
-                    text = start + ellipsis + end;
-                    break;
-                case END:
-                default:
-                    while (font.width(text + ellipsis) > maxWidth && text.length() > 1) {
-                        // 从尾部截取字符
-                        text = text.substring(0, text.length() - 1);
-                    }
-                    text = text + ellipsis;
-                    break;
+                }
+                if (skip) continue;
+                else index++;
+                MatrixStack matrixStack = text.getMatrixStack();
+                if (text.isShadow()) {
+                    font.drawShadow(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), x, y + index * font.lineHeight, text.getColor());
+                } else {
+                    font.draw(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), x, y + index * font.lineHeight, text.getColor());
+                }
             }
-        }
-        if (shadow) {
-            font.drawShadow(matrixStack, text, x, y, color);
-        } else {
-            font.draw(matrixStack, text, x, y, color);
         }
     }
 
@@ -809,7 +877,7 @@ public class AbstractGuiUtils {
      * @param screenHeight 屏幕高度
      */
     public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight) {
-        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, 0xAA000000, 0xFFFFFFFF);
+        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, 0xFFFFFFFF, 0xAA000000);
     }
 
     /**
@@ -825,8 +893,8 @@ public class AbstractGuiUtils {
      * @param bgColor      背景颜色
      * @param textColor    文本颜色
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int bgColor, int textColor) {
-        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, 2, bgColor, textColor);
+    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int textColor, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, 2, textColor, bgColor);
     }
 
     /**
@@ -843,8 +911,8 @@ public class AbstractGuiUtils {
      * @param bgColor      背景颜色
      * @param textColor    文本颜色
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int bgColor, int textColor) {
-        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, margin, margin, bgColor, textColor);
+    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int textColor, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, margin, margin, textColor, bgColor);
     }
 
     /**
@@ -862,10 +930,56 @@ public class AbstractGuiUtils {
      * @param bgColor      背景颜色
      * @param textColor    文本颜色
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int padding, int bgColor, int textColor) {
+    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int padding, int textColor, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(Text.literal(message).setMatrixStack(matrixStack).setFont(font).setColor(textColor), x, y, screenWidth, screenHeight, margin, padding, bgColor);
+    }
+
+    /**
+     * 绘制弹出层消息
+     *
+     * @param text         消息内容
+     * @param x            鼠标坐标X
+     * @param y            鼠标坐标y
+     * @param screenWidth  屏幕宽度
+     * @param screenHeight 屏幕高度
+     */
+    public static void drawPopupMessage(Text text, int x, int y, int screenWidth, int screenHeight) {
+        AbstractGuiUtils.drawPopupMessage(text, x, y, screenWidth, screenHeight, 0xAA000000);
+    }
+
+    /**
+     * 绘制弹出层消息
+     *
+     * @param text         消息内容
+     * @param x            鼠标坐标X
+     * @param y            鼠标坐标y
+     * @param screenWidth  屏幕宽度
+     * @param screenHeight 屏幕高度
+     * @param bgColor      背景颜色
+     */
+    public static void drawPopupMessage(Text text, int x, int y, int screenWidth, int screenHeight, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(text, x, y, screenWidth, screenHeight, 2, bgColor);
+    }
+
+    /**
+     * 绘制弹出层消息
+     *
+     * @param text         消息内容
+     * @param x            鼠标坐标X
+     * @param y            鼠标坐标y
+     * @param screenWidth  屏幕宽度
+     * @param screenHeight 屏幕高度
+     * @param margin       弹出层的外边距(外层背景与屏幕边缘)
+     * @param bgColor      背景颜色
+     */
+    public static void drawPopupMessage(Text text, int x, int y, int screenWidth, int screenHeight, int margin, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(text, x, y, screenWidth, screenHeight, margin, margin, bgColor);
+    }
+
+    public static void drawPopupMessage(Text text, int x, int y, int screenWidth, int screenHeight, int margin, int padding, int bgColor) {
         // 计算消息宽度和高度
-        int msgWidth = AbstractGuiUtils.multilineTextWidth(font, message) + padding; // 添加一些边距
-        int msgHeight = AbstractGuiUtils.multilineTextHeight(font, message) + padding; // 添加一些边距
+        int msgWidth = AbstractGuiUtils.multilineTextWidth(text) + padding; // 添加一些边距
+        int msgHeight = AbstractGuiUtils.multilineTextHeight(text) + padding; // 添加一些边距
 
         // 初始化调整后的坐标
         int adjustedX = x - msgWidth / 2; // 横向居中
@@ -894,12 +1008,11 @@ public class AbstractGuiUtils {
         // 如果调整后仍然超出屏幕范围，强制限制在屏幕内
         adjustedX = Math.max(margin, Math.min(adjustedX, screenWidth - msgWidth - margin));
         adjustedY = Math.max(margin, Math.min(adjustedY, screenHeight - msgHeight - margin));
-
-        AbstractGuiUtils.setDepth(matrixStack, EDepth.POPUP_TIPS);
+        AbstractGuiUtils.setDepth(text.getMatrixStack(), EDepth.POPUP_TIPS);
         // 在计算完的坐标位置绘制消息框背景
-        AbstractGui.fill(matrixStack, adjustedX, adjustedY, adjustedX + msgWidth, adjustedY + msgHeight, bgColor);
+        AbstractGui.fill(text.getMatrixStack(), adjustedX, adjustedY, adjustedX + msgWidth, adjustedY + msgHeight, bgColor);
         // 绘制消息文字
-        AbstractGuiUtils.drawMultilineText(matrixStack, font, message, adjustedX + (float) padding / 2, adjustedY + (float) padding / 2, textColor);
-        AbstractGuiUtils.resetDepth(matrixStack);
+        AbstractGuiUtils.drawMultilineText(text, adjustedX + (float) padding / 2, adjustedY + (float) padding / 2);
+        AbstractGuiUtils.resetDepth(text.getMatrixStack());
     }
 }

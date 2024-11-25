@@ -4,10 +4,9 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.AbstractGuiUtils;
@@ -23,14 +22,14 @@ import java.util.Map;
  * 弹出层选项框
  */
 @OnlyIn(Dist.CLIENT)
+@Accessors(chain = true)
 public class PopupOption {
     private final int topPadding = 2;
     private final int bottomPadding = 2;
     private final int leftPadding = 5;
     private final int rightPadding = 5;
     private final int margin = 2;
-    private final List<IFormattableTextComponent> optionList = new ArrayList<>();
-    private final Map<Integer, IFormattableTextComponent> tipsMap = new HashMap<>();
+    private final List<Text> optionList = new ArrayList<>();
     @Setter
     private int radius = 2;
     /**
@@ -59,6 +58,15 @@ public class PopupOption {
      * 最大行数，如果超过最大行数，则滚动
      */
     private int maxLines;
+    /**
+     * 提示文字
+     */
+    private final Map<Integer, Text> tipsMap = new HashMap<>();
+    /**
+     * 提示文字是否仅按下按键时显示
+     */
+    @Setter
+    private int tipsKeyCode = -1, tipsModifiers = -1;
 
     private PopupOption(FontRenderer font) {
         this.font = font;
@@ -77,8 +85,8 @@ public class PopupOption {
         // 计算弹出层的宽度和高度
         if (this.maxWidth <= 0) this.maxWidth = this.screenWidth - this.margin * 2;
         if (this.maxHeight <= 0) this.maxHeight = this.screenHeight - this.margin * 2;
-        this.width = Math.min(AbstractGuiUtils.getTextComponentWidth(this.font, this.optionList) + this.leftPadding + this.rightPadding, this.maxWidth);
-        this.height = Math.min(AbstractGuiUtils.getTextComponentHeight(this.font, this.optionList) + this.optionList.size() - 1 + this.topPadding + this.bottomPadding, this.maxHeight);
+        this.width = Math.min(AbstractGuiUtils.getTextWidth(this.font, this.optionList) + this.leftPadding + this.rightPadding, this.maxWidth);
+        this.height = Math.min(AbstractGuiUtils.getTextHeight(this.font, this.optionList) + this.optionList.size() - 1 + this.topPadding + this.bottomPadding, this.maxHeight);
         // 计算弹出层的最大行数
         this.maxLines = ((this.height - this.topPadding - this.bottomPadding) + 1) / (this.font.lineHeight + 1);
         // 初始化调整后的坐标
@@ -116,7 +124,7 @@ public class PopupOption {
         return new PopupOption(font).setPosition(x, y).calculateSize();
     }
 
-    public PopupOption addOption(@NonNull IFormattableTextComponent text) {
+    public PopupOption addOption(@NonNull Text text) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         optionList.add(text);
@@ -127,12 +135,12 @@ public class PopupOption {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         for (String s : text) {
-            optionList.add(new StringTextComponent(s));
+            optionList.add(Text.literal(s));
         }
         return this;
     }
 
-    public PopupOption addTips(@NonNull IFormattableTextComponent text, int index) {
+    public PopupOption addTips(@NonNull Text text, int index) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
         tipsMap.put(index, text);
@@ -142,11 +150,11 @@ public class PopupOption {
     public PopupOption addTips(@NonNull String text, int index) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
-        tipsMap.put(index, new StringTextComponent(text));
+        tipsMap.put(index, Text.literal(text));
         return this;
     }
 
-    public PopupOption addTips(@NonNull IFormattableTextComponent text) {
+    public PopupOption addTips(@NonNull Text text) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addTips method must be called after the clear/init method and before the resize method.");
         int index = tipsMap.keySet().stream().max(Integer::compareTo).orElse(-1);
@@ -161,7 +169,7 @@ public class PopupOption {
         int index = tipsMap.keySet().stream().max(Integer::compareTo).orElse(-1);
         index++;
         for (int i = 0; i < text.length; i++) {
-            tipsMap.put(index + i, new StringTextComponent(text[i]));
+            tipsMap.put(index + i, Text.literal(text[i]));
         }
         return this;
     }
@@ -219,6 +227,8 @@ public class PopupOption {
         this.selectedIndex = -1;
         this.scrollOffset = 0;
         this.maxLines = 0;
+        this.tipsKeyCode = -1;
+        this.tipsModifiers = -1;
     }
 
     public boolean isHovered() {
@@ -234,7 +244,7 @@ public class PopupOption {
         return !CollectionUtils.isNullOrEmpty(optionList)
                 && this.getSelectedIndex() >= 0
                 && this.getSelectedIndex() < this.optionList.size()
-                ? this.optionList.get(selectedIndex).getString() : "";
+                ? this.optionList.get(selectedIndex).getContent() : "";
     }
 
     /**
@@ -269,6 +279,10 @@ public class PopupOption {
     }
 
     public void render(MatrixStack matrixStack, double mouseX, double mouseY) {
+        this.render(matrixStack, mouseX, mouseY, -1, -1);
+    }
+
+    public void render(MatrixStack matrixStack, double mouseX, double mouseY, int keyCode, int modifiers) {
         if (CollectionUtils.isNullOrEmpty(optionList)) return;
         if (Minecraft.getInstance().screen == null) return;
 
@@ -292,28 +306,28 @@ public class PopupOption {
         for (int i = 0; i < this.maxLines; i++) {
             int index = i + scrollOffset;
             if (index >= 0 && index < optionList.size()) {
-                IFormattableTextComponent text = optionList.get(index);
+                Text text = optionList.get(index);
                 if (selectedIndex == index) {
                     AbstractGuiUtils.fill(matrixStack, (int) adjustedX + 1, (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), width - 2, this.font.lineHeight, 0x88ACACAC);
                 }
-                int color = AbstractGuiUtils.getColor(text, 0xFFFFFFFF);
                 if (maxWidth > 0) {
-                    AbstractGuiUtils.drawLimitedText(matrixStack, this.font, text.getString(), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, maxWidth, false, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(text.setMatrixStack(matrixStack).setFont(this.font), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), maxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 } else {
-                    AbstractGuiUtils.drawStringWithoutDepth(matrixStack, this.font, text, (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), color, false);
+                    AbstractGuiUtils.drawString(text.setMatrixStack(matrixStack).setFont(this.font), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))));
                 }
             }
         }
         AbstractGuiUtils.resetDepth(matrixStack);
         // 绘制提示
-        if (this.getSelectedIndex() >= 0 && !tipsMap.isEmpty()) {
-            IFormattableTextComponent text = tipsMap.getOrDefault(this.getSelectedIndex(), new StringTextComponent(""));
-            if (StringUtils.isNullOrEmpty(text.getString())) {
-                text = tipsMap.getOrDefault(this.getSelectedIndex() - optionList.size(), new StringTextComponent(""));
-            }
-            if (StringUtils.isNotNullOrEmpty(text.getString())) {
-                int color = AbstractGuiUtils.getColor(text, 0xFFFFFFFF);
-                AbstractGuiUtils.drawPopupMessage(matrixStack, this.font, text.getString(), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight, 0xAA000000, color);
+        if (this.tipsKeyCode == -1 || (this.tipsKeyCode == keyCode && this.tipsModifiers == modifiers)) {
+            if (this.getSelectedIndex() >= 0 && !tipsMap.isEmpty()) {
+                Text text = tipsMap.getOrDefault(this.getSelectedIndex(), Text.literal(""));
+                if (StringUtils.isNullOrEmpty(text.getContent())) {
+                    text = tipsMap.getOrDefault(this.getSelectedIndex() - optionList.size(), Text.literal(""));
+                }
+                if (StringUtils.isNotNullOrEmpty(text.getContent())) {
+                    AbstractGuiUtils.drawPopupMessage(text.setMatrixStack(matrixStack).setFont(this.font), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight);
+                }
             }
         }
     }

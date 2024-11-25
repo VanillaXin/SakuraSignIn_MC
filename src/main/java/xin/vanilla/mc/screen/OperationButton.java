@@ -104,6 +104,10 @@ public class OperationButton {
      * 鼠标提示
      */
     private String tooltip;
+    /**
+     * 提示文字是否仅按下按键时显示
+     */
+    private int keyCode = -1, modifiers = -1;
 
     public OperationButton(int operation, Function<RenderContext, Void> customRenderFunction) {
         this.operation = operation;
@@ -340,7 +344,7 @@ public class OperationButton {
      * 绘制按钮
      */
     public void render(MatrixStack matrixStack, double mouseX, double mouseY) {
-        this.render(matrixStack, mouseX, mouseY, false);
+        this.render(matrixStack, mouseX, mouseY, false, -1, -1);
     }
 
     /**
@@ -348,7 +352,7 @@ public class OperationButton {
      *
      * @param renderPopup 是否绘制弹出层提示
      */
-    public void render(MatrixStack matrixStack, double mouseX, double mouseY, boolean renderPopup) {
+    public void render(MatrixStack matrixStack, double mouseX, double mouseY, boolean renderPopup, int keyCode, int modifiers) {
         if (customRenderFunction != null) {
             // 使用自定义渲染逻辑
             customRenderFunction.apply(new RenderContext(matrixStack, mouseX, mouseY, this));
@@ -363,7 +367,7 @@ public class OperationButton {
             }
         }
         if (renderPopup) {
-            this.renderPopup(matrixStack, mouseX, mouseY);
+            this.renderPopup(matrixStack, mouseX, mouseY, keyCode, modifiers);
         }
     }
 
@@ -371,9 +375,19 @@ public class OperationButton {
      * 绘制弹出层
      */
     public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY) {
-        if (this.isHovered() && StringUtils.isNotNullOrEmpty(tooltip)) {
-            if (Minecraft.getInstance().screen != null) {
-                AbstractGuiUtils.drawPopupMessage(matrixStack, Minecraft.getInstance().font, tooltip, (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+        this.renderPopup(matrixStack, mouseX, mouseY, -1, -1);
+    }
+
+    /**
+     * 绘制弹出层
+     */
+    public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY, int keyCode, int modifiers) {
+        // 绘制提示
+        if (this.keyCode == -1 || (this.keyCode == keyCode && this.modifiers == modifiers)) {
+            if (this.isHovered() && StringUtils.isNotNullOrEmpty(tooltip)) {
+                if (Minecraft.getInstance().screen != null) {
+                    AbstractGuiUtils.drawPopupMessage(matrixStack, Minecraft.getInstance().font, tooltip, (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+                }
             }
         }
     }

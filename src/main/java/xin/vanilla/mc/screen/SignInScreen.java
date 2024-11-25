@@ -41,10 +41,19 @@ import static xin.vanilla.mc.screen.SignInScreen.OperationButtonType.*;
 
 @OnlyIn(Dist.CLIENT)
 public class SignInScreen extends Screen {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     // region 变量定义
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    /**
+     * 当前按下的按键
+     */
+    private int keyCode = -1;
+    /**
+     * 按键的组合键 Shift 1, Ctrl 2, Alt 4
+     */
+    private int modifiers = -1;
+
     /**
      * 上月最后offset天
      */
@@ -466,7 +475,7 @@ public class SignInScreen extends Screen {
         }
         // 渲染操作按钮的弹出提示
         for (Integer op : BUTTONS.keySet()) {
-            BUTTONS.get(op).renderPopup(matrixStack, mouseX, mouseY);
+            BUTTONS.get(op).renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);
         }
 
         // 渲染所有格子
@@ -752,6 +761,8 @@ public class SignInScreen extends Screen {
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        this.keyCode = keyCode;
+        this.modifiers = modifiers;
         // 当按键等于SIGN_IN_SCREEN_KEY键的值或Inventory键时，调用onClose方法，并返回true，表示该按键事件已被消耗
         if (keyCode == ClientEventHandler.SIGN_IN_SCREEN_KEY.getKey().getValue() || keyCode == Minecraft.getInstance().options.keyInventory.getKey().getValue()) {
             this.onClose();
@@ -764,6 +775,8 @@ public class SignInScreen extends Screen {
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        this.keyCode = -1;
+        this.modifiers = -1;
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
             SakuraSignIn.setCalendarCurrentDate(DateUtils.addMonth(SakuraSignIn.getCalendarCurrentDate(), -1));
             updateLayout();
