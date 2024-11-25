@@ -90,25 +90,20 @@ public class PopupOption {
         // 计算弹出层的最大行数
         this.maxLines = ((this.height - this.topPadding - this.bottomPadding) + 1) / (this.font.lineHeight + 1);
         // 初始化调整后的坐标
-        this.adjustedX = this.x + 2;
-        this.adjustedY = this.y + 2;
-        // 检查顶部空间是否充足
-        boolean hasTopSpace = this.adjustedY >= this.margin;
-        // 检查左右空间是否充足
-        boolean hasLeftSpace = this.adjustedX >= this.margin;
-        boolean hasRightSpace = this.adjustedX + this.width <= this.screenWidth - this.margin;
-        if (!hasTopSpace) {
+        this.adjustedX = this.x + this.margin;
+        this.adjustedY = this.y + this.margin;
+        // 检查底部空间是否充足
+        boolean hasBottomSpace = this.adjustedY + this.height + this.margin <= this.screenHeight;
+        // 检查右侧空间是否充足
+        boolean hasRightSpace = this.adjustedX + this.width + this.margin <= this.screenWidth;
+        // 如果底部空间不足
+        if (!hasBottomSpace) {
             // 如果顶部空间不足，调整到鼠标下方
-            this.adjustedY = this.y + 1 + 5;
-        } else {
-            // 如果顶部空间充足
-            if (!hasLeftSpace) {
-                // 如果左侧空间不足，靠右
-                this.adjustedX = this.margin;
-            } else if (!hasRightSpace) {
-                // 如果右侧空间不足，靠左
-                this.adjustedX = this.screenWidth - this.width - this.margin;
-            }
+            this.adjustedY = this.y - this.height - this.margin + 1;
+        }
+        // 如果右侧空间不足
+        if (!hasRightSpace) {
+            this.adjustedX = this.x - this.width - this.margin + 1;
         }
         // 如果调整后仍然超出屏幕范围，强制限制在屏幕内
         this.adjustedX = Math.max(this.margin, Math.min(this.adjustedX, this.screenWidth - this.width - this.margin));
