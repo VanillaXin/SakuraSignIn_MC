@@ -1,7 +1,7 @@
 package xin.vanilla.mc;
 
 import org.junit.Test;
-import xin.vanilla.mc.screen.CalendarTextureCoordinate;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.PNGUtils;
 import xin.vanilla.mc.util.StringUtils;
@@ -82,8 +82,11 @@ public class MyTest {
         sourceFile = new File("F:\\Design\\PS\\樱花签\\sign_in_calendar_" + fileName + "_source.png");
         targetFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/sign_in_calendar_" + fileName + ".png");
         File tempFile = new File("src/main/resources/assets/sakura_sign_in/textures/gui/checkin_background_temp.png");
-        CalendarTextureCoordinate aDefault = CalendarTextureCoordinate.getDefault();
+        TextureCoordinate aDefault = TextureCoordinate.getDefault();
         switch (fileName) {
+            case "original":
+                aDefault.setTotalHeight(880);
+                break;
             case "sakura":
                 aDefault.getCellCoordinate().setX(70).setY(128).setWidth(34).setHeight(34);
                 aDefault.setCellHMargin(20);
@@ -95,6 +98,7 @@ public class MyTest {
                 aDefault.setTextColorDate(0xFF000000);
                 break;
             case "clover":
+                aDefault.setTotalHeight(880);
                 aDefault.getCellCoordinate().setX(80);
                 aDefault.setTextColorDefault(0xFFEFCE8B);
                 aDefault.setTextColorCurrent(0xFF426812);
@@ -103,6 +107,7 @@ public class MyTest {
                 aDefault.setTextColorDate(0xFF000000);
                 break;
             case "maple":
+                aDefault.setTotalHeight(880);
                 aDefault.setTextColorDefault(0xFFFFAA85);
                 aDefault.setTextColorCurrent(0xFFCE4906);
                 aDefault.setTextColorCanRepair(0xFFFFFCD2);
@@ -116,17 +121,17 @@ public class MyTest {
         PNGUtils.writePrivateChunk(sourceFile, tempFile, "vacb", aDefault, true);
         PNGUtils.writeZTxtByKey(tempFile, targetFile, "Software", "Minecraft SakuraSignIn");
         tempFile.deleteOnExit();
-        CalendarTextureCoordinate backgroundConf = PNGUtils.readLastPrivateChunk(targetFile, "vacb");
+        TextureCoordinate backgroundConf = PNGUtils.readLastPrivateChunk(targetFile, "vacb");
         System.out.println(backgroundConf);
     }
 
     @Test
     public void pngTest() throws IOException, ClassNotFoundException {
         // testWriteZTxt("original");
-        // testWriteChunk("original");
+        testWriteChunk("original");
         testWriteChunk("sakura");
-        // testWriteChunk("clover");
-        // testWriteChunk("maple");
+        testWriteChunk("clover");
+        testWriteChunk("maple");
         // testWriteChunk("chaos");
     }
 }

@@ -1,4 +1,4 @@
-package xin.vanilla.mc.screen;
+package xin.vanilla.mc.screen.coordinate;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Data
 @Accessors(chain = true)
-public class TextureCoordinate implements Serializable {
+public class Coordinate implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public double x;

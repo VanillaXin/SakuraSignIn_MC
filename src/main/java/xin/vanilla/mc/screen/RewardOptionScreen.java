@@ -24,6 +24,12 @@ import xin.vanilla.mc.config.RewardOptionDataManager;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
+import xin.vanilla.mc.screen.component.MouseCursor;
+import xin.vanilla.mc.screen.component.OperationButton;
+import xin.vanilla.mc.screen.component.PopupOption;
+import xin.vanilla.mc.screen.component.Text;
+import xin.vanilla.mc.screen.coordinate.Coordinate;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.PNGUtils;
 import xin.vanilla.mc.util.StringUtils;
@@ -37,9 +43,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
+import static xin.vanilla.mc.util.I18nUtils.getByZh;
 
 @OnlyIn(Dist.CLIENT)
 public class RewardOptionScreen extends Screen {
@@ -61,7 +68,7 @@ public class RewardOptionScreen extends Screen {
     /**
      * 背景材质坐标
      */
-    public CalendarTextureCoordinate textureCoordinate;
+    public TextureCoordinate textureCoordinate;
     /**
      * 左侧边栏标题高度
      */
@@ -173,7 +180,7 @@ public class RewardOptionScreen extends Screen {
         }
         if (textureCoordinate == null) {
             // 使用默认配置
-            textureCoordinate = CalendarTextureCoordinate.getDefault();
+            textureCoordinate = TextureCoordinate.getDefault();
         }
     }
 
@@ -281,7 +288,6 @@ public class RewardOptionScreen extends Screen {
                 AbstractGuiUtils.drawLimitedText(this.ms, super.font, title, (int) context.button.getRealX(), (int) (context.button.getRealY() + (context.button.getRealHeight() - super.font.lineHeight) / 2), (int) context.button.getRealWidth(), 0xAC000000, false);
                 AbstractGui.fill(this.ms, (int) context.button.getRealX(), (int) (context.button.getRealY() + context.button.getRealHeight()), (int) (context.button.getRealX() + super.font.width(title)), (int) (context.button.getRealY() + context.button.getRealHeight() - 1), 0xAC000000);
             }
-            return null;
         })
                 .setX(leftMargin)
                 .setY(topMargin + (itemIconSize + itemBottomMargin) * Math.floor((double) index / lineItemCount))
@@ -304,7 +310,6 @@ public class RewardOptionScreen extends Screen {
                     Reward reward = rewardMap.get(key).get(context.button.getOperation());
                     AbstractGuiUtils.renderCustomReward(this.ms, this.itemRenderer, super.font, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) context.button.getRealX(), (int) context.button.getRealY(), true);
                 }
-                return null;
             })
                     .setX(leftMargin + (j % lineItemCount) * (itemIconSize + itemRightMargin))
                     .setY(topMargin + (itemIconSize + itemBottomMargin) * Math.floor((double) index.get() / lineItemCount))
@@ -326,7 +331,7 @@ public class RewardOptionScreen extends Screen {
         rewardListIndex.set(0);
         switch (OperationButtonType.valueOf(currOpButton)) {
             case BASE_REWARD: {
-                this.addRewardTitleButton("基础奖励", "base", titleIndex, rewardListIndex.get());
+                this.addRewardTitleButton(getByZh("基础奖励"), "base", titleIndex, rewardListIndex.get());
                 rewardListIndex.addAndGet(lineItemCount);
                 this.addRewardButton(new HashMap<String, RewardList>() {{
                     put("base", rewardOptionData.getBaseRewards());
@@ -338,7 +343,7 @@ public class RewardOptionScreen extends Screen {
                     if (rewardListIndex.get() > 0) {
                         rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
                     }
-                    this.addRewardTitleButton(String.format("第%s天", key), key, titleIndex, rewardListIndex.get());
+                    this.addRewardTitleButton(getByZh("第%s天", key), key, titleIndex, rewardListIndex.get());
                     rewardListIndex.addAndGet(lineItemCount);
                     this.addRewardButton(rewardOptionData.getContinuousRewards(), key, rewardListIndex);
                     titleIndex--;
@@ -350,7 +355,7 @@ public class RewardOptionScreen extends Screen {
                     if (rewardListIndex.get() > 0) {
                         rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
                     }
-                    this.addRewardTitleButton(String.format("第%s天", key), key, titleIndex, rewardListIndex.get());
+                    this.addRewardTitleButton(getByZh("第%s天", key), key, titleIndex, rewardListIndex.get());
                     rewardListIndex.addAndGet(lineItemCount);
                     this.addRewardButton(rewardOptionData.getCycleRewards(), key, rewardListIndex);
                     titleIndex--;
@@ -362,7 +367,7 @@ public class RewardOptionScreen extends Screen {
                     if (rewardListIndex.get() > 0) {
                         rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
                     }
-                    this.addRewardTitleButton(String.format("年度第%s天", key), key, titleIndex, rewardListIndex.get());
+                    this.addRewardTitleButton(getByZh("年度第%s天", key), key, titleIndex, rewardListIndex.get());
                     rewardListIndex.addAndGet(lineItemCount);
                     this.addRewardButton(rewardOptionData.getYearRewards(), key, rewardListIndex);
                     titleIndex--;
@@ -374,7 +379,7 @@ public class RewardOptionScreen extends Screen {
                     if (rewardListIndex.get() > 0) {
                         rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
                     }
-                    this.addRewardTitleButton(String.format("月度第%s天", key), key, titleIndex, rewardListIndex.get());
+                    this.addRewardTitleButton(getByZh("月度第%s天", key), key, titleIndex, rewardListIndex.get());
                     rewardListIndex.addAndGet(lineItemCount);
                     this.addRewardButton(rewardOptionData.getMonthRewards(), key, rewardListIndex);
                     titleIndex--;
@@ -386,7 +391,7 @@ public class RewardOptionScreen extends Screen {
                     if (rewardListIndex.get() > 0) {
                         rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
                     }
-                    this.addRewardTitleButton(String.format("周%s", key), key, titleIndex, rewardListIndex.get());
+                    this.addRewardTitleButton(getByZh(String.format("周%s", key)), key, titleIndex, rewardListIndex.get());
                     rewardListIndex.addAndGet(lineItemCount);
                     this.addRewardButton(rewardOptionData.getWeekRewards(), key, rewardListIndex);
                     titleIndex--;
@@ -463,8 +468,8 @@ public class RewardOptionScreen extends Screen {
             } else {
                 // 绘制弹出层选项
                 this.popupOption.clear();
-                this.popupOption.addOption(Text.literal("清空").setColor(0xFFFF0000))
-                        .addTips("是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认")
+                this.popupOption.addOption(Text.i18n("清空").setColor(0xFFFF0000))
+                        .addTips(Text.i18n("是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认"))
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励规则类型按钮:%s", value.getOperation()));
@@ -504,24 +509,28 @@ public class RewardOptionScreen extends Screen {
         if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             if (key.startsWith("标题")) {
                 this.popupOption.clear();
-                this.popupOption.addOption(Text.literal("修改"))
-                        .addOption(Text.literal("复制"));
+                if (!"标题,base".equalsIgnoreCase(key)) {
+                    this.popupOption.addOption(Text.i18n("修改"))
+                            .addOption(Text.i18n("复制"));
+                }
                 for (ERewardType rewardType : ERewardType.values()) {
                     this.popupOption.addOption(Text.translatable(String.format("reward.sakura_sign_in.reward_type_%s", rewardType.getCode())));
                 }
-                this.popupOption.addOption(Text.literal("清空").setColor(0xFFFF0000))
-                        .addOption(Text.literal("删除").setColor(0xFFFF0000))
-                        .addTips("左键取消\n右键确认", -1)
-                        .addTips("左键取消\n右键确认", -2)
+                this.popupOption.addOption(Text.i18n("清空").setColor(0xFFFF0000));
+                if (!"标题,base".equalsIgnoreCase(key)) {
+                    this.popupOption.addOption(Text.i18n("删除").setColor(0xFFFF0000));
+                }
+                this.popupOption.addTips(Text.i18n("左键取消\n右键确认"), -1)
+                        .addTips(Text.i18n("左键取消\n右键确认"), -2)
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励按钮:%s", key));
             } else {
                 this.popupOption.clear();
-                this.popupOption.addOption(Text.literal("修改"))
-                        .addOption(Text.literal("复制"))
-                        .addOption(Text.literal("删除").setColor(0xFFFF0000))
-                        .addTips("左键取消\n右键确认", -1)
+                this.popupOption.addOption(Text.i18n("修改"))
+                        .addOption(Text.i18n("复制"))
+                        .addOption(Text.i18n("删除").setColor(0xFFFF0000))
+                        .addTips(Text.i18n("左键取消\n右键确认"), -1)
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励按钮:%s", key));
@@ -582,6 +591,25 @@ public class RewardOptionScreen extends Screen {
                     // TODO 发包同步至服务器, 做成右侧边栏按钮
                 }
             }
+        } else if (popupOption.getId().startsWith("奖励面板按钮:")) {
+            String key = popupOption.getId().replace("奖励按钮:", "");
+
+        } else if (popupOption.getId().startsWith("奖励按钮:")) {
+            String key = popupOption.getId().replace("奖励按钮:", "");
+            if (key.startsWith("标题")) {
+                key = key.substring(3);
+                if (getByZh("修改").equalsIgnoreCase(popupOption.getSelectedString())) {
+                    Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.literal("请输入规则名称").setShadow(true), Text.literal("请输入"), ".*", (input) -> {
+
+                    }));
+                } else if (getByZh("复制").equalsIgnoreCase(popupOption.getSelectedString())) {
+
+                } else if (getByZh("清空").equalsIgnoreCase(popupOption.getSelectedString())) {
+
+                } else if (getByZh("删除").equalsIgnoreCase(popupOption.getSelectedString())) {
+
+                }
+            }
         }
     }
 
@@ -590,7 +618,7 @@ public class RewardOptionScreen extends Screen {
      *
      * @param content 按钮内容
      */
-    private Function<OperationButton.RenderContext, Void> generateCustomRenderFunction(String content) {
+    private Consumer<OperationButton.RenderContext> generateCustomRenderFunction(String content) {
         return context -> {
             int realX = (int) context.button.getRealX();
             int realY = (int) context.button.getRealY();
@@ -604,8 +632,7 @@ public class RewardOptionScreen extends Screen {
             if (context.button.isHovered()) {
                 AbstractGui.fill(context.matrixStack, realX, realY, realX2, realY2, 0x99ACACAC);
             }
-            AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, content, realX + 4, (int) (realY + (realHeight - super.font.lineHeight) / 2), (int) (realWidth - 22), 0xFFEBD4B1);
-            return null;
+            AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, getByZh(content), realX + 4, (int) (realY + (realHeight - super.font.lineHeight) / 2), (int) (realWidth - 22), 0xFFEBD4B1);
         };
     }
 
@@ -636,23 +663,24 @@ public class RewardOptionScreen extends Screen {
         this.leftBarTitleHeight = 5 * 2 + super.font.lineHeight;
         // 初始化材质及材质坐标信息
         this.updateTextureAndCoordinate();
-        OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> null)
+        OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> {
+        })
                 .setTransparentCheck(false));
         OP_BUTTONS.put(OperationButtonType.OPEN.getCode(), new OperationButton(OperationButtonType.OPEN.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(new TextureCoordinate().setX(4).setY((super.height - 16) / 2.0).setWidth(16).setHeight(16))
+                .setCoordinate(new Coordinate().setX(4).setY((super.height - 16) / 2.0).setWidth(16).setHeight(16))
                 .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
                 .setTextureWidth(textureCoordinate.getTotalWidth())
                 .setTextureHeight(textureCoordinate.getTotalHeight())
                 .setTransparentCheck(false)
-                .setTooltip("展开侧边栏"));
+                .setTooltip(getByZh("展开侧边栏")));
         OP_BUTTONS.put(OperationButtonType.CLOSE.getCode(), new OperationButton(OperationButtonType.CLOSE.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(new TextureCoordinate().setX(80).setY((5 * 2 + super.font.lineHeight - 16) / 2.0).setWidth(16).setHeight(16))
+                .setCoordinate(new Coordinate().setX(80).setY((5 * 2 + super.font.lineHeight - 16) / 2.0).setWidth(16).setHeight(16))
                 .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
                 .setTextureWidth(textureCoordinate.getTotalWidth())
                 .setTextureHeight(textureCoordinate.getTotalHeight())
                 .setFlipHorizontal(true)
                 .setTransparentCheck(false)
-                .setTooltip("收起侧边栏"));
+                .setTooltip(getByZh("收起侧边栏")));
         OP_BUTTONS.put(OperationButtonType.BASE_REWARD.getCode()
                 , new OperationButton(OperationButtonType.BASE_REWARD.getCode(), this.generateCustomRenderFunction("签到基础奖励"))
                         .setX(0).setY(this.leftBarTitleHeight).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
@@ -677,7 +705,6 @@ public class RewardOptionScreen extends Screen {
         OP_BUTTONS.put(OperationButtonType.OFFSET_Y.getCode(), new OperationButton(OperationButtonType.OFFSET_Y.getCode(), context -> {
             AbstractGuiUtils.drawString(context.matrixStack, super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
             AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, String.valueOf((int) yOffset), super.width - rightBarWidth + 1, super.height - font.lineHeight - 2, rightBarWidth, 0xFFACACAC);
-            return null;
         })
                 .setX(super.width - rightBarWidth).setY(super.height - font.lineHeight * 2 - 2).setWidth(rightBarWidth).setHeight(font.lineHeight * 2 + 2)
                 .setTransparentCheck(false));
@@ -701,7 +728,7 @@ public class RewardOptionScreen extends Screen {
         AbstractGuiUtils.fillOutLine(matrixStack, 0, 0, leftBarWidth, super.height, 1, 0xFF000000);
         // 绘制左侧边栏列表标题
         if (SakuraSignIn.isRewardOptionBarOpened()) {
-            AbstractGui.drawString(matrixStack, super.font, "奖励规则类型", 4, 5, 0xFFACACAC);
+            AbstractGui.drawString(matrixStack, super.font, getByZh("奖励规则类型"), 4, 5, 0xFFACACAC);
             AbstractGui.fill(matrixStack, 0, leftBarTitleHeight, leftBarWidth, leftBarTitleHeight - 1, 0xAA000000);
         }
         // 绘制右侧边栏列表背景
@@ -749,7 +776,7 @@ public class RewardOptionScreen extends Screen {
             // 绘制其他按钮
             else {
                 if (op == OperationButtonType.OFFSET_Y.getCode()) {
-                    button.setTooltip(String.format("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
+                    button.setTooltip(getByZh("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
                 }
                 button.renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);
             }

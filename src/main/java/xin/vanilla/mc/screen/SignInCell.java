@@ -15,6 +15,8 @@ import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.enums.ESignInStatus;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
+import xin.vanilla.mc.screen.coordinate.Coordinate;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.DateUtils;
 
@@ -24,7 +26,7 @@ import java.util.Date;
 @Accessors(chain = true)
 public class SignInCell {
     private final ResourceLocation BACKGROUND_TEXTURE;
-    private final CalendarTextureCoordinate textureCoordinate;
+    private final TextureCoordinate textureCoordinate;
 
     /**
      * 当前滚动偏移量
@@ -52,7 +54,7 @@ public class SignInCell {
     private int previousMouseX;
     private int previousMouseY;
 
-    public SignInCell(ResourceLocation resourceLocation, CalendarTextureCoordinate textureCoordinate, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
+    public SignInCell(ResourceLocation resourceLocation, TextureCoordinate textureCoordinate, double x, double y, double width, double height, double scale, @NonNull RewardList rewardList, int year, int month, int day, int status) {
         BACKGROUND_TEXTURE = resourceLocation;
         this.textureCoordinate = textureCoordinate;
         this.x = x;
@@ -81,10 +83,10 @@ public class SignInCell {
             Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
             if (status == ESignInStatus.REWARDED.getCode()) {
                 // 绘制已领取图标
-                TextureCoordinate signedInUV = textureCoordinate.getRewardedUV();
+                Coordinate signedInUV = textureCoordinate.getRewardedUV();
                 AbstractGuiUtils.blit(matrixStack, (int) x, (int) y, (int) width, (int) height, (float) signedInUV.getU0(), (float) signedInUV.getV0(), (int) signedInUV.getUWidth(), (int) signedInUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
             } else {
-                TextureCoordinate rewardUV;
+                Coordinate rewardUV;
                 // 绘制奖励图标
                 if (status == ESignInStatus.SIGNED_IN.getCode() || ClientConfig.AUTO_REWARDED.get()) {
                     rewardUV = textureCoordinate.getSignedInUV();
@@ -149,8 +151,8 @@ public class SignInCell {
         // 提升Z坐标以确保弹出层在最上层
         matrixStack.translate(0, 0, 200.0F);
 
-        TextureCoordinate tooltipUV = textureCoordinate.getTooltipUV();
-        TextureCoordinate cellCoordinate = textureCoordinate.getTooltipCellCoordinate();
+        Coordinate tooltipUV = textureCoordinate.getTooltipUV();
+        Coordinate cellCoordinate = textureCoordinate.getTooltipCellCoordinate();
         // 物品图标之间的间距
         double margin = textureCoordinate.getTooltipCellHMargin();
         // 弹出层宽高
@@ -171,7 +173,7 @@ public class SignInCell {
         RenderSystem.disableBlend();
 
         // 绘制滚动条
-        TextureCoordinate scrollCoordinate = textureCoordinate.getTooltipScrollCoordinate();
+        Coordinate scrollCoordinate = textureCoordinate.getTooltipScrollCoordinate();
         double outScrollX0 = tooltipX0 + scrollCoordinate.getX() * tooltipScale;
         double outScrollX1 = outScrollX0 + scrollCoordinate.getWidth() * tooltipScale;
         double outScrollY0 = tooltipY0 + scrollCoordinate.getY() * tooltipScale;
@@ -209,7 +211,7 @@ public class SignInCell {
         // 绘制文字
         StringTextComponent title = new StringTextComponent(month + "月" + day + "日");
         double fontWidth = fontRenderer.width(title);
-        TextureCoordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
+        Coordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
         double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;
         double tooltipDateY = tooltipY0 + (dateCoordinate.getY() * tooltipScale);
         fontRenderer.draw(matrixStack, title, (int) tooltipDateX, (int) tooltipDateY, 0xFFFFFF);

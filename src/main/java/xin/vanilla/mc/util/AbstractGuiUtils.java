@@ -22,9 +22,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
-import xin.vanilla.mc.screen.CalendarTextureCoordinate;
-import xin.vanilla.mc.screen.Text;
-import xin.vanilla.mc.screen.TextureCoordinate;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
+import xin.vanilla.mc.screen.component.Text;
+import xin.vanilla.mc.screen.coordinate.Coordinate;
 
 import java.util.Collection;
 import java.util.Random;
@@ -484,11 +484,11 @@ public class AbstractGuiUtils {
      * @param height         目标矩形的高度，决定了图像在屏幕上的高度
      * @param showText       是否显示效果等级和持续时间
      */
-    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer font, EffectInstance effectInstance, ResourceLocation textureLocation, CalendarTextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
+    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer font, EffectInstance effectInstance, ResourceLocation textureLocation, TextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
         ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
         if (effectIcon == null) {
             Minecraft.getInstance().getTextureManager().bind(textureLocation);
-            TextureCoordinate buffUV = textureCoordinate.getBuffUV();
+            Coordinate buffUV = textureCoordinate.getBuffUV();
             AbstractGuiUtils.blit(matrixStack, x, y, width, height, (float) buffUV.getU0(), (float) buffUV.getV0(), (int) buffUV.getUWidth(), (int) buffUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         } else {
             Minecraft.getInstance().getTextureManager().bind(effectIcon);
@@ -528,7 +528,7 @@ public class AbstractGuiUtils {
      * @param totalHeight     纹理总高度
      * @param showText        是否显示物品数量等信息
      */
-    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer font, Reward reward, ResourceLocation textureLocation, TextureCoordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
+    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer font, Reward reward, ResourceLocation textureLocation, Coordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
         Minecraft.getInstance().getTextureManager().bind(textureLocation);
         AbstractGuiUtils.blit(matrixStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
@@ -551,7 +551,7 @@ public class AbstractGuiUtils {
      * @param y            图标的y坐标
      * @param showText     是否显示物品数量等信息
      */
-    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, CalendarTextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
+    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, TextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             itemRenderer.renderGuiItem(itemStack, x, y);
@@ -599,7 +599,7 @@ public class AbstractGuiUtils {
      * @param flipHorizontal    水平翻转
      * @param flipVertical      垂直翻转
      */
-    public static void renderRotatedTexture(MatrixStack matrixStack, ResourceLocation texture, CalendarTextureCoordinate textureCoordinate, TextureCoordinate coordinate, double baseX, double baseY, double scale, double angle, boolean flipHorizontal, boolean flipVertical) {
+    public static void renderRotatedTexture(MatrixStack matrixStack, ResourceLocation texture, TextureCoordinate textureCoordinate, Coordinate coordinate, double baseX, double baseY, double scale, double angle, boolean flipHorizontal, boolean flipVertical) {
         double x = baseX + coordinate.getX() * scale;
         double y = baseY + coordinate.getY() * scale;
         int width = (int) (coordinate.getWidth() * scale);
@@ -647,7 +647,7 @@ public class AbstractGuiUtils {
      * @param affectLight        是否受光照影响
      * @param tremblingAmplitude 颤抖幅度
      */
-    public static void renderTremblingTexture(MatrixStack matrixStack, ResourceLocation texture, CalendarTextureCoordinate textureCoordinate, TextureCoordinate coordinate, double baseX, double baseY, double scale, boolean affectLight, double tremblingAmplitude) {
+    public static void renderTremblingTexture(MatrixStack matrixStack, ResourceLocation texture, TextureCoordinate textureCoordinate, Coordinate coordinate, double baseX, double baseY, double scale, boolean affectLight, double tremblingAmplitude) {
         double x = baseX + coordinate.getX() * scale;
         double y = baseY + coordinate.getY() * scale;
         int width = (int) (coordinate.getWidth() * scale);

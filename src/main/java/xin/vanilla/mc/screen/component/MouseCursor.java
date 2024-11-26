@@ -1,4 +1,4 @@
-package xin.vanilla.mc.screen;
+package xin.vanilla.mc.screen.component;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;

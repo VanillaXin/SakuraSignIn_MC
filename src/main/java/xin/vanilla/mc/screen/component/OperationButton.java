@@ -1,4 +1,4 @@
-package xin.vanilla.mc.screen;
+package xin.vanilla.mc.screen.component;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Data;
@@ -8,11 +8,13 @@ import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import xin.vanilla.mc.screen.coordinate.Coordinate;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.StringUtils;
 import xin.vanilla.mc.util.TextureUtils;
 
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 /**
  * 页面操作按钮
@@ -41,7 +43,7 @@ public class OperationButton {
     /**
      * 自定义渲染函数
      */
-    private Function<RenderContext, Void> customRenderFunction;
+    private Consumer<RenderContext> customRenderFunction;
 
     /**
      * 按钮材质资源
@@ -109,7 +111,7 @@ public class OperationButton {
      */
     private int keyCode = -1, modifiers = -1;
 
-    public OperationButton(int operation, Function<RenderContext, Void> customRenderFunction) {
+    public OperationButton(int operation, Consumer<RenderContext> customRenderFunction) {
         this.operation = operation;
         this.customRenderFunction = customRenderFunction;
     }
@@ -129,7 +131,7 @@ public class OperationButton {
      *
      * @param coordinate 渲染坐标
      */
-    public OperationButton setCoordinate(TextureCoordinate coordinate) {
+    public OperationButton setCoordinate(Coordinate coordinate) {
         this.x = coordinate.getX();
         this.y = coordinate.getY();
         this.width = coordinate.getWidth();
@@ -142,7 +144,7 @@ public class OperationButton {
      *
      * @param normal 默认材质UV
      */
-    public OperationButton setNormal(TextureCoordinate normal) {
+    public OperationButton setNormal(Coordinate normal) {
         this.normalU = normal.getU0();
         this.normalV = normal.getV0();
         this.normalWidth = normal.getUWidth();
@@ -155,7 +157,7 @@ public class OperationButton {
      *
      * @param hover 悬浮材质UV
      */
-    public OperationButton setHover(TextureCoordinate hover) {
+    public OperationButton setHover(Coordinate hover) {
         this.hoverU = hover.getU0();
         this.hoverV = hover.getV0();
         this.hoverWidth = hover.getUWidth();
@@ -168,7 +170,7 @@ public class OperationButton {
      *
      * @param tap 点击材质UV
      */
-    public OperationButton setTap(TextureCoordinate tap) {
+    public OperationButton setTap(Coordinate tap) {
         this.tapU = tap.getU0();
         this.tapV = tap.getV0();
         this.tapWidth = tap.getUWidth();
@@ -355,10 +357,10 @@ public class OperationButton {
     public void render(MatrixStack matrixStack, double mouseX, double mouseY, boolean renderPopup, int keyCode, int modifiers) {
         if (customRenderFunction != null) {
             // 使用自定义渲染逻辑
-            customRenderFunction.apply(new RenderContext(matrixStack, mouseX, mouseY, this));
+            customRenderFunction.accept(new RenderContext(matrixStack, mouseX, mouseY, this));
         } else {
-            CalendarTextureCoordinate textureCoordinate = new CalendarTextureCoordinate().setTotalWidth(this.textureWidth).setTotalHeight(this.textureHeight);
-            TextureCoordinate coordinate = new TextureCoordinate().setX(this.x).setY(this.y).setWidth(this.width).setHeight(this.height)
+            TextureCoordinate textureCoordinate = new TextureCoordinate().setTotalWidth(this.textureWidth).setTotalHeight(this.textureHeight);
+            Coordinate coordinate = new Coordinate().setX(this.x).setY(this.y).setWidth(this.width).setHeight(this.height)
                     .setU0(getU()).setV0(getV()).setUWidth(getUWidth()).setVHeight(getVHeight());
             if (this.isHovered() && this.getTremblingAmplitude() > 0) {
                 AbstractGuiUtils.renderTremblingTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());

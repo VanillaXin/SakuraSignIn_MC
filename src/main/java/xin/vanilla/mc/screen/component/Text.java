@@ -1,4 +1,4 @@
-package xin.vanilla.mc.screen;
+package xin.vanilla.mc.screen.component;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Setter;
@@ -8,6 +8,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import xin.vanilla.mc.util.I18nUtils;
 
 @Setter
 @Accessors(chain = true)
@@ -111,7 +112,11 @@ public class Text {
     }
 
     public static Text translatable(String key) {
-        return new Text(I18n.get(key));
+        return new Text(I18nUtils.get(key));
+    }
+
+    public static Text i18n(String key) {
+        return new Text(I18nUtils.getByZh(key));
     }
 
     public Text copy() {

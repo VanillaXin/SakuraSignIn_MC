@@ -27,6 +27,9 @@ import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
+import xin.vanilla.mc.screen.component.OperationButton;
+import xin.vanilla.mc.screen.component.PopupOption;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -74,7 +77,7 @@ public class SignInScreen extends Screen {
     /**
      * 背景材质坐标
      */
-    public CalendarTextureCoordinate textureCoordinate;
+    public TextureCoordinate textureCoordinate;
     /**
      * 是否使用内置主题特殊图标
      */
@@ -179,7 +182,7 @@ public class SignInScreen extends Screen {
         }
         if (textureCoordinate == null) {
             // 使用默认配置
-            textureCoordinate = CalendarTextureCoordinate.getDefault();
+            textureCoordinate = TextureCoordinate.getDefault();
         }
         // 设置内置主题特殊图标UV的偏移量
         if (specialVersion) {

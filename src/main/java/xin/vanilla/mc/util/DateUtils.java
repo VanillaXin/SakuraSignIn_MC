@@ -26,7 +26,13 @@ public class DateUtils {
     public static final String POINT_DATE_FORMAT = "yyyy.MM.dd";
     public static final String CHINESE_DATE_FORMAT = "yyyy年MM月dd日";
 
+    private static final String[] WEEK_NAMES = new String[]{"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
+
     public DateUtils() {
+    }
+
+    public static String getWeekName(int week) {
+        return WEEK_NAMES[week - 1];
     }
 
     private static Locale getLocalFromLanguageTag(String languageTag) {
