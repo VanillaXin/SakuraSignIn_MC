@@ -51,5 +51,5 @@
   "tips.sakura_sign_in.close_sidebar": "Close sidebar",
   "tips.sakura_sign_in.y_offset": "Offset of Y:\n%.1f\nClick to reset",
   "tips.sakura_sign_in.cancel_or_confirm": "Left-click to cancel\nRight-click to confirm",
-  "tips.sakura_sign_in.clear_all_config": "Clear all config under the current rule\n      Left-click to cancel\n      Right-click to confirm"
+  "tips.sakura_sign_in.clear_all_config": "Clear all config under the current rule\n            Left-click to cancel\n           Right-click to confirm"
 }
