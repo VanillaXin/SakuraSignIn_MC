@@ -30,6 +30,11 @@ public class I18nUtils {
         put("复制", "option.sakura_sign_in.copy");
         put("删除", "option.sakura_sign_in.delete");
         put("清空", "option.sakura_sign_in.clear");
+        put("取消", "option.sakura_sign_in.cancel");
+        put("提交", "option.sakura_sign_in.submit");
+        put("请输入", "tips.sakura_sign_in.enter_something");
+        put("请输入规则名称", "tips.sakura_sign_in.enter_reward_rule_key");
+        put("规则名称[%s]输入有误", "tips.sakura_sign_in.reward_rule_s_error");
         put("展开侧边栏", "tips.sakura_sign_in.open_sidebar");
         put("收起侧边栏", "tips.sakura_sign_in.close_sidebar");
         put("Y轴偏移:\n%.1f\n点击重置", "tips.sakura_sign_in.y_offset");

@@ -12,6 +12,7 @@ import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.impl.*;
+import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.StringUtils;
 
@@ -23,6 +24,10 @@ import java.util.stream.Collectors;
 
 @Data
 public class RewardOptionData implements Serializable {
+    public static final String DATE_RANGE_REGEX1 = "(\\d{4}|0000)[-/](\\d{2}|00)[-/](\\d{2}|00)(?:[T ](\\d{2}):(\\d{2}):(\\d{2}))?";
+    public static final String DATE_RANGE_REGEX2 = "(\\d{4})(?:~(\\d+))?[-/](\\d{2})(?:~(\\d+))?[-/](\\d{2})(?:~(\\d+))?";
+    public static final String REWARD_RULE_KEY_REGEX = "(?:(?:" + DATE_RANGE_REGEX1 + ")|(?:" + DATE_RANGE_REGEX2 + ")|(?:" + "-?\\d{4}" + "))";
+
     /**
      * 每次签到基础奖励
      */
@@ -142,22 +147,27 @@ public class RewardOptionData implements Serializable {
      * 设置连续签到奖励
      */
     public void setContinuousRewards(@NonNull Map<String, RewardList> continuousRewards) {
-        this.continuousRewards = new LinkedHashMap<>();
         // 只有键为有效正整数字符串时才会被添加到映射中，以确保数据的合法性
         continuousRewards.forEach((key, value) -> {
             if (StringUtils.isNotNullOrEmpty(key)) {
-                try {
-                    int keyInt = Integer.parseInt(key);
-                    if (keyInt > 0) {
-                        this.continuousRewards.put(String.valueOf(keyInt), value);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+                this.addContinuousRewards(key, value);
             }
         });
+    }
+
+    /**
+     * 添加连续签到奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addContinuousRewards(@NonNull String key, @NonNull RewardList value) {
+        if (continuousRewards == null) this.continuousRewards = new LinkedHashMap<>();
+        int keyInt = StringUtils.toInt(key);
+        if (keyInt > 0) {
+            this.continuousRewards.put(String.valueOf(keyInt), value);
+        }
         // 处理映射关系
-        this.continuousRewardsRelation = new LinkedHashMap<>();
         if (!continuousRewards.isEmpty()) {
+            this.continuousRewardsRelation = new LinkedHashMap<>();
             List<Integer> keyList = continuousRewards.keySet().stream().map(Integer::parseInt).sorted().collect(Collectors.toList());
             int max = keyList.stream().max(Comparator.naturalOrder()).orElse(0);
             int cur = keyList.get(0);
@@ -172,22 +182,27 @@ public class RewardOptionData implements Serializable {
      * 设置周期签到奖励
      */
     public void setCycleRewards(@NonNull Map<String, RewardList> cycleRewards) {
-        this.cycleRewards = new LinkedHashMap<>();
         // 只有键为有效正整数字符串时才会被添加到映射中，以确保数据的合法性
         cycleRewards.forEach((key, value) -> {
             if (StringUtils.isNotNullOrEmpty(key)) {
-                try {
-                    int keyInt = Integer.parseInt(key);
-                    if (keyInt > 0) {
-                        this.cycleRewards.put(String.valueOf(keyInt), value);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+                this.addCycleRewards(key, value);
             }
         });
+    }
+
+    /**
+     * 添加周期签到奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addCycleRewards(@NonNull String key, @NonNull RewardList value) {
+        if (cycleRewards == null) cycleRewards = new LinkedHashMap<>();
+        int keyInt = StringUtils.toInt(key);
+        if (keyInt > 0) {
+            this.cycleRewards.put(String.valueOf(keyInt), value);
+        }
         // 处理映射关系
-        this.cycleRewardsRelation = new LinkedHashMap<>();
         if (!cycleRewards.isEmpty()) {
+            this.cycleRewardsRelation = new LinkedHashMap<>();
             List<Integer> keyList = cycleRewards.keySet().stream().map(Integer::parseInt).sorted().collect(Collectors.toList());
             int max = keyList.stream().max(Comparator.naturalOrder()).orElse(0);
             int cur = keyList.get(0);
@@ -202,57 +217,72 @@ public class RewardOptionData implements Serializable {
      * 设置年度签到奖励
      */
     public void setYearRewards(@NonNull Map<String, RewardList> yearRewards) {
-        this.yearRewards = new LinkedHashMap<>();
         // 只有键为有效整数字符串时才会被添加到映射中，以确保数据的合法性
         yearRewards.forEach((key, value) -> {
             if (StringUtils.isNotNullOrEmpty(key)) {
-                try {
-                    int keyInt = Integer.parseInt(key);
-                    if (keyInt > -366 && keyInt <= 366 && keyInt != 0) {
-                        this.yearRewards.put(String.valueOf(keyInt), value);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+                this.addYearRewards(key, value);
             }
         });
+    }
+
+    /**
+     * 添加年度签到奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addYearRewards(@NonNull String key, @NonNull RewardList value) {
+        if (yearRewards == null) this.yearRewards = new LinkedHashMap<>();
+        int keyInt = StringUtils.toInt(key);
+        if (keyInt > -366 && keyInt <= 366 && keyInt != 0) {
+            this.yearRewards.put(String.valueOf(keyInt), value);
+        }
     }
 
     /**
      * 设置月度签到奖励
      */
     public void setMonthRewards(@NonNull Map<String, RewardList> monthRewards) {
-        this.monthRewards = new LinkedHashMap<>();
         // 只有键为有效整数字符串时才会被添加到映射中，以确保数据的合法性
         monthRewards.forEach((key, value) -> {
             if (StringUtils.isNotNullOrEmpty(key)) {
-                try {
-                    int keyInt = Integer.parseInt(key);
-                    if (keyInt > -31 && keyInt <= 31 && keyInt != 0) {
-                        this.monthRewards.put(String.valueOf(keyInt), value);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+                this.addMonthRewards(key, value);
             }
         });
+    }
+
+    /**
+     * 添加月度签到奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addMonthRewards(@NonNull String key, @NonNull RewardList value) {
+        if (monthRewards == null) this.monthRewards = new LinkedHashMap<>();
+        int keyInt = StringUtils.toInt(key);
+        if (keyInt > -31 && keyInt <= 31 && keyInt != 0) {
+            this.monthRewards.put(String.valueOf(keyInt), value);
+        }
     }
 
     /**
      * 设置周度签到奖励
      */
     public void setWeekRewards(@NonNull Map<String, RewardList> weekRewards) {
-        this.weekRewards = new LinkedHashMap<>();
         // 只有键为有效正整数字符串时才会被添加到映射中，以确保数据的合法性
         weekRewards.forEach((key, value) -> {
             if (StringUtils.isNotNullOrEmpty(key)) {
-                try {
-                    int keyInt = Integer.parseInt(key);
-                    if (keyInt > 0 && keyInt <= 7) {
-                        this.weekRewards.put(String.valueOf(keyInt), value);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+                this.addWeekRewards(key, value);
             }
         });
+    }
+
+    /**
+     * 添加周度签到奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addWeekRewards(@NonNull String key, @NonNull RewardList value) {
+        if (weekRewards == null) this.weekRewards = new LinkedHashMap<>();
+        int keyInt = StringUtils.toInt(key);
+        if (keyInt > 0 && keyInt <= 7) {
+            this.weekRewards.put(String.valueOf(keyInt), value);
+        }
     }
 
     /**
@@ -262,19 +292,28 @@ public class RewardOptionData implements Serializable {
      * 这有助于在给定特定日期时，能够快速确定该日期所属的日期范围及其对应的奖励
      */
     public void setDateTimeRewards(@NonNull Map<String, RewardList> dateTimeRewards) {
-        this.dateTimeRewards = dateTimeRewards;
-        this.dateTimeRewardsRelation = new LinkedHashMap<>();
         dateTimeRewards.forEach((key, rewardList) -> {
-            // 解析日期范围并生成具体日期
-            List<String> parsedDates = this.parseDateRange(key);
-            if (parsedDates.isEmpty()) {
-                dateTimeRewards.remove(key);
-            } else {
-                for (String date : parsedDates) {
-                    this.dateTimeRewardsRelation.put(date, key);
-                }
+            if (!CollectionUtils.isNullOrEmpty(rewardList)) {
+                // 解析日期范围并生成具体日期
+                this.addDateTimeRewards(key, rewardList);
             }
         });
+    }
+
+    /**
+     * 添加日期时间奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addDateTimeRewards(@NonNull String key, @NonNull RewardList value) {
+        if (dateTimeRewards == null) this.dateTimeRewards = new LinkedHashMap<>();
+        List<String> parsedDates = RewardOptionData.parseDateRange(key);
+        if (!parsedDates.isEmpty()) {
+            this.dateTimeRewardsRelation = new LinkedHashMap<>();
+            this.dateTimeRewards.put(key, value);
+            for (String date : parsedDates) {
+                this.dateTimeRewardsRelation.put(date, key);
+            }
+        }
     }
 
     public static RewardOptionData getDefault() {
@@ -383,13 +422,11 @@ public class RewardOptionData implements Serializable {
     /**
      * 解析日期范围
      */
-    private List<String> parseDateRange(String dateRange) {
+    public static List<String> parseDateRange(String dateRange) {
         List<String> result = new ArrayList<>();
 
         // 处理具体日期 yyyy-MM-dd 和 yyyy-MM-ddTHH:mm:ss
-        Pattern fixedDatePattern = Pattern.compile(
-                "(\\d{4}|0000)-(\\d{2}|00)-(\\d{2}|00)(?:T(\\d{2}):(\\d{2}):(\\d{2}))?"
-        );
+        Pattern fixedDatePattern = Pattern.compile(DATE_RANGE_REGEX1);
         Matcher matcher = fixedDatePattern.matcher(dateRange);
 
         if (matcher.matches()) {
@@ -416,9 +453,7 @@ public class RewardOptionData implements Serializable {
             return result;
         } else {
             // 处理 yyyy-MM-dd~n 或 yyyy-MM~n-dd~n 这种格式
-            Pattern rangePattern = Pattern.compile(
-                    "(\\d{4})(?:~(\\d+))?-(\\d{2})(?:~(\\d+))?-(\\d{2})(?:~(\\d+))?"
-            );
+            Pattern rangePattern = Pattern.compile(DATE_RANGE_REGEX2);
             matcher = rangePattern.matcher(dateRange);
 
             if (matcher.matches()) {

@@ -21,6 +21,7 @@ import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
+import xin.vanilla.mc.enums.ERewaedRule;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
@@ -595,21 +596,85 @@ public class RewardOptionScreen extends Screen {
             String key = popupOption.getId().replace("奖励按钮:", "");
 
         } else if (popupOption.getId().startsWith("奖励按钮:")) {
-            String key = popupOption.getId().replace("奖励按钮:", "");
-            if (key.startsWith("标题")) {
-                key = key.substring(3);
+            String id = popupOption.getId().replace("奖励按钮:", "");
+            if (id.startsWith("标题")) {
+                String key = id.substring(3);
                 if (getByZh("修改").equalsIgnoreCase(popupOption.getSelectedString())) {
-                    Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.literal("请输入规则名称").setShadow(true), Text.literal("请输入"), ".*", (input) -> {
-
-                    }));
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                        Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入规则名称").setShadow(true), Text.i18n("请输入"), "[\\d +~/:T-]*", key, input -> {
+                            String result = "";
+                            if (StringUtils.isNotNullOrEmpty(input)) {
+                                ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+                                if (RewardOptionDataManager.validateKeyName(rule, input)) {
+                                    RewardOptionDataManager.updateKeyName(rule, key, input);
+                                    RewardOptionDataManager.saveSignInData();
+                                } else {
+                                    result = getByZh("规则名称[%s]输入有误", input);
+                                }
+                            }
+                            return result;
+                        }));
+                    }
                 } else if (getByZh("复制").equalsIgnoreCase(popupOption.getSelectedString())) {
-
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                        Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入规则名称").setShadow(true), Text.i18n("请输入"), "[\\d +~/:T-]*", key, input -> {
+                            String result = "";
+                            if (StringUtils.isNotNullOrEmpty(input)) {
+                                ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+                                if (RewardOptionDataManager.validateKeyName(rule, input)) {
+                                    RewardList rewardList = RewardOptionDataManager.getKeyName(rule, key).clone();
+                                    RewardOptionDataManager.addKeyName(rule, input, rewardList);
+                                    RewardOptionDataManager.saveSignInData();
+                                } else {
+                                    result = getByZh("规则名称[%s]输入有误", input);
+                                }
+                            }
+                            return result;
+                        }));
+                    }
                 } else if (getByZh("清空").equalsIgnoreCase(popupOption.getSelectedString())) {
-
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+                        RewardOptionDataManager.clearKey(rule, key);
+                        RewardOptionDataManager.saveSignInData();
+                    }
                 } else if (getByZh("删除").equalsIgnoreCase(popupOption.getSelectedString())) {
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+                        RewardOptionDataManager.deleteKey(rule, key);
+                        RewardOptionDataManager.saveSignInData();
+                    }
+                }
+            } else {
+                String[] split = id.split(",");
+                if (split.length != 2) {
+                    LOGGER.error("Invalid popup option id: {}", id);
+                    return;
+                }
+                String key = split[0];
+                String index = split[1];
+                if (getByZh("修改").equalsIgnoreCase(popupOption.getSelectedString())) {
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
 
+                    }
+                } else if (getByZh("复制").equalsIgnoreCase(popupOption.getSelectedString())) {
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+                        Reward reward = RewardOptionDataManager.getReward(rule, key, Integer.parseInt(index)).clone();
+                        RewardOptionDataManager.addReward(rule, key, reward);
+                        RewardOptionDataManager.saveSignInData();
+                    }
+                } else if (getByZh("删除").equalsIgnoreCase(popupOption.getSelectedString())) {
+                    if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+                        RewardOptionDataManager.deleteReward(rule, key, Integer.parseInt(index));
+                        RewardOptionDataManager.saveSignInData();
+                    }
                 }
             }
+            updateLayout.set(true);
+            flag.set(true);
         }
     }
 
@@ -708,6 +773,10 @@ public class RewardOptionScreen extends Screen {
         })
                 .setX(super.width - rightBarWidth).setY(super.height - font.lineHeight * 2 - 2).setWidth(rightBarWidth).setHeight(font.lineHeight * 2 + 2)
                 .setTransparentCheck(false));
+        // TODO 添加帮助按钮
+        // TODO 添加排序按钮
+        // TODO 添加同步至服务器按钮
+        // TODO 添加打开配置文件夹按钮
         this.updateLayout();
     }
 
