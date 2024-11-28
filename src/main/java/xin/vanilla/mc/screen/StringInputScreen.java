@@ -16,6 +16,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * 字符串输入 Screen
+ */
 public class StringInputScreen extends Screen {
 
     /**
@@ -115,7 +118,7 @@ public class StringInputScreen extends Screen {
         this.inputField.setValue(defaultValue);
         this.addButton(this.inputField);
         // 创建提交按钮
-        this.submitButton = new Button(this.width / 2 - 100, this.height / 2 + 20, 200, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.submitButton = new Button(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
             String value = this.inputField.getValue();
             if (StringUtils.isNullOrEmpty(value)) {
                 // 关闭当前屏幕并返回到调用者的 Screen
@@ -138,6 +141,11 @@ public class StringInputScreen extends Screen {
             }
         });
         this.addButton(this.submitButton);
+        // 创建取消按钮
+        this.addButton(new Button(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+            // 关闭当前屏幕并返回到调用者的 Screen
+            Minecraft.getInstance().setScreen(previousScreen);
+        }));
     }
 
     @Override
@@ -147,10 +155,10 @@ public class StringInputScreen extends Screen {
         // 绘制背景
         super.render(matrixStack, mouseX, mouseY, delta);
         // 绘制标题
-        AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 30);
+        AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 33);
         // 绘制错误提示
         if (this.errorText != null) {
-            AbstractGuiUtils.drawString(errorText, this.width / 2.0f - 100, this.height / 2.0f + 2);
+            AbstractGuiUtils.drawLimitedText(errorText, this.width / 2.0f - 100, this.height / 2.0f + 2, 200, AbstractGuiUtils.EllipsisPosition.MIDDLE);
         }
         if (StringUtils.isNotNullOrEmpty(this.inputField.getValue())) {
             this.submitButton.setMessage(new StringTextComponent(I18nUtils.getByZh("提交")));
@@ -164,7 +172,7 @@ public class StringInputScreen extends Screen {
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_MOUSE_BUTTON_5 || (keyCode == GLFW.GLFW_KEY_BACKSPACE && !this.inputField.isFocused())) {
             Minecraft.getInstance().setScreen(previousScreen);
             return true;
         } else {
