@@ -8,6 +8,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -48,18 +49,18 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     public JsonObject serialize(ItemStack reward) {
         JsonObject json = new JsonObject();
         try {
-            json.addProperty("item", reward.getItem().getRegistryName().toString());
+            json.addProperty("item", getId(reward.getItem()));
             json.addProperty("count", reward.getCount());
 
             // 如果物品有NBT数据，则序列化
             if (reward.hasTag()) {
                 if (reward.getTag() != null) {
-                    json.addProperty("nbt", reward.getTag().toString());
+                    json.addProperty("nbt", getNbtString(reward));
                 }
             }
         } catch (Exception e) {
             LOGGER.error("Failed to serialize item reward", e);
-            json.addProperty("item", Items.AIR.getRegistryName().toString());
+            json.addProperty("item", getId(Items.AIR));
             json.addProperty("count", 0);
         }
         return json;
@@ -68,5 +69,63 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     @Override
     public String getName(JsonObject json) {
         return this.deserialize(json).getDisplayName().getString().replaceAll("\\[(.*)]", "$1");
+    }
+
+    public static String getName(ItemStack itemStack) {
+        return itemStack.getDisplayName().getString().replaceAll("\\[(.*)]", "$1");
+    }
+
+    public static String getName(Item item) {
+        return new ItemStack(item).getDisplayName().getString().replaceAll("\\[(.*)]", "$1");
+    }
+
+    public static String getNbtString(ItemStack itemStack) {
+        JsonObject jsonObject = new JsonObject();
+        try {
+            if (itemStack.hasTag()) {
+                if (itemStack.getTag() != null) {
+                    for (String key : itemStack.getTag().getAllKeys()) {
+                        INBT inbt = itemStack.getTag().get(key);
+                        if (inbt != null) {
+                            jsonObject.addProperty(key, inbt.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to get nbt string", e);
+        }
+        return jsonObject.toString();
+    }
+
+    public static String getId(Item item) {
+        ResourceLocation resource = item.getRegistryName();
+        if (resource == null) return "minecraft:air";
+        else return resource.toString();
+    }
+
+    public static String getId(ItemStack itemStack) {
+        return getId(itemStack.getItem()) + getNbtString(itemStack);
+    }
+
+    public static Item getItem(String id) {
+        return ForgeRegistries.ITEMS.getValue(new ResourceLocation(id.substring(0, id.indexOf("{"))));
+    }
+
+    public static ItemStack getItemStack(String id) {
+        Item item = getItem(id);
+        if (item == null) {
+            throw new JsonParseException("Unknown item ID: " + id);
+        }
+        ItemStack itemStack = new ItemStack(item);
+        if (id.contains("{")) {
+            try {
+                CompoundNBT nbt = JsonToNBT.parseTag(id.substring(id.indexOf("{")));
+                itemStack.setTag(nbt);
+            } catch (Exception e) {
+                LOGGER.error("Failed to parse NBT data", e);
+            }
+        }
+        return itemStack;
     }
 }

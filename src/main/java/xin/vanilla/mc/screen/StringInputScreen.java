@@ -110,7 +110,7 @@ public class StringInputScreen extends Screen {
     @Override
     protected void init() {
         // 创建文本输入框
-        this.inputField = new TextFieldWidget(this.font, this.width / 2 - 100, this.height / 2 - 20, 200, 20
+        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, this.width / 2 - 100, this.height / 2 - 20, 200, 20
                 , AbstractGuiUtils.textToComponent(this.messageText));
         if (StringUtils.isNotNullOrEmpty(validator)) {
             this.inputField.setFilter(s -> s.matches(validator));
@@ -118,7 +118,7 @@ public class StringInputScreen extends Screen {
         this.inputField.setValue(defaultValue);
         this.addButton(this.inputField);
         // 创建提交按钮
-        this.submitButton = new Button(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
             String value = this.inputField.getValue();
             if (StringUtils.isNullOrEmpty(value)) {
                 // 关闭当前屏幕并返回到调用者的 Screen
@@ -142,7 +142,7 @@ public class StringInputScreen extends Screen {
         });
         this.addButton(this.submitButton);
         // 创建取消按钮
-        this.addButton(new Button(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.addButton(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
             // 关闭当前屏幕并返回到调用者的 Screen
             Minecraft.getInstance().setScreen(previousScreen);
         }));
@@ -167,12 +167,22 @@ public class StringInputScreen extends Screen {
         }
     }
 
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_4) {
+            Minecraft.getInstance().setScreen(previousScreen);
+            return true;
+        } else {
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+    }
+
     /**
      * 重写键盘事件，ESC键关闭当前屏幕并返回到调用者的 Screen
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_MOUSE_BUTTON_5 || (keyCode == GLFW.GLFW_KEY_BACKSPACE && !this.inputField.isFocused())) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || (keyCode == GLFW.GLFW_KEY_BACKSPACE && !this.inputField.isFocused())) {
             Minecraft.getInstance().setScreen(previousScreen);
             return true;
         } else {

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -39,6 +40,11 @@ public class OperationButton {
             this.button = button;
         }
     }
+
+    /**
+     * 按钮ID
+     */
+    private String id;
 
     /**
      * 自定义渲染函数
@@ -369,7 +375,7 @@ public class OperationButton {
             }
         }
         if (renderPopup) {
-            this.renderPopup(matrixStack, mouseX, mouseY, keyCode, modifiers);
+            this.renderPopup(matrixStack, null, mouseX, mouseY, keyCode, modifiers);
         }
     }
 
@@ -377,18 +383,33 @@ public class OperationButton {
      * 绘制弹出层
      */
     public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY) {
-        this.renderPopup(matrixStack, mouseX, mouseY, -1, -1);
+        this.renderPopup(matrixStack, null, mouseX, mouseY, -1, -1);
+    }
+
+    /**
+     * 绘制弹出层
+     */
+    public void renderPopup(MatrixStack matrixStack, FontRenderer font, double mouseX, double mouseY) {
+        this.renderPopup(matrixStack, font, mouseX, mouseY, -1, -1);
     }
 
     /**
      * 绘制弹出层
      */
     public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY, int keyCode, int modifiers) {
+        this.renderPopup(matrixStack, null, mouseX, mouseY, keyCode, modifiers);
+    }
+
+    /**
+     * 绘制弹出层
+     */
+    public void renderPopup(MatrixStack matrixStack, FontRenderer font, double mouseX, double mouseY, int keyCode, int modifiers) {
         // 绘制提示
         if (this.keyCode == -1 || (this.keyCode == keyCode && this.modifiers == modifiers)) {
             if (this.isHovered() && StringUtils.isNotNullOrEmpty(tooltip)) {
                 if (Minecraft.getInstance().screen != null) {
-                    AbstractGuiUtils.drawPopupMessage(matrixStack, Minecraft.getInstance().font, tooltip, (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+                    if (font == null) font = Minecraft.getInstance().font;
+                    AbstractGuiUtils.drawPopupMessage(matrixStack, font, tooltip, (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
                 }
             }
         }

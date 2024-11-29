@@ -25,6 +25,7 @@ import xin.vanilla.mc.enums.ERewaedRule;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
+import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.component.MouseCursor;
 import xin.vanilla.mc.screen.component.OperationButton;
 import xin.vanilla.mc.screen.component.PopupOption;
@@ -656,7 +657,11 @@ public class RewardOptionScreen extends Screen {
                 if (getByZh("修改").equalsIgnoreCase(popupOption.getSelectedString())) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                         ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
-
+                        Reward reward = RewardOptionDataManager.getReward(rule, key, Integer.parseInt(index)).clone();
+                        if (reward.getType() == ERewardType.ITEM) {
+                            Minecraft.getInstance().setScreen(new ItemSelectScreen(this, input -> {
+                            }, RewardManager.deserializeReward(reward)));
+                        }
                     }
                 } else if (getByZh("复制").equalsIgnoreCase(popupOption.getSelectedString())) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
