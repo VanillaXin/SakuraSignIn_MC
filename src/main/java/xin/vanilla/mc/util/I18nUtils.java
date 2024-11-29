@@ -40,6 +40,11 @@ public class I18nUtils {
         put("Y轴偏移:\n%.1f\n点击重置", "tips.sakura_sign_in.y_offset");
         put("左键取消\n右键确认", "tips.sakura_sign_in.cancel_or_confirm");
         put("是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认", "tips.sakura_sign_in.clear_all_config");
+        put("列出模式\n物品栏 (%s)", "tips.sakura_sign_in.item_select_list_inventory_mode");
+        put("列出模式\n所有物品 (%s)", "tips.sakura_sign_in.item_select_list_all_mode");
+        put("设置数量\n当前 %s", "tips.sakura_sign_in.set_count_s");
+        put("编辑NBT", "tips.sakura_sign_in.edit_nbt");
+        put("药水效果: %s", "tips.sakura_sign_in.mob_effect_s");
 
     }};
 

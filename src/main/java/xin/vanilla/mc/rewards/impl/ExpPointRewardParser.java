@@ -2,7 +2,9 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
+import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
+import xin.vanilla.mc.util.I18nUtils;
 
 public class ExpPointRewardParser implements RewardParser<Integer> {
 
@@ -24,7 +26,7 @@ public class ExpPointRewardParser implements RewardParser<Integer> {
     }
 
     @Override
-    public String getName(JsonObject json) {
-        return "EXP经验";
+    public String getDisplayName(JsonObject json) {
+        return I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EXP_POINT.getCode()));
     }
 }

@@ -2,8 +2,9 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
-import net.minecraft.client.resources.I18n;
+import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
+import xin.vanilla.mc.util.I18nUtils;
 
 public class SignInCardRewardParser implements RewardParser<Integer> {
 
@@ -25,7 +26,7 @@ public class SignInCardRewardParser implements RewardParser<Integer> {
     }
 
     @Override
-    public String getName(JsonObject json) {
-        return "补签卡";
+    public String getDisplayName(JsonObject json) {
+        return I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.SIGN_IN_CARD.getCode()));
     }
 }

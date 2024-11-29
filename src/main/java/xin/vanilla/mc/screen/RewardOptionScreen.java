@@ -827,7 +827,7 @@ public class RewardOptionScreen extends Screen {
             // 绘制其他按钮
             else {
                 if (op == OperationButtonType.OFFSET_Y.getCode()) {
-                    button.setTooltip(String.format("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
+                    button.setTooltip(getByZh("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
                 }
                 button.render(matrixStack, mouseX, mouseY);
             }

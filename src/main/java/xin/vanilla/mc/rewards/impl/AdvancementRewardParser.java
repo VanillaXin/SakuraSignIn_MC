@@ -28,7 +28,7 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
     }
 
     @Override
-    public String getName(JsonObject json) {
+    public String getDisplayName(JsonObject json) {
         // TODO 获取进度名称
         // ResourceLocation deserialize = deserialize(json);
         // return Minecraft.getInstance().getSingleplayerServer().getAdvancements().getAdvancement(deserialize).getDisplay().getTitle().getString();

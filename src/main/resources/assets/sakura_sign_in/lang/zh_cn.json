@@ -56,5 +56,10 @@
   "tips.sakura_sign_in.close_sidebar": "关闭侧边栏",
   "tips.sakura_sign_in.y_offset": "Y轴偏移:\n%.1f\n点击重置",
   "tips.sakura_sign_in.cancel_or_confirm": "左键取消\n右键确认",
-  "tips.sakura_sign_in.clear_all_config": "是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认"
+  "tips.sakura_sign_in.clear_all_config": "是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认",
+  "tips.sakura_sign_in.item_select_list_inventory_mode": "列出模式\n物品栏 (%s)",
+  "tips.sakura_sign_in.item_select_list_all_mode": "列出模式\n所有物品 (%s)",
+  "tips.sakura_sign_in.set_count_s": "设置数量\n当前 %s",
+  "tips.sakura_sign_in.edit_nbt": "编辑NBT",
+  "tips.sakura_sign_in.mob_effect_s": "药水效果: %s"
 }

@@ -6,6 +6,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -43,11 +44,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ItemSelectScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final NonNullList<ItemStack> allItemList = this.getAllItemList();
+    private final List<ItemStack> playerItemList = this.getPlayerItemList();
     // 每行显示数量
     private final int itemPerLine = 9;
     // 每页显示行数
@@ -94,12 +97,16 @@ public class ItemSelectScreen extends Screen {
      * 当前选择的物品
      */
     private ItemStack currentItem = new ItemStack(Items.AIR);
+    /**
+     * 背包模式
+     */
+    private boolean inventoryMode = false;
 
     private int bgX;
     private int bgY;
     private final double margin = 3;
-    private double itemBgX = bgX + margin;
-    private double itemBgY = bgY + 20;
+    private double itemBgX = this.bgX + margin;
+    private double itemBgY = this.bgY + 20;
 
     // region 滚动条相关
 
@@ -221,6 +228,7 @@ public class ItemSelectScreen extends Screen {
         // 绘制背景
         this.renderBackground(matrixStack);
         AbstractGuiUtils.fill(matrixStack, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
+        AbstractGuiUtils.fillOutLine(matrixStack, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
         super.render(matrixStack, mouseX, mouseY, delta);
 
         this.renderButton(matrixStack, mouseX, mouseY);
@@ -259,11 +267,12 @@ public class ItemSelectScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         AtomicBoolean flag = new AtomicBoolean(false);
+        AtomicBoolean updateSearchResults = new AtomicBoolean(false);
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             // 控制按钮
             OP_BUTTONS.forEach((key, value) -> {
                 if (value.isHovered() && value.isPressed()) {
-                    this.handleOperation(value, mouseX, mouseY, button, flag);
+                    this.handleOperation(value, button, flag, updateSearchResults);
                 }
                 value.setPressed(false);
             });
@@ -276,6 +285,9 @@ public class ItemSelectScreen extends Screen {
             });
             this.mouseDownX = -1;
             this.mouseDownY = -1;
+            if (updateSearchResults.get()) {
+                this.updateSearchResults();
+            }
         }
         return flag.get() ? flag.get() : super.mouseReleased(mouseX, mouseY, button);
     }
@@ -329,21 +341,81 @@ public class ItemSelectScreen extends Screen {
         return list;
     }
 
+    private List<ItemStack> getPlayerItemList() {
+        List<ItemStack> result = new ArrayList<>();
+        ClientPlayerEntity player = Minecraft.getInstance().player;
+        if (player != null) {
+            result.addAll(player.inventory.items);
+            result.addAll(player.inventory.armor);
+            result.addAll(player.inventory.offhand);
+            result = result.stream().filter(itemStack -> !itemStack.isEmpty() && itemStack.getItem() != Items.AIR).collect(Collectors.toList());
+        }
+        return result;
+    }
+
     private void updateLayout() {
-        this.bgX = this.width / 2 - 90;
+        this.bgX = this.width / 2 - 92;
         this.bgY = this.height / 2 - 65;
         this.itemBgX = this.bgX + margin;
         this.itemBgY = this.bgY + 20;
 
         // 初始化操作按钮
         this.OP_BUTTONS.put(OperationButtonType.TYPE.getCode(), new OperationButton(OperationButtonType.TYPE.getCode(), context -> {
-        }));
+            // 绘制背景
+            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            ItemStack itemStack = new ItemStack(this.inventoryMode ? Items.CHEST : Items.COMPASS);
+            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            // 绘制物品详情悬浮窗
+            if (context.button.isHovered()) {
+                Text text = this.inventoryMode ? Text.i18n("列出模式\n物品栏 (%s)", playerItemList.size()) : Text.i18n("列出模式\n所有物品 (%s)", allItemList.size());
+                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
+            }
+        }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.ITEM.getCode(), new OperationButton(OperationButtonType.ITEM.getCode(), context -> {
-        }));
+            // 绘制背景
+            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            this.itemRenderer.renderGuiItem(this.currentItem, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            // 绘制物品详情悬浮窗
+            if (context.button.isHovered()) {
+                AbstractGuiUtils.drawPopupMessage(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()), (int) context.mouseX, (int) context.mouseY, this.width, this.height);
+                // List<ITextComponent> list = this.currentItem.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+                // List<ITextComponent> list1 = Lists.newArrayList(list);
+                // FontRenderer font = this.currentItem.getItem().getFontRenderer(this.currentItem);
+                // GuiUtils.preItemToolTip(this.currentItem);
+                // this.renderWrappedToolTip(context.matrixStack, list1, (int) context.mouseX, (int) context.mouseY, (font == null ? this.font : font));
+                // GuiUtils.postItemToolTip();
+            }
+        }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.COUNT.getCode(), new OperationButton(OperationButtonType.COUNT.getCode(), context -> {
-        }));
+            // 绘制背景
+            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            ItemStack itemStack = new ItemStack(Items.WRITABLE_BOOK);
+            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            // 绘制物品详情悬浮窗
+            if (context.button.isHovered()) {
+                Text text = Text.i18n("设置数量\n当前 %s", this.currentItem.getCount());
+                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
+            }
+        }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 2).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.NBT.getCode(), new OperationButton(OperationButtonType.NBT.getCode(), context -> {
-        }));
+            // 绘制背景
+            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            ItemStack itemStack = new ItemStack(Items.NAME_TAG);
+            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            // 绘制物品详情悬浮窗
+            if (context.button.isHovered()) {
+                Text text = Text.i18n("编辑NBT");
+                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
+            }
+        }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
         // 滚动条
         this.OP_BUTTONS.put(OperationButtonType.SLIDER.getCode(), new OperationButton(OperationButtonType.SLIDER.getCode(), context -> {
@@ -351,14 +423,14 @@ public class ItemSelectScreen extends Screen {
             double bgWidth = (AbstractGuiUtils.ITEM_ICON_SIZE + margin) * itemPerLine;
             double bgHeight = (AbstractGuiUtils.ITEM_ICON_SIZE + margin) * maxLine - margin;
             // 绘制滚动条
-            this.outScrollX = itemBgX + bgWidth;
-            this.outScrollY = itemBgY + 1;
+            this.outScrollX = itemBgX + bgWidth + 2;
+            this.outScrollY = itemBgY - this.margin + 1;
             this.outScrollWidth = 5;
-            this.outScrollHeight = (int) bgHeight - 2;
+            this.outScrollHeight = (int) (bgHeight + this.margin + 1);
             // 滚动条百分比
             double inScrollWidthScale = itemList.size() > itemPerLine * maxLine ? (double) itemPerLine * maxLine / itemList.size() : 1;
             // 多出来的行数
-            int outLine = Math.max((int) Math.ceil((double) (itemList.size() - itemPerLine * maxLine) / itemPerLine), 0);
+            double outLine = Math.max((int) Math.ceil((double) (itemList.size() - itemPerLine * maxLine) / itemPerLine), 0);
             // 多出来的每行所占的空余条长度
             double outCellHeight = outLine == 0 ? 0 : (1 - inScrollWidthScale) * (outScrollHeight - 2) / outLine;
             // 滚动条上边距长度
@@ -370,8 +442,8 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
             // 绘制滚动条滑块
             int color = context.button.isHovered() ? 0xCCFFFFFF : 0xCC8B8B8B;
-            AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) this.inScrollY, this.outScrollWidth, (int) this.inScrollHeight, color);
-            context.button.setX(this.outScrollX).setY(this.inScrollY).setWidth(this.outScrollWidth).setHeight(this.inScrollHeight);
+            AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
+            context.button.setX(this.outScrollX).setY(this.outScrollY).setWidth(this.outScrollWidth).setHeight(this.outScrollHeight);
         }));
 
         // 物品列表
@@ -459,7 +531,7 @@ public class ItemSelectScreen extends Screen {
             }
             this.itemList.addAll(isearchtree.search(s.toLowerCase(Locale.ROOT)));
         } else {
-            this.itemList.addAll(new ArrayList<>(allItemList));
+            this.itemList.addAll(new ArrayList<>(this.inventoryMode ? this.playerItemList : this.allItemList));
         }
         this.setScrollOffset(0);
     }
@@ -501,15 +573,17 @@ public class ItemSelectScreen extends Screen {
             if (StringUtils.isNotNullOrEmpty(this.selectedItemId)) {
                 this.currentItem = ItemRewardParser.getItemStack(selectedItemId);
                 this.currentItem.setCount(1);
-                LOGGER.debug("Select item: {}", ItemRewardParser.getName(this.currentItem));
+                LOGGER.debug("Select item: {}", ItemRewardParser.getDisplayName(this.currentItem));
                 flag.set(true);
             }
         }
     }
 
-    private void handleOperation(OperationButton bt, double mouseX, double mouseY, int button, AtomicBoolean flag) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-
+    private void handleOperation(OperationButton bt, int button, AtomicBoolean flag, AtomicBoolean updateSearchResults) {
+        if (bt.getOperation() == OperationButtonType.TYPE.getCode()) {
+            this.inventoryMode = !this.inventoryMode;
+            updateSearchResults.set(true);
+            flag.set(true);
         }
     }
 }

@@ -6,7 +6,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
+import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
+import xin.vanilla.mc.util.I18nUtils;
 
 public class MessageRewardParser implements RewardParser<StringTextComponent> {
 
@@ -53,7 +55,7 @@ public class MessageRewardParser implements RewardParser<StringTextComponent> {
     }
 
     @Override
-    public String getName(JsonObject json) {
-        return "消息提示";
+    public String getDisplayName(JsonObject json) {
+        return I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.MESSAGE.getCode()));
     }
 }

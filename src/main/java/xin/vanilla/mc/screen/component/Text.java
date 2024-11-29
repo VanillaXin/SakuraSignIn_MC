@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.resources.I18n;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.I18nUtils;
@@ -115,8 +114,8 @@ public class Text {
         return new Text(I18nUtils.get(key));
     }
 
-    public static Text i18n(String key) {
-        return new Text(I18nUtils.getByZh(key));
+    public static Text i18n(String key, Object... args) {
+        return new Text(I18nUtils.getByZh(key, args));
     }
 
     public Text copy() {

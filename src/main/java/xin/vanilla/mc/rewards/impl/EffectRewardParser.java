@@ -9,6 +9,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 import xin.vanilla.mc.rewards.RewardParser;
+import xin.vanilla.mc.util.I18nUtils;
 
 public class EffectRewardParser implements RewardParser<EffectInstance> {
 
@@ -42,7 +43,7 @@ public class EffectRewardParser implements RewardParser<EffectInstance> {
     }
 
     @Override
-    public String getName(JsonObject json) {
-        return "药水效果: " + this.deserialize(json).getEffect().getDisplayName().getString();
+    public String getDisplayName(JsonObject json) {
+        return I18nUtils.getByZh("药水效果: %s", this.deserialize(json).getEffect().getDisplayName().getString());
     }
 }
