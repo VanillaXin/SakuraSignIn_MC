@@ -112,6 +112,7 @@ public class StringInputScreen extends Screen {
         // 创建文本输入框
         this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, this.width / 2 - 100, this.height / 2 - 20, 200, 20
                 , AbstractGuiUtils.textToComponent(this.messageText));
+        this.inputField.setMaxLength(Integer.MAX_VALUE);
         if (StringUtils.isNotNullOrEmpty(validator)) {
             this.inputField.setFilter(s -> s.matches(validator));
         }

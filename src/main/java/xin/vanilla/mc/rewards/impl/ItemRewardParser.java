@@ -8,7 +8,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -80,22 +79,27 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     }
 
     public static String getNbtString(ItemStack itemStack) {
-        JsonObject jsonObject = new JsonObject();
-        try {
-            if (itemStack.hasTag()) {
-                if (itemStack.getTag() != null) {
-                    for (String key : itemStack.getTag().getAllKeys()) {
-                        INBT inbt = itemStack.getTag().get(key);
-                        if (inbt != null) {
-                            jsonObject.addProperty(key, inbt.toString());
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to get nbt string", e);
+        // Map<String, INBT> nbtMap = new HashMap<>();
+        // try {
+        //     if (itemStack.hasTag()) {
+        //         if (itemStack.getTag() != null) {
+        //             for (String key : itemStack.getTag().getAllKeys()) {
+        //                 INBT inbt = itemStack.getTag().get(key);
+        //                 if (inbt != null) {
+        //                     nbtMap.put(key, inbt);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // } catch (Exception e) {
+        //     LOGGER.error("Failed to get nbt string", e);
+        // }
+        // return GSON.toJson(nbtMap);
+        String json = "";
+        if (itemStack.hasTag() && itemStack.getTag() != null) {
+            json = itemStack.getTag().toString();
         }
-        return jsonObject.toString();
+        return json;
     }
 
     public static String getId(Item item) {
@@ -113,16 +117,27 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     }
 
     public static ItemStack getItemStack(String id) {
+        ItemStack result = new ItemStack(Items.AIR);
+        try {
+            result = getItemStack(id, false);
+        } catch (CommandSyntaxException ignored) {
+        }
+        return result;
+    }
+
+    public static ItemStack getItemStack(String id, boolean throwException) throws CommandSyntaxException {
         Item item = getItem(id);
         if (item == null) {
-            throw new JsonParseException("Unknown item ID: " + id);
+            throw new RuntimeException("Unknown item ID: " + id);
         }
         ItemStack itemStack = new ItemStack(item);
-        if (id.contains("{")) {
+        if (id.contains("{") && id.endsWith("}") && !id.endsWith("{}")) {
             try {
-                CompoundNBT nbt = JsonToNBT.parseTag(id.substring(id.indexOf("{")));
+                String nbtString = id.substring(id.indexOf("{"));
+                CompoundNBT nbt = JsonToNBT.parseTag(nbtString);
                 itemStack.setTag(nbt);
             } catch (Exception e) {
+                if (throwException) throw e;
                 LOGGER.error("Failed to parse NBT data", e);
             }
         }

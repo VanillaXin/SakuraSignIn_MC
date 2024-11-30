@@ -2,6 +2,7 @@ package xin.vanilla.mc.screen;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonObject;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.NonNull;
@@ -32,6 +33,9 @@ import net.minecraftforge.fml.client.gui.GuiUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
+import xin.vanilla.mc.enums.ERewardType;
+import xin.vanilla.mc.rewards.Reward;
+import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.rewards.impl.ItemRewardParser;
 import xin.vanilla.mc.screen.component.OperationButton;
 import xin.vanilla.mc.screen.component.Text;
@@ -45,6 +49,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static xin.vanilla.mc.config.RewardOptionDataManager.GSON;
+import static xin.vanilla.mc.util.I18nUtils.getByZh;
 
 public class ItemSelectScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -72,6 +79,10 @@ public class ItemSelectScreen extends Screen {
      * 输入框
      */
     private TextFieldWidget inputField;
+    /**
+     * 输入框文本
+     */
+    private String inputFieldText = "";
     /**
      * 搜索结果
      */
@@ -192,6 +203,7 @@ public class ItemSelectScreen extends Screen {
         this.updateLayout();
         // 创建文本输入框
         this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 180, 15, new StringTextComponent(""));
+        this.inputField.setValue(this.inputFieldText);
         this.addButton(this.inputField);
         // 创建提交按钮
         this.addButton(AbstractGuiUtils.newButton((int) (this.bgX + 90 + this.margin), (int) (this.bgY + (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + margin))
@@ -230,6 +242,8 @@ public class ItemSelectScreen extends Screen {
         AbstractGuiUtils.fill(matrixStack, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
         AbstractGuiUtils.fillOutLine(matrixStack, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
         super.render(matrixStack, mouseX, mouseY, delta);
+        // 保存输入框的文本, 防止窗口重绘时输入框内容丢失
+        this.inputFieldText = this.inputField.getValue();
 
         this.renderButton(matrixStack, mouseX, mouseY);
     }
@@ -575,6 +589,7 @@ public class ItemSelectScreen extends Screen {
                 this.currentItem.setCount(1);
                 LOGGER.debug("Select item: {}", ItemRewardParser.getDisplayName(this.currentItem));
                 flag.set(true);
+
             }
         }
     }
@@ -584,6 +599,63 @@ public class ItemSelectScreen extends Screen {
             this.inventoryMode = !this.inventoryMode;
             updateSearchResults.set(true);
             flag.set(true);
+        } else if (bt.getOperation() == OperationButtonType.ITEM.getCode()) {
+            String itemRewardJsonString = RewardManager.serializeReward(this.currentItem, ERewardType.ITEM).toString();
+            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入物品Json").setShadow(true), Text.i18n("请输入"), "", itemRewardJsonString, input -> {
+                String result = "";
+                if (StringUtils.isNotNullOrEmpty(input)) {
+                    ItemStack itemStack;
+                    try {
+                        JsonObject jsonObject = GSON.fromJson(input, JsonObject.class);
+                        itemStack = RewardManager.deserializeReward(new Reward(jsonObject, ERewardType.ITEM));
+                    } catch (Exception e) {
+                        LOGGER.error("Invalid Json: {}", input);
+                        itemStack = null;
+                    }
+                    if (itemStack != null && itemStack.getItem() != Items.AIR) {
+                        this.currentItem = itemStack;
+                        this.selectedItemId = ItemRewardParser.getId(this.currentItem);
+                    } else {
+                        result = getByZh("物品Json[%s]输入有误", input);
+                    }
+                }
+                return result;
+            }));
+        } else if (bt.getOperation() == OperationButtonType.COUNT.getCode()) {
+            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入物品数量").setShadow(true), Text.i18n("请输入"), "\\d{0,4}", String.valueOf(this.currentItem.getCount()), input -> {
+                String result = "";
+                if (StringUtils.isNotNullOrEmpty(input)) {
+                    int count = StringUtils.toInt(input);
+                    if (count > 0 && count <= 64 * 9 * 5) {
+                        this.currentItem.setCount(count);
+                    } else {
+                        result = getByZh("物品数量[%s]输入有误", input);
+                    }
+                }
+                return result;
+            }));
+        } else if (bt.getOperation() == OperationButtonType.NBT.getCode()) {
+            String itemNbtJsonString = ItemRewardParser.getNbtString(this.currentItem);
+            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入物品NBT").setShadow(true), Text.i18n("请输入"), "", itemNbtJsonString, input -> {
+                String result = "";
+                if (StringUtils.isNotNullOrEmpty(input)) {
+                    ItemStack itemStack;
+                    try {
+                        itemStack = ItemRewardParser.getItemStack(ItemRewardParser.getId(this.currentItem.getItem()) + input, true);
+                        itemStack.setCount(this.currentItem.getCount());
+                    } catch (Exception e) {
+                        LOGGER.error("Invalid NBT: {}", input);
+                        itemStack = null;
+                    }
+                    if (itemStack != null && itemStack.hasTag()) {
+                        this.currentItem = itemStack;
+                        this.selectedItemId = ItemRewardParser.getId(this.currentItem);
+                    } else {
+                        result = getByZh("物品NBT[%s]输入有误", input);
+                    }
+                }
+                return result;
+            }));
         }
     }
 }
