@@ -113,7 +113,9 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     }
 
     public static Item getItem(String id) {
-        return ForgeRegistries.ITEMS.getValue(new ResourceLocation(id.substring(0, id.indexOf("{"))));
+        String resourceId = id;
+        if (id.contains("{") && id.endsWith("}")) resourceId = resourceId.substring(0, id.indexOf("{"));
+        return ForgeRegistries.ITEMS.getValue(new ResourceLocation(resourceId));
     }
 
     public static ItemStack getItemStack(String id) {

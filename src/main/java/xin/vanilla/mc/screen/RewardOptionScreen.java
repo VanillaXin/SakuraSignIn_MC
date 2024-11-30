@@ -9,6 +9,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -32,10 +34,7 @@ import xin.vanilla.mc.screen.component.PopupOption;
 import xin.vanilla.mc.screen.component.Text;
 import xin.vanilla.mc.screen.coordinate.Coordinate;
 import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
-import xin.vanilla.mc.util.AbstractGuiUtils;
-import xin.vanilla.mc.util.PNGUtils;
-import xin.vanilla.mc.util.StringUtils;
-import xin.vanilla.mc.util.TextureUtils;
+import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
@@ -552,6 +551,8 @@ public class RewardOptionScreen extends Screen {
      */
     private void handlePopupOption(double mouseX, double mouseY, int button, AtomicBoolean updateLayout, AtomicBoolean flag) {
         LOGGER.debug("选择了弹出选项:\tButton: {}\tId: {}\tIndex: {}\tContent: {}", button, popupOption.getId(), popupOption.getSelectedIndex(), popupOption.getSelectedString());
+        String selectedString = popupOption.getSelectedString();
+        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
         if (popupOption.getId().startsWith("奖励规则类型按钮:")) {
             int opCode = StringUtils.toInt(popupOption.getId().replace("奖励规则类型按钮:", ""));
             // 若选择了清空
@@ -594,18 +595,41 @@ public class RewardOptionScreen extends Screen {
                 }
             }
         } else if (popupOption.getId().startsWith("奖励面板按钮:")) {
-            String key = popupOption.getId().replace("奖励按钮:", "");
-
+            String[] key = new String[]{""};
+            if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ITEM.getCode())).equalsIgnoreCase(selectedString)) {
+                ItemSelectScreen callbackScreen = new ItemSelectScreen(this, input -> {
+                    if (input != null && input.getItem() != Items.AIR && StringUtils.isNotNullOrEmpty(key[0])) {
+                        RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.ITEM), ERewardType.ITEM));
+                        RewardOptionDataManager.saveSignInData();
+                    }
+                }, new ItemStack(Items.AIR), () -> StringUtils.isNullOrEmpty(key[0]));
+                if (rule != ERewaedRule.BASE_REWARD) {
+                    Minecraft.getInstance().setScreen(new StringInputScreen(callbackScreen, Text.i18n("请输入规则名称").setShadow(true), Text.i18n("请输入"), "[\\d +~/:T-]*", "", input -> {
+                        String result = "";
+                        if (StringUtils.isNotNullOrEmpty(input)) {
+                            if (RewardOptionDataManager.validateKeyName(rule, input)) {
+                                key[0] = input;
+                            } else {
+                                result = getByZh("规则名称[%s]输入有误", input);
+                            }
+                        }
+                        return result;
+                    }));
+                } else {
+                    key[0] = "base";
+                    Minecraft.getInstance().setScreen(callbackScreen);
+                }
+            }
+            // TODO 实现其他奖励类型
         } else if (popupOption.getId().startsWith("奖励按钮:")) {
             String id = popupOption.getId().replace("奖励按钮:", "");
             if (id.startsWith("标题")) {
                 String key = id.substring(3);
-                if (getByZh("修改").equalsIgnoreCase(popupOption.getSelectedString())) {
+                if (getByZh("修改").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                         Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入规则名称").setShadow(true), Text.i18n("请输入"), "[\\d +~/:T-]*", key, input -> {
                             String result = "";
                             if (StringUtils.isNotNullOrEmpty(input)) {
-                                ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                                 if (RewardOptionDataManager.validateKeyName(rule, input)) {
                                     RewardOptionDataManager.updateKeyName(rule, key, input);
                                     RewardOptionDataManager.saveSignInData();
@@ -616,12 +640,11 @@ public class RewardOptionScreen extends Screen {
                             return result;
                         }));
                     }
-                } else if (getByZh("复制").equalsIgnoreCase(popupOption.getSelectedString())) {
+                } else if (getByZh("复制").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                         Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入规则名称").setShadow(true), Text.i18n("请输入"), "[\\d +~/:T-]*", key, input -> {
                             String result = "";
                             if (StringUtils.isNotNullOrEmpty(input)) {
-                                ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                                 if (RewardOptionDataManager.validateKeyName(rule, input)) {
                                     RewardList rewardList = RewardOptionDataManager.getKeyName(rule, key).clone();
                                     RewardOptionDataManager.addKeyName(rule, input, rewardList);
@@ -633,19 +656,27 @@ public class RewardOptionScreen extends Screen {
                             return result;
                         }));
                     }
-                } else if (getByZh("清空").equalsIgnoreCase(popupOption.getSelectedString())) {
+                } else if (getByZh("清空").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                         RewardOptionDataManager.clearKey(rule, key);
                         RewardOptionDataManager.saveSignInData();
                     }
-                } else if (getByZh("删除").equalsIgnoreCase(popupOption.getSelectedString())) {
+                } else if (getByZh("删除").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                         RewardOptionDataManager.deleteKey(rule, key);
                         RewardOptionDataManager.saveSignInData();
                     }
                 }
+                // 添加物品
+                else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ITEM.getCode())).equalsIgnoreCase(selectedString)) {
+                    Minecraft.getInstance().setScreen(new ItemSelectScreen(this, input -> {
+                        if (input != null && input.getItem() != Items.AIR) {
+                            RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.ITEM), ERewardType.ITEM));
+                            RewardOptionDataManager.saveSignInData();
+                        }
+                    }, new ItemStack(Items.AIR)));
+                }
+                // TODO 实现其他奖励类型
             } else {
                 String[] split = id.split(",");
                 if (split.length != 2) {
@@ -654,25 +685,26 @@ public class RewardOptionScreen extends Screen {
                 }
                 String key = split[0];
                 String index = split[1];
-                if (getByZh("修改").equalsIgnoreCase(popupOption.getSelectedString())) {
+                if (getByZh("修改").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                         Reward reward = RewardOptionDataManager.getReward(rule, key, Integer.parseInt(index)).clone();
                         if (reward.getType() == ERewardType.ITEM) {
                             Minecraft.getInstance().setScreen(new ItemSelectScreen(this, input -> {
+                                if (input != null && input.getItem() != Items.AIR) {
+                                    RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(input, ERewardType.ITEM), ERewardType.ITEM));
+                                    RewardOptionDataManager.saveSignInData();
+                                }
                             }, RewardManager.deserializeReward(reward)));
                         }
                     }
-                } else if (getByZh("复制").equalsIgnoreCase(popupOption.getSelectedString())) {
+                } else if (getByZh("复制").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                         Reward reward = RewardOptionDataManager.getReward(rule, key, Integer.parseInt(index)).clone();
                         RewardOptionDataManager.addReward(rule, key, reward);
                         RewardOptionDataManager.saveSignInData();
                     }
-                } else if (getByZh("删除").equalsIgnoreCase(popupOption.getSelectedString())) {
+                } else if (getByZh("删除").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
                         RewardOptionDataManager.deleteReward(rule, key, Integer.parseInt(index));
                         RewardOptionDataManager.saveSignInData();
                     }

@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static xin.vanilla.mc.config.RewardOptionDataManager.GSON;
@@ -75,6 +76,10 @@ public class ItemSelectScreen extends Screen {
      * 输入数据回调2
      */
     private final Function<ItemStack, String> onDataReceived2;
+    /**
+     * 是否要显示该界面, 若为false则直接关闭当前界面并返回到调用者的 Screen
+     */
+    private final Supplier<Boolean> shouldClose;
     /**
      * 输入框
      */
@@ -165,6 +170,26 @@ public class ItemSelectScreen extends Screen {
         }
     }
 
+    public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived, @NonNull ItemStack defaultItem, Supplier<Boolean> shouldClose) {
+        super(new StringTextComponent("ItemSelectScreen"));
+        this.previousScreen = callbackScreen;
+        this.onDataReceived1 = onDataReceived;
+        this.onDataReceived2 = null;
+        this.currentItem = defaultItem;
+        this.selectedItemId = ItemRewardParser.getId(defaultItem);
+        this.shouldClose = shouldClose;
+    }
+
+    public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived, @NonNull ItemStack defaultItem, Supplier<Boolean> shouldClose) {
+        super(new StringTextComponent("ItemSelectScreen"));
+        this.previousScreen = callbackScreen;
+        this.onDataReceived1 = null;
+        this.onDataReceived2 = onDataReceived;
+        this.currentItem = defaultItem;
+        this.selectedItemId = ItemRewardParser.getId(defaultItem);
+        this.shouldClose = shouldClose;
+    }
+
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived, @NonNull ItemStack defaultItem) {
         super(new StringTextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
@@ -172,6 +197,7 @@ public class ItemSelectScreen extends Screen {
         this.onDataReceived2 = null;
         this.currentItem = defaultItem;
         this.selectedItemId = ItemRewardParser.getId(defaultItem);
+        this.shouldClose = null;
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived, @NonNull ItemStack defaultItem) {
@@ -181,6 +207,7 @@ public class ItemSelectScreen extends Screen {
         this.onDataReceived2 = onDataReceived;
         this.currentItem = defaultItem;
         this.selectedItemId = ItemRewardParser.getId(defaultItem);
+        this.shouldClose = null;
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived) {
@@ -188,6 +215,7 @@ public class ItemSelectScreen extends Screen {
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
+        this.shouldClose = null;
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived) {
@@ -195,10 +223,13 @@ public class ItemSelectScreen extends Screen {
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
+        this.shouldClose = null;
     }
 
     @Override
     protected void init() {
+        if (this.shouldClose != null && Boolean.TRUE.equals(this.shouldClose.get()))
+            Minecraft.getInstance().setScreen(previousScreen);
         this.updateSearchResults();
         this.updateLayout();
         // 创建文本输入框

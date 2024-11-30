@@ -15,6 +15,7 @@ import xin.vanilla.mc.util.StringUtils;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * 字符串输入 Screen
@@ -46,6 +47,10 @@ public class StringInputScreen extends Screen {
      */
     private final Function<String, String> onDataReceived2;
     /**
+     * 是否要显示该界面, 若为false则直接关闭当前界面并返回到调用者的 Screen
+     */
+    private final Supplier<Boolean> shouldClose;
+    /**
      * 输入框
      */
     private TextFieldWidget inputField;
@@ -72,6 +77,7 @@ public class StringInputScreen extends Screen {
         this.messageText = messageText;
         this.validator = validator;
         this.defaultValue = "";
+        this.shouldClose = null;
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Consumer<String> onDataReceived) {
@@ -83,6 +89,19 @@ public class StringInputScreen extends Screen {
         this.messageText = messageText;
         this.validator = validator;
         this.defaultValue = defaultValue;
+        this.shouldClose = null;
+    }
+
+    public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Consumer<String> onDataReceived, Supplier<Boolean> shouldClose) {
+        super(new StringTextComponent("StringInputScreen"));
+        this.previousScreen = callbackScreen;
+        this.onDataReceived1 = onDataReceived;
+        this.onDataReceived2 = null;
+        this.titleText = titleText;
+        this.messageText = messageText;
+        this.validator = validator;
+        this.defaultValue = defaultValue;
+        this.shouldClose = shouldClose;
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, Function<String, String> onDataReceived) {
@@ -94,6 +113,7 @@ public class StringInputScreen extends Screen {
         this.messageText = messageText;
         this.validator = validator;
         this.defaultValue = "";
+        this.shouldClose = null;
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Function<String, String> onDataReceived) {
@@ -105,10 +125,25 @@ public class StringInputScreen extends Screen {
         this.messageText = messageText;
         this.validator = validator;
         this.defaultValue = defaultValue;
+        this.shouldClose = null;
+    }
+
+    public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Function<String, String> onDataReceived, Supplier<Boolean> shouldClose) {
+        super(new StringTextComponent("StringInputScreen"));
+        this.previousScreen = callbackScreen;
+        this.onDataReceived1 = null;
+        this.onDataReceived2 = onDataReceived;
+        this.titleText = titleText;
+        this.messageText = messageText;
+        this.validator = validator;
+        this.defaultValue = defaultValue;
+        this.shouldClose = null;
     }
 
     @Override
     protected void init() {
+        if (this.shouldClose != null && Boolean.TRUE.equals(this.shouldClose.get()))
+            Minecraft.getInstance().setScreen(previousScreen);
         // 创建文本输入框
         this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, this.width / 2 - 100, this.height / 2 - 20, 200, 20
                 , AbstractGuiUtils.textToComponent(this.messageText));

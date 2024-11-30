@@ -351,30 +351,118 @@ public class RewardOptionDataManager {
      * @param reward  奖励
      */
     public static void addReward(ERewaedRule rule, String keyName, Reward reward) {
+        if (StringUtils.isNullOrEmpty(keyName)) return;
         switch (rule) {
             case BASE_REWARD:
                 rewardOptionData.getBaseRewards().add(reward);
                 break;
             case CONTINUOUS_REWARD:
+                if (!rewardOptionData.getContinuousRewards().containsKey(keyName)) {
+                    rewardOptionData.getContinuousRewards().put(keyName, new RewardList());
+                }
                 rewardOptionData.getContinuousRewards().get(keyName).add(reward);
                 break;
             case CYCLE_REWARD:
+                if (!rewardOptionData.getCycleRewards().containsKey(keyName)) {
+                    rewardOptionData.getCycleRewards().put(keyName, new RewardList());
+                }
                 rewardOptionData.getCycleRewards().get(keyName).add(reward);
                 break;
             case YEAR_REWARD:
+                if (!rewardOptionData.getYearRewards().containsKey(keyName)) {
+                    rewardOptionData.getYearRewards().put(keyName, new RewardList());
+                }
                 rewardOptionData.getYearRewards().get(keyName).add(reward);
                 break;
             case MONTH_REWARD:
+                if (!rewardOptionData.getMonthRewards().containsKey(keyName)) {
+                    rewardOptionData.getMonthRewards().put(keyName, new RewardList());
+                }
                 rewardOptionData.getMonthRewards().get(keyName).add(reward);
                 break;
             case WEEK_REWARD:
+                if (!rewardOptionData.getWeekRewards().containsKey(keyName)) {
+                    rewardOptionData.getWeekRewards().put(keyName, new RewardList());
+                }
                 rewardOptionData.getWeekRewards().get(keyName).add(reward);
                 break;
             case DATE_TIME_REWARD:
+                if (!rewardOptionData.getDateTimeRewards().containsKey(keyName)) {
+                    rewardOptionData.getDateTimeRewards().put(keyName, new RewardList());
+                }
                 rewardOptionData.getDateTimeRewards().get(keyName).add(reward);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
+        }
+    }
+
+    /**
+     * 更新奖励规则下的奖励
+     *
+     * @param rule    规则类型
+     * @param keyName 规则
+     * @param index   奖励索引
+     * @param reward  奖励
+     */
+    public static void updateReward(ERewaedRule rule, String keyName, int index, Reward reward) {
+        try {
+            switch (rule) {
+                case BASE_REWARD:
+                    rewardOptionData.getBaseRewards().set(index, reward);
+                    break;
+                case CONTINUOUS_REWARD:
+                    if (!rewardOptionData.getContinuousRewards().containsKey(keyName)) {
+                        rewardOptionData.getContinuousRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getContinuousRewards().get(keyName).set(index, reward);
+                    break;
+                case CYCLE_REWARD:
+                    if (!rewardOptionData.getCycleRewards().containsKey(keyName)) {
+                        rewardOptionData.getCycleRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getCycleRewards().get(keyName).set(index, reward);
+                    break;
+                case YEAR_REWARD:
+                    if (!rewardOptionData.getYearRewards().containsKey(keyName)) {
+                        rewardOptionData.getYearRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getYearRewards().get(keyName).set(index, reward);
+                    break;
+                case MONTH_REWARD:
+                    if (!rewardOptionData.getMonthRewards().containsKey(keyName)) {
+                        rewardOptionData.getMonthRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getMonthRewards().get(keyName).set(index, reward);
+                    break;
+                case WEEK_REWARD:
+                    if (!rewardOptionData.getWeekRewards().containsKey(keyName)) {
+                        rewardOptionData.getWeekRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getWeekRewards().get(keyName).set(index, reward);
+                    break;
+                case DATE_TIME_REWARD:
+                    if (!rewardOptionData.getDateTimeRewards().containsKey(keyName)) {
+                        rewardOptionData.getDateTimeRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getDateTimeRewards().get(keyName).set(index, reward);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown rule: " + rule);
+            }
+        } catch (Exception ignored) {
         }
     }
 
