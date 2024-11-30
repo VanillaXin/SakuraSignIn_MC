@@ -37,10 +37,15 @@ public class I18nUtils {
         put("请输入物品Json", "tips.sakura_sign_in.enter_item_json");
         put("请输入物品数量", "tips.sakura_sign_in.enter_item_count");
         put("请输入物品NBT", "tips.sakura_sign_in.enter_item_nbt");
+        put("请输入经验点值", "tips.sakura_sign_in.enter_exp_point");
+        put("请输入经验等级", "tips.sakura_sign_in.enter_exp_level");
+        put("请输入补签卡数量", "tips.sakura_sign_in.enter_sign_in_card");
+        put("请输入消息", "tips.sakura_sign_in.enter_message");
         put("规则名称[%s]输入有误", "tips.sakura_sign_in.reward_rule_s_error");
         put("物品Json[%s]输入有误", "tips.sakura_sign_in.item_json_s_error");
         put("物品数量[%s]输入有误", "tips.sakura_sign_in.item_count_s_error");
         put("物品NBT[%s]输入有误", "tips.sakura_sign_in.item_nbt_s_error");
+        put("输入值[%s]有误", "tips.sakura_sign_in.enter_value_s_error");
         put("展开侧边栏", "tips.sakura_sign_in.open_sidebar");
         put("收起侧边栏", "tips.sakura_sign_in.close_sidebar");
         put("Y轴偏移:\n%.1f\n点击重置", "tips.sakura_sign_in.y_offset");

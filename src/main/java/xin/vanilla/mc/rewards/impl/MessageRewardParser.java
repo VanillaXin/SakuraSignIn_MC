@@ -4,17 +4,20 @@ import com.google.gson.JsonObject;
 import lombok.NonNull;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.Color;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
+import xin.vanilla.mc.screen.component.Text;
+import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.I18nUtils;
 
-public class MessageRewardParser implements RewardParser<StringTextComponent> {
+public class MessageRewardParser implements RewardParser<IFormattableTextComponent> {
 
     @Override
-    public @NonNull StringTextComponent deserialize(JsonObject json) {
-        StringTextComponent message;
+    public @NonNull IFormattableTextComponent deserialize(JsonObject json) {
+        IFormattableTextComponent message;
         try {
             message = new StringTextComponent(json.get("contents").getAsString());
             JsonObject styleJson = json.getAsJsonObject("style");
@@ -30,13 +33,13 @@ public class MessageRewardParser implements RewardParser<StringTextComponent> {
             message.setStyle(style);
         } catch (Exception e) {
             LOGGER.error("Failed to parse message reward", e);
-            message = new StringTextComponent("Failed to parse message reward");
+            message = AbstractGuiUtils.textToComponent(Text.literal("Failed to parse message reward").setColor(0xFFFF0000));
         }
         return message;
     }
 
     @Override
-    public JsonObject serialize(StringTextComponent reward) {
+    public JsonObject serialize(IFormattableTextComponent reward) {
         JsonObject result = new JsonObject();
         JsonObject styleJson = new JsonObject();
         Style style = reward.getStyle();

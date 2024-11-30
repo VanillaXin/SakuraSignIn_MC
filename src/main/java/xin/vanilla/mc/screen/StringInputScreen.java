@@ -137,7 +137,7 @@ public class StringInputScreen extends Screen {
         this.messageText = messageText;
         this.validator = validator;
         this.defaultValue = defaultValue;
-        this.shouldClose = null;
+        this.shouldClose = shouldClose;
     }
 
     @Override
