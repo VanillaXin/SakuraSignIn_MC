@@ -454,7 +454,7 @@ public class AbstractGuiUtils {
      * @param y        绘制的Y坐标
      * @param maxWidth 文本显示的最大宽度
      */
-    public static void drawLimitedText(Text text, float x, float y, int maxWidth) {
+    public static void drawLimitedText(Text text, double x, double y, int maxWidth) {
         AbstractGuiUtils.drawLimitedText(text, x, y, maxWidth, 0, EllipsisPosition.END);
     }
 
@@ -467,7 +467,7 @@ public class AbstractGuiUtils {
      * @param maxWidth 文本显示的最大宽度
      * @param maxLine  文本显示的最大行数
      */
-    public static void drawLimitedText(Text text, float x, float y, int maxWidth, int maxLine) {
+    public static void drawLimitedText(Text text, double x, double y, int maxWidth, int maxLine) {
         AbstractGuiUtils.drawLimitedText(text, x, y, maxWidth, maxLine, EllipsisPosition.END);
     }
 
@@ -480,7 +480,7 @@ public class AbstractGuiUtils {
      * @param maxWidth 文本显示的最大宽度
      * @param position 省略号位置（开头、中间、结尾）
      */
-    public static void drawLimitedText(Text text, float x, float y, int maxWidth, EllipsisPosition position) {
+    public static void drawLimitedText(Text text, double x, double y, int maxWidth, EllipsisPosition position) {
         AbstractGuiUtils.drawLimitedText(text, x, y, maxWidth, 0, position);
     }
 
@@ -494,7 +494,7 @@ public class AbstractGuiUtils {
      * @param maxLine  文本显示的最大行数
      * @param position 省略号位置（开头、中间、结尾）
      */
-    public static void drawLimitedText(Text text, float x, float y, int maxWidth, int maxLine, EllipsisPosition position) {
+    public static void drawLimitedText(Text text, double x, double y, int maxWidth, int maxLine, EllipsisPosition position) {
         if (StringUtils.isNotNullOrEmpty(text.getContent())) {
             String ellipsis = "...";
             FontRenderer font = text.getFont();
@@ -565,9 +565,9 @@ public class AbstractGuiUtils {
                 else index++;
                 MatrixStack matrixStack = text.getMatrixStack();
                 if (text.isShadow()) {
-                    font.drawShadow(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), x, y + index * font.lineHeight, text.getColor());
+                    font.drawShadow(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), (float) x, (float) y + index * font.lineHeight, text.getColor());
                 } else {
-                    font.draw(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), x, y + index * font.lineHeight, text.getColor());
+                    font.draw(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), (float) x, (float) y + index * font.lineHeight, text.getColor());
                 }
             }
         }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
@@ -22,10 +23,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.command.SignInCommand;
 import xin.vanilla.mc.config.ClientConfig;
-import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.RewardOptionDataManager;
+import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 
 import java.nio.file.Path;
 import java.util.Date;
@@ -56,6 +58,25 @@ public class SakuraSignIn {
     @Getter
     @Setter
     private static Date calendarCurrentDate;
+
+    /**
+     * 背景材质
+     */
+    @Getter
+    @Setter
+    private static ResourceLocation themeTexture = null;
+    /**
+     * 背景材质坐标
+     */
+    @Getter
+    @Setter
+    public static TextureCoordinate themeTextureCoordinate = null;
+    /**
+     * 是否使用内置主题特殊图标
+     */
+    @Getter
+    @Setter
+    private static boolean specialVersionTheme = false;
 
     public SakuraSignIn() {
 
@@ -101,6 +122,8 @@ public class SakuraSignIn {
         ClientEventHandler.registerKeyBindings();
         // 创建配置文件目录
         ClientEventHandler.createConfigPath();
+        // 加载主题纹理
+        ClientEventHandler.loadThemeTexture();
     }
 
     /**

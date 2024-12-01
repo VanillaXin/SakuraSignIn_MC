@@ -14,12 +14,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.SakuraSignIn;
+import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.RewardOptionScreen;
 import xin.vanilla.mc.screen.SignInScreen;
+import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
+import xin.vanilla.mc.util.PNGUtils;
+import xin.vanilla.mc.util.TextureUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
+
+import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
 
 /**
  * 客户端事件处理器
@@ -51,6 +59,31 @@ public class ClientEventHandler {
         File themesPath = new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes");
         if (!themesPath.exists()) {
             themesPath.mkdirs();
+        }
+    }
+
+    /**
+     * 加载主题纹理
+     */
+    public static void loadThemeTexture() {
+        try {
+            SakuraSignIn.setThemeTexture(TextureUtils.loadCustomTexture(ClientConfig.THEME.get()));
+            SakuraSignIn.setSpecialVersionTheme(Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get()));
+            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(SakuraSignIn.getThemeTexture()).getInputStream();
+            SakuraSignIn.setThemeTextureCoordinate(PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME));
+        } catch (IOException | ClassNotFoundException ignored) {
+        }
+        if (SakuraSignIn.getThemeTexture() == null) {
+            // 使用默认配置
+            SakuraSignIn.setThemeTextureCoordinate(TextureCoordinate.getDefault());
+        }
+        // 设置内置主题特殊图标UV的偏移量
+        if (SakuraSignIn.isSpecialVersionTheme()) {
+            SakuraSignIn.getThemeTextureCoordinate().getNotSignedInUV().setX(320);
+            SakuraSignIn.getThemeTextureCoordinate().getSignedInUV().setX(320);
+        } else {
+            SakuraSignIn.getThemeTextureCoordinate().getNotSignedInUV().setX(0);
+            SakuraSignIn.getThemeTextureCoordinate().getSignedInUV().setX(0);
         }
     }
 

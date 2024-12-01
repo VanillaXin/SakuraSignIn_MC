@@ -29,17 +29,13 @@ import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.component.OperationButton;
 import xin.vanilla.mc.screen.component.PopupOption;
-import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
 import static xin.vanilla.mc.screen.SignInScreen.OperationButtonType.*;
 
 @OnlyIn(Dist.CLIENT)
@@ -70,18 +66,6 @@ public class SignInScreen extends Screen {
      * 日历单元格集合
      */
     private final List<SignInCell> signInCells = new ArrayList<>();
-    /**
-     * 背景材质
-     */
-    private ResourceLocation BACKGROUND_TEXTURE;
-    /**
-     * 背景材质坐标
-     */
-    public TextureCoordinate textureCoordinate;
-    /**
-     * 是否使用内置主题特殊图标
-     */
-    private boolean specialVersion;
 
     /**
      * 日历表格列数
@@ -173,25 +157,7 @@ public class SignInScreen extends Screen {
      * 更新材质及材质坐标信息
      */
     private void updateTextureAndCoordinate() {
-        try {
-            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.THEME.get());
-            specialVersion = Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get());
-            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
-            textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
-        } catch (IOException | ClassNotFoundException ignored) {
-        }
-        if (textureCoordinate == null) {
-            // 使用默认配置
-            textureCoordinate = TextureCoordinate.getDefault();
-        }
-        // 设置内置主题特殊图标UV的偏移量
-        if (specialVersion) {
-            textureCoordinate.getNotSignedInUV().setX(320);
-            textureCoordinate.getSignedInUV().setX(320);
-        } else {
-            textureCoordinate.getNotSignedInUV().setX(0);
-            textureCoordinate.getSignedInUV().setX(0);
-        }
+        ClientEventHandler.loadThemeTexture();
         // 更新按钮信息
         this.updateButtons();
     }
@@ -200,55 +166,55 @@ public class SignInScreen extends Screen {
      * 更新按钮信息
      */
     private void updateButtons() {
-        BUTTONS.put(LEFT_ARROW.getCode(), new OperationButton(LEFT_ARROW.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getLeftArrowCoordinate())
-                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight())
+        BUTTONS.put(LEFT_ARROW.getCode(), new OperationButton(LEFT_ARROW.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getLeftArrowCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setFlipHorizontal(true));
-        BUTTONS.put(RIGHT_ARROW.getCode(), new OperationButton(RIGHT_ARROW.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getRightArrowCoordinate())
-                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight()));
-        BUTTONS.put(UP_ARROW.getCode(), new OperationButton(UP_ARROW.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getUpArrowCoordinate())
-                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight())
+        BUTTONS.put(RIGHT_ARROW.getCode(), new OperationButton(RIGHT_ARROW.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getRightArrowCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+        BUTTONS.put(UP_ARROW.getCode(), new OperationButton(UP_ARROW.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getUpArrowCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setRotatedAngle(270));
-        BUTTONS.put(DOWN_ARROW.getCode(), new OperationButton(DOWN_ARROW.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getDownArrowCoordinate())
-                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight())
+        BUTTONS.put(DOWN_ARROW.getCode(), new OperationButton(DOWN_ARROW.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getDownArrowCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setRotatedAngle(90).setFlipVertical(true));
 
-        BUTTONS.put(THEME_ORIGINAL_BUTTON.getCode(), new OperationButton(THEME_ORIGINAL_BUTTON.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getThemeCoordinate())
-                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight()));
-        BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getThemeCoordinate())
-                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight()));
-        BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getThemeCoordinate())
-                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight()));
-        BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getThemeCoordinate())
-                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight()));
-        BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), BACKGROUND_TEXTURE)
-                .setCoordinate(textureCoordinate.getThemeCoordinate())
-                .setNormal(textureCoordinate.getThemeUV()).setHover(textureCoordinate.getThemeHoverUV()).setTap(textureCoordinate.getThemeTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight())
+        BUTTONS.put(THEME_ORIGINAL_BUTTON.getCode(), new OperationButton(THEME_ORIGINAL_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+        BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+        BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+        BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+        BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setTremblingAmplitude(3.5));
     }
 
@@ -263,7 +229,7 @@ public class SignInScreen extends Screen {
         // 使背景水平居中
         bgX = (super.width - bgW) / 2;
         // 更新缩放比例
-        this.scale = bgH * 1.0f / textureCoordinate.getBgUV().getVHeight();
+        this.scale = bgH * 1.0f / SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight();
         // 创建或更新格子位置
         this.createCalendarCells(SakuraSignIn.getCalendarCurrentDate());
     }
@@ -277,8 +243,8 @@ public class SignInScreen extends Screen {
         // 清除原有格子，避免重复添加
         signInCells.clear();
 
-        double startX = bgX + textureCoordinate.getCellCoordinate().getX() * this.scale;
-        double startY = bgY + textureCoordinate.getCellCoordinate().getY() * this.scale;
+        double startX = bgX + SakuraSignIn.getThemeTextureCoordinate().getCellCoordinate().getX() * this.scale;
+        double startY = bgY + SakuraSignIn.getThemeTextureCoordinate().getCellCoordinate().getY() * this.scale;
         // 今天的校准日期
         Date compensateDate = RewardManager.getCompensateDate(new Date());
         Date lastMonth = DateUtils.addMonth(current, -1);
@@ -301,12 +267,12 @@ public class SignInScreen extends Screen {
                     int itemIndex = row * columns + col;
                     // 检查是否已超过设置显示上限
                     if (itemIndex >= 40) break;
-                    double x = startX + col * (textureCoordinate.getCellCoordinate().getWidth() + textureCoordinate.getCellHMargin()) * this.scale;
-                    double y = startY + row * (textureCoordinate.getCellCoordinate().getHeight() + textureCoordinate.getCellVMargin()) * this.scale;
+                    double x = startX + col * (SakuraSignIn.getThemeTextureCoordinate().getCellCoordinate().getWidth() + SakuraSignIn.getThemeTextureCoordinate().getCellHMargin()) * this.scale;
+                    double y = startY + row * (SakuraSignIn.getThemeTextureCoordinate().getCellCoordinate().getHeight() + SakuraSignIn.getThemeTextureCoordinate().getCellVMargin()) * this.scale;
                     int year, month, day, status;
                     boolean showIcon, showText, showHover;
                     // 计算本月第一天是第几(0为第一个)个格子
-                    int curPoint = (dayOfWeekOfMonthStart - (textureCoordinate.getWeekStart() - 1) + 6) % 7;
+                    int curPoint = (dayOfWeekOfMonthStart - (SakuraSignIn.getThemeTextureCoordinate().getWeekStart() - 1) + 6) % 7;
                     // 根据itemIndex确定日期和状态
                     if (itemIndex >= curPoint + daysOfCurrentMonth) {
                         // 属于下月的日期
@@ -366,7 +332,7 @@ public class SignInScreen extends Screen {
                     }
 
                     // 创建物品格子
-                    SignInCell cell = new SignInCell(BACKGROUND_TEXTURE, textureCoordinate, x, y, textureCoordinate.getCellCoordinate().getWidth() * this.scale, textureCoordinate.getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
+                    SignInCell cell = new SignInCell(SakuraSignIn.getThemeTexture(), SakuraSignIn.getThemeTextureCoordinate(), x, y, SakuraSignIn.getThemeTextureCoordinate().getCellCoordinate().getWidth() * this.scale, SakuraSignIn.getThemeTextureCoordinate().getCellCoordinate().getHeight() * this.scale, this.scale, rewards, year, month, day, status);
                     cell.setShowIcon(showIcon).setShowText(showText).setShowHover(showHover);
                     // 添加到列表
                     signInCells.add(cell);
@@ -383,8 +349,8 @@ public class SignInScreen extends Screen {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         // 绘制背景纹理，使用缩放后的宽度和高度
-        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
-        AbstractGuiUtils.blit(matrixStack, bgX, bgY, bgW, bgH, (float) textureCoordinate.getBgUV().getU0(), (float) textureCoordinate.getBgUV().getV0(), (int) textureCoordinate.getBgUV().getUWidth(), (int) textureCoordinate.getBgUV().getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        Minecraft.getInstance().getTextureManager().bind(SakuraSignIn.getThemeTexture());
+        AbstractGuiUtils.blit(matrixStack, bgX, bgY, bgW, bgH, (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getU0(), (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getV0(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight(), SakuraSignIn.getThemeTextureCoordinate().getTotalWidth(), SakuraSignIn.getThemeTextureCoordinate().getTotalHeight());
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();
     }
@@ -398,16 +364,16 @@ public class SignInScreen extends Screen {
         this.renderBackgroundTexture(matrixStack);
 
         // 渲染年份
-        double yearX = bgX + textureCoordinate.getYearCoordinate().getX() * this.scale;
-        double yearY = bgY + textureCoordinate.getYearCoordinate().getY() * this.scale;
+        double yearX = bgX + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getX() * this.scale;
+        double yearY = bgY + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, textureCoordinate.getTextColorDate());
+        super.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
 
         // 渲染月份
-        double monthX = bgX + textureCoordinate.getMonthCoordinate().getX() * this.scale;
-        double monthY = bgY + textureCoordinate.getMonthCoordinate().getY() * this.scale;
+        double monthX = bgX + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getX() * this.scale;
+        double monthY = bgY + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, textureCoordinate.getTextColorDate());
+        super.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -415,41 +381,41 @@ public class SignInScreen extends Screen {
             switch (OperationButtonType.valueOf(op)) {
                 case RIGHT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
-                    if (button.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && button.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
+                    if (button.getWidth() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getWidth() && button.getHeight() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getHeight()) {
                         button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与月份相同，则将坐标设置为月份右边的位置
-                    if (button.getX() == textureCoordinate.getMonthCoordinate().getX() && button.getY() == textureCoordinate.getMonthCoordinate().getY()) {
+                    if (button.getX() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getX() && button.getY() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getY()) {
                         button.setX((monthX - bgX + font.width(monthTitle) + 1) / this.scale);
                     }
                     break;
                 case DOWN_ARROW:
                     // 如果宽度和高度与年份相同，则将大小设置为字体行高
-                    if (button.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && button.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
+                    if (button.getWidth() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getWidth() && button.getHeight() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getHeight()) {
                         button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与年份相同，则将坐标设置为年份右边的位置
-                    if (button.getX() == textureCoordinate.getYearCoordinate().getX() && button.getY() == textureCoordinate.getYearCoordinate().getY()) {
+                    if (button.getX() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getX() && button.getY() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getY()) {
                         button.setX((yearX - bgX + font.width(yearTitle) + 1) / this.scale);
                     }
                     break;
                 case LEFT_ARROW:
                     // 如果宽度和高度与月份相同，则将大小设置为字体行高
-                    if (button.getWidth() == textureCoordinate.getMonthCoordinate().getWidth() && button.getHeight() == textureCoordinate.getMonthCoordinate().getHeight()) {
+                    if (button.getWidth() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getWidth() && button.getHeight() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getHeight()) {
                         button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与月份相同，则将坐标设置为月份左边的位置
-                    if (button.getX() == textureCoordinate.getMonthCoordinate().getX() && button.getY() == textureCoordinate.getMonthCoordinate().getY()) {
+                    if (button.getX() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getX() && button.getY() == SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getY()) {
                         button.setX((monthX - bgX - 1) / this.scale - button.getWidth());
                     }
                     break;
                 case UP_ARROW:
                     // 如果宽度和高度与年份相同，则将大小设置为字体行高
-                    if (button.getWidth() == textureCoordinate.getYearCoordinate().getWidth() && button.getHeight() == textureCoordinate.getYearCoordinate().getHeight()) {
+                    if (button.getWidth() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getWidth() && button.getHeight() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getHeight()) {
                         button.setWidth(font.lineHeight / this.scale).setHeight(font.lineHeight / this.scale);
                     }
                     // 如果坐标与年份相同，则将坐标设置为年份左边的位置
-                    if (button.getX() == textureCoordinate.getYearCoordinate().getX() && button.getY() == textureCoordinate.getYearCoordinate().getY()) {
+                    if (button.getX() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getX() && button.getY() == SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getY()) {
                         button.setX((yearX - bgX - 1) / this.scale - button.getWidth());
                     }
                     break;
@@ -459,17 +425,17 @@ public class SignInScreen extends Screen {
                 case THEME_MAPLE_BUTTON:
                 case THEME_CHAOS_BUTTON:
                     // 如选中主题为当前主题则设置为鼠标按下(选中)状态
-                    if (BACKGROUND_TEXTURE.getPath().equalsIgnoreCase(OperationButtonType.valueOf(op).getPath())) {
+                    if (SakuraSignIn.getThemeTexture().getPath().equalsIgnoreCase(OperationButtonType.valueOf(op).getPath())) {
                         button.setNormalV(button.getTapV());
                         button.setHoverV(button.getTapV());
                     } else {
-                        button.setNormalV(textureCoordinate.getThemeUV().getV0());
-                        button.setHoverV(textureCoordinate.getThemeHoverUV().getV0());
+                        button.setNormalV(SakuraSignIn.getThemeTextureCoordinate().getThemeUV().getV0());
+                        button.setHoverV(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV().getV0());
                     }
-                    button.setNormalU((op - 100) * textureCoordinate.getThemeUV().getUWidth());
-                    button.setHoverU((op - 100) * textureCoordinate.getThemeHoverUV().getUWidth());
-                    button.setTapU((op - 100) * textureCoordinate.getThemeTapUV().getUWidth());
-                    button.setX((op - 100) * (textureCoordinate.getThemeCoordinate().getWidth() + textureCoordinate.getThemeHMargin()) + textureCoordinate.getThemeCoordinate().getX());
+                    button.setNormalU((op - 100) * SakuraSignIn.getThemeTextureCoordinate().getThemeUV().getUWidth());
+                    button.setHoverU((op - 100) * SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV().getUWidth());
+                    button.setTapU((op - 100) * SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV().getUWidth());
+                    button.setX((op - 100) * (SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate().getWidth() + SakuraSignIn.getThemeTextureCoordinate().getThemeHMargin()) + SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate().getX());
             }
             button.setBaseX(bgX);
             button.setBaseY(bgY);
@@ -616,36 +582,36 @@ public class SignInScreen extends Screen {
         }
         // 类原版主题
         else if (value.getOperation() == THEME_ORIGINAL_BUTTON.getCode()) {
-            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            SakuraSignIn.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
             ClientConfig.THEME.set(THEME_ORIGINAL_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.SPECIAL_THEME.set(SakuraSignIn.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
         }
         // 樱花粉主题
         else if (value.getOperation() == THEME_SAKURA_BUTTON.getCode()) {
-            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            SakuraSignIn.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
             ClientConfig.THEME.set(THEME_SAKURA_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.SPECIAL_THEME.set(SakuraSignIn.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
         }
         // 四叶草主题
         else if (value.getOperation() == THEME_CLOVER_BUTTON.getCode()) {
-            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            SakuraSignIn.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
             ClientConfig.THEME.set(THEME_CLOVER_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.SPECIAL_THEME.set(SakuraSignIn.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
         }
         // 枫叶主题
         else if (value.getOperation() == THEME_MAPLE_BUTTON.getCode()) {
-            specialVersion = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            SakuraSignIn.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
             ClientConfig.THEME.set(THEME_MAPLE_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(specialVersion);
+            ClientConfig.SPECIAL_THEME.set(SakuraSignIn.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);

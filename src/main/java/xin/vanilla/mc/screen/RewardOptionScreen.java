@@ -11,7 +11,8 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -21,11 +22,11 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xin.vanilla.mc.SakuraSignIn;
-import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
 import xin.vanilla.mc.enums.ERewaedRule;
 import xin.vanilla.mc.enums.ERewardType;
+import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
@@ -34,12 +35,11 @@ import xin.vanilla.mc.screen.component.OperationButton;
 import xin.vanilla.mc.screen.component.PopupOption;
 import xin.vanilla.mc.screen.component.Text;
 import xin.vanilla.mc.screen.coordinate.Coordinate;
-import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
-import xin.vanilla.mc.util.*;
+import xin.vanilla.mc.util.AbstractGuiUtils;
+import xin.vanilla.mc.util.I18nUtils;
+import xin.vanilla.mc.util.StringUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
 import static xin.vanilla.mc.util.I18nUtils.getByZh;
 
 @OnlyIn(Dist.CLIENT)
@@ -63,14 +62,6 @@ public class RewardOptionScreen extends Screen {
      */
     private int modifiers = -1;
 
-    /**
-     * 背景材质
-     */
-    private ResourceLocation BACKGROUND_TEXTURE;
-    /**
-     * 背景材质坐标
-     */
-    public TextureCoordinate textureCoordinate;
     /**
      * 左侧边栏标题高度
      */
@@ -171,22 +162,6 @@ public class RewardOptionScreen extends Screen {
     }
 
     /**
-     * 更新材质及材质坐标信息
-     */
-    private void updateTextureAndCoordinate() {
-        try {
-            BACKGROUND_TEXTURE = TextureUtils.loadCustomTexture(ClientConfig.THEME.get());
-            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(BACKGROUND_TEXTURE).getInputStream();
-            textureCoordinate = PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME);
-        } catch (IOException | ClassNotFoundException ignored) {
-        }
-        if (textureCoordinate == null) {
-            // 使用默认配置
-            textureCoordinate = TextureCoordinate.getDefault();
-        }
-    }
-
-    /**
      * 绘制背景纹理
      */
     private void renderBackgroundTexture(MatrixStack matrixStack) {
@@ -195,21 +170,21 @@ public class RewardOptionScreen extends Screen {
         RenderSystem.defaultBlendFunc();
 
         // 绑定背景纹理
-        Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
+        Minecraft.getInstance().getTextureManager().bind(SakuraSignIn.getThemeTexture());
 
         // 获取屏幕宽高
         int screenWidth = super.width;
         int screenHeight = super.height;
 
         // 获取纹理指定区域的坐标和大小
-        float u0 = (float) textureCoordinate.getOptionBgUV().getU0();
-        float v0 = (float) textureCoordinate.getOptionBgUV().getV0();
-        float regionWidth = (float) textureCoordinate.getOptionBgUV().getUWidth();
-        float regionHeight = (float) textureCoordinate.getOptionBgUV().getVHeight();
+        float u0 = (float) SakuraSignIn.getThemeTextureCoordinate().getOptionBgUV().getU0();
+        float v0 = (float) SakuraSignIn.getThemeTextureCoordinate().getOptionBgUV().getV0();
+        float regionWidth = (float) SakuraSignIn.getThemeTextureCoordinate().getOptionBgUV().getUWidth();
+        float regionHeight = (float) SakuraSignIn.getThemeTextureCoordinate().getOptionBgUV().getVHeight();
         if (regionWidth == 0) regionWidth = screenWidth;
         if (regionHeight == 0) regionHeight = screenHeight;
-        int textureTotalWidth = textureCoordinate.getTotalWidth();
-        int textureTotalHeight = textureCoordinate.getTotalHeight();
+        int textureTotalWidth = SakuraSignIn.getThemeTextureCoordinate().getTotalWidth();
+        int textureTotalHeight = SakuraSignIn.getThemeTextureCoordinate().getTotalHeight();
 
         // 计算UV比例
         float uMin = u0 / textureTotalWidth;
@@ -310,7 +285,7 @@ public class RewardOptionScreen extends Screen {
             REWARD_BUTTONS.put(String.format("%s,%s", key, j), new OperationButton(j, context -> {
                 if (context.button.getRealY() < super.height && context.button.getRealY() + context.button.getRealHeight() >= 0) {
                     Reward reward = rewardMap.get(key).get(context.button.getOperation());
-                    AbstractGuiUtils.renderCustomReward(this.ms, this.itemRenderer, super.font, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) context.button.getRealX(), (int) context.button.getRealY(), true);
+                    AbstractGuiUtils.renderCustomReward(this.ms, this.itemRenderer, super.font, SakuraSignIn.getThemeTexture(), SakuraSignIn.getThemeTextureCoordinate(), reward, (int) context.button.getRealX(), (int) context.button.getRealY(), true);
                 }
             })
                     .setX(leftMargin + (j % lineItemCount) * (itemIconSize + itemRightMargin))
@@ -628,7 +603,18 @@ public class RewardOptionScreen extends Screen {
             }
             // 药水效果
             else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EFFECT.getCode())).equalsIgnoreCase(selectedString)) {
-
+                EffecrSelectScreen callbackScreen = new EffecrSelectScreen(this, input -> {
+                    if (input != null && input.getDuration() > 0 && StringUtils.isNotNullOrEmpty(key[0])) {
+                        RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.EFFECT), ERewardType.EFFECT));
+                        RewardOptionDataManager.saveSignInData();
+                    }
+                }, new EffectInstance(Effects.LUCK), () -> StringUtils.isNullOrEmpty(key[0]));
+                if (rule != ERewaedRule.BASE_REWARD) {
+                    Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
+                } else {
+                    key[0] = "base";
+                    Minecraft.getInstance().setScreen(callbackScreen);
+                }
             }
             // 经验点
             else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EXP_POINT.getCode())).equalsIgnoreCase(selectedString)) {
@@ -774,7 +760,12 @@ public class RewardOptionScreen extends Screen {
                 }
                 // 药水效果
                 else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EFFECT.getCode())).equalsIgnoreCase(selectedString)) {
-
+                    Minecraft.getInstance().setScreen(new EffecrSelectScreen(this, input -> {
+                        if (input != null && input.getDuration() > 0) {
+                            RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.EFFECT), ERewardType.EFFECT));
+                            RewardOptionDataManager.saveSignInData();
+                        }
+                    }, new EffectInstance(Effects.LUCK)));
                 }
                 // 经验点
                 else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EXP_POINT.getCode())).equalsIgnoreCase(selectedString)) {
@@ -926,22 +917,22 @@ public class RewardOptionScreen extends Screen {
         super.init();
         this.leftBarTitleHeight = 5 * 2 + super.font.lineHeight;
         // 初始化材质及材质坐标信息
-        this.updateTextureAndCoordinate();
+        ClientEventHandler.loadThemeTexture();
         OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> {
         })
                 .setTransparentCheck(false));
-        OP_BUTTONS.put(OperationButtonType.OPEN.getCode(), new OperationButton(OperationButtonType.OPEN.getCode(), BACKGROUND_TEXTURE)
+        OP_BUTTONS.put(OperationButtonType.OPEN.getCode(), new OperationButton(OperationButtonType.OPEN.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(new Coordinate().setX(4).setY((super.height - 16) / 2.0).setWidth(16).setHeight(16))
-                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setTransparentCheck(false)
                 .setTooltip(getByZh("展开侧边栏")));
-        OP_BUTTONS.put(OperationButtonType.CLOSE.getCode(), new OperationButton(OperationButtonType.CLOSE.getCode(), BACKGROUND_TEXTURE)
+        OP_BUTTONS.put(OperationButtonType.CLOSE.getCode(), new OperationButton(OperationButtonType.CLOSE.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(new Coordinate().setX(80).setY((5 * 2 + super.font.lineHeight - 16) / 2.0).setWidth(16).setHeight(16))
-                .setNormal(textureCoordinate.getArrowUV()).setHover(textureCoordinate.getArrowHoverUV()).setTap(textureCoordinate.getArrowTapUV())
-                .setTextureWidth(textureCoordinate.getTotalWidth())
-                .setTextureHeight(textureCoordinate.getTotalHeight())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setFlipHorizontal(true)
                 .setTransparentCheck(false)
                 .setTooltip(getByZh("收起侧边栏")));
