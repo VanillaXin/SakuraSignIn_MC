@@ -79,7 +79,7 @@
   "tips.sakura_sign_in.effect_select_list_all_mode": "List Mode\nAll Effects (%s)",
   "tips.sakura_sign_in.effect_select_list_player_mode": "List Mode\nPlayer owns (%s)",
   "tips.sakura_sign_in.set_count_s": "Set Quantity\nCurrently %s",
-  "tips.sakura_sign_in.set_duration_s": "Set Duration\nCurrently %s",
+  "tips.sakura_sign_in.set_duration_s": "Set Duration\nCurrently %ss",
   "tips.sakura_sign_in.set_amplifier_s": "Set Amplifier\nCurrently %s",
   "tips.sakura_sign_in.edit_nbt": "Edit NBT",
   "tips.sakura_sign_in.mob_effect_s": "Mob Effect: %s"

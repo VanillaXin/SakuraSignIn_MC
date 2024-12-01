@@ -79,7 +79,7 @@
   "tips.sakura_sign_in.effect_select_list_all_mode": "列出模式\n所有效果 (%s)",
   "tips.sakura_sign_in.effect_select_list_player_mode": "列出模式\n玩家拥有 (%s)",
   "tips.sakura_sign_in.set_count_s": "设置数量\n当前 %s",
-  "tips.sakura_sign_in.set_duration_s": "设置持续时间\n当前 %s",
+  "tips.sakura_sign_in.set_duration_s": "设置持续时间\n当前 %ss",
   "tips.sakura_sign_in.set_amplifier_s": "设置效果等级\n当前 %s",
   "tips.sakura_sign_in.edit_nbt": "编辑NBT",
   "tips.sakura_sign_in.mob_effect_s": "药水效果: %s"
