@@ -12,13 +12,16 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ERewardType;
+import xin.vanilla.mc.network.AdvancementData;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.component.Text;
@@ -675,6 +678,12 @@ public class AbstractGuiUtils {
         } else if (reward.getType().equals(ERewardType.MESSAGE)) {
             // 这玩意不是Integer类型也没有数量, 不能showText
             AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
+        } else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
+            ResourceLocation resourceLocation = RewardManager.deserializeReward(reward);
+            AdvancementData advancementData = SakuraSignIn.getAdvancementData().stream()
+                    .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
+                    .findFirst().orElse(new AdvancementData(resourceLocation, "", "", new ItemStack(Items.AIR)));
+            itemRenderer.renderGuiItem(advancementData.getIcon(), x, y);
         }
     }
 

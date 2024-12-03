@@ -2,9 +2,16 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import xin.vanilla.mc.SakuraSignIn;
+import xin.vanilla.mc.enums.ERewardType;
+import xin.vanilla.mc.network.AdvancementData;
 import xin.vanilla.mc.rewards.RewardParser;
+import xin.vanilla.mc.util.I18nUtils;
 
 public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
 
@@ -29,9 +36,57 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
 
     @Override
     public String getDisplayName(JsonObject json) {
-        // TODO 获取进度名称
-        // ResourceLocation deserialize = deserialize(json);
-        // return Minecraft.getInstance().getSingleplayerServer().getAdvancements().getAdvancement(deserialize).getDisplay().getTitle().getString();
-        return "";
+        ResourceLocation deserialize = deserialize(json);
+        return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode()))
+                , SakuraSignIn.getAdvancementData().stream()
+                        .filter(data -> data.getId().equals(deserialize))
+                        .findFirst().orElse(new AdvancementData(deserialize, "", "", new ItemStack(Items.AIR)))
+                        .getTitle());
+    }
+
+    public static String getId(AdvancementData advancementData) {
+        return getId(advancementData.getId());
+    }
+
+    public static String getId(Advancement advancement) {
+        return getId(advancement.getId());
+    }
+
+    public static String getId(ResourceLocation resourceLocation) {
+        return resourceLocation.toString();
+    }
+
+    public static AdvancementData getAdvancementData(ResourceLocation resourceLocation) {
+        return getAdvancementData(resourceLocation.toString());
+    }
+
+    public static AdvancementData getAdvancementData(String id) {
+        return SakuraSignIn.getAdvancementData().stream()
+                .filter(data -> data.getId().toString().equalsIgnoreCase(id))
+                .findFirst().orElse(new AdvancementData(new ResourceLocation(id), "", "", new ItemStack(Items.AIR)));
+    }
+
+    public static String getDisplayName(AdvancementData advancementData) {
+        return advancementData.getTitle();
+    }
+
+    public static String getDisplayName(Advancement advancement) {
+        String result = "";
+        DisplayInfo display = advancement.getDisplay();
+        if (display != null)
+            result = display.getTitle().getString();
+        return result;
+    }
+
+    public static String getDescription(AdvancementData advancementData) {
+        return advancementData.getDescription();
+    }
+
+    public static String getDescription(Advancement advancement) {
+        String result = "";
+        DisplayInfo display = advancement.getDisplay();
+        if (display != null)
+            result = advancement.getDisplay().getDescription().getString();
+        return result;
     }
 }

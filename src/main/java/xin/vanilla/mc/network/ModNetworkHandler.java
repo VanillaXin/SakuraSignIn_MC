@@ -25,5 +25,6 @@ public class ModNetworkHandler {
         INSTANCE.registerMessage(nextID(), SignInDataSyncPacket.class, SignInDataSyncPacket::toBytes, SignInDataSyncPacket::new, SignInDataSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ItemStackPacket.class, ItemStackPacket::toBytes, ItemStackPacket::new, ItemStackPacket::handle);
         INSTANCE.registerMessage(nextID(), SignInPacket.class, SignInPacket::toBytes, SignInPacket::new, SignInPacket::handle);
+        INSTANCE.registerMessage(nextID(), AdvancementPacket.class, AdvancementPacket::toBytes, AdvancementPacket::new, AdvancementPacket::handle);
     }
 }

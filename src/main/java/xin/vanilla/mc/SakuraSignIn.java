@@ -26,11 +26,13 @@ import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.RewardOptionDataManager;
 import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.event.ClientEventHandler;
+import xin.vanilla.mc.network.AdvancementData;
 import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.List;
 
 @Mod(SakuraSignIn.MODID)
 public class SakuraSignIn {
@@ -77,6 +79,12 @@ public class SakuraSignIn {
     @Getter
     @Setter
     private static boolean specialVersionTheme = false;
+    /**
+     * 奖励配置数据
+     */
+    @Getter
+    @Setter
+    private static List<AdvancementData> advancementData;
 
     public SakuraSignIn() {
 

@@ -15,4 +15,8 @@ public class ClientProxy {
             SakuraSignIn.setEnabled(true);
         }
     }
+
+    public static void handleAdvancement(AdvancementPacket packet) {
+        SakuraSignIn.setAdvancementData(packet.getAdvancements());
+    }
 }

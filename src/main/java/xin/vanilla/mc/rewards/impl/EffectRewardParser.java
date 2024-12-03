@@ -9,6 +9,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
+import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
 import xin.vanilla.mc.util.I18nUtils;
 
@@ -45,7 +46,8 @@ public class EffectRewardParser implements RewardParser<EffectInstance> {
 
     @Override
     public String getDisplayName(JsonObject json) {
-        return I18nUtils.getByZh("药水效果: %s", this.deserialize(json).getEffect().getDisplayName().getString());
+        return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EFFECT.getCode()))
+                , this.deserialize(json).getEffect().getDisplayName().getString());
     }
 
     public static String getDisplayName(EffectInstance instance) {

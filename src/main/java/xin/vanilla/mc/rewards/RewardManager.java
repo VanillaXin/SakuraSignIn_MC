@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.NonNull;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -551,10 +552,10 @@ public class RewardManager {
                 player.giveExperiencePoints((Integer) object);
                 break;
             case ADVANCEMENT:
-                // TODO 待研究成就解锁
                 Advancement advancement = player.server.getAdvancements().getAdvancement((ResourceLocation) object);
                 if (advancement != null) {
-                    player.getAdvancements().award(advancement, "impossible");
+                    AdvancementProgress progress = player.getAdvancements().getOrStartProgress(advancement);
+                    progress.getRemainingCriteria().forEach(criterion -> player.getAdvancements().award(advancement, criterion));
                 }
                 break;
             case MESSAGE:

@@ -43,6 +43,7 @@ public class I18nUtils {
         put("请输入经验点值", "tips.sakura_sign_in.enter_exp_point");
         put("请输入经验等级", "tips.sakura_sign_in.enter_exp_level");
         put("请输入补签卡数量", "tips.sakura_sign_in.enter_sign_in_card");
+        put("请输入进度Json", "tips.sakura_sign_in.enter_advancement_json");
         put("请输入消息", "tips.sakura_sign_in.enter_message");
         put("规则名称[%s]输入有误", "tips.sakura_sign_in.reward_rule_s_error");
         put("物品Json[%s]输入有误", "tips.sakura_sign_in.item_json_s_error");
@@ -51,6 +52,7 @@ public class I18nUtils {
         put("效果Json[%s]输入有误", "tips.sakura_sign_in.effect_json_s_error");
         put("持续时间[%s]输入有误", "tips.sakura_sign_in.effect_duration_s_error");
         put("效果等级[%s]输入有误", "tips.sakura_sign_in.effect_amplifier_s_error");
+        put("进度Json[%s]输入有误", "tips.sakura_sign_in.advancement_json_s_error");
         put("输入值[%s]有误", "tips.sakura_sign_in.enter_value_s_error");
         put("展开侧边栏", "tips.sakura_sign_in.open_sidebar");
         put("收起侧边栏", "tips.sakura_sign_in.close_sidebar");
@@ -61,11 +63,12 @@ public class I18nUtils {
         put("列出模式\n所有物品 (%s)", "tips.sakura_sign_in.item_select_list_all_mode");
         put("列出模式\n所有效果 (%s)", "tips.sakura_sign_in.effect_select_list_all_mode");
         put("列出模式\n玩家拥有 (%s)", "tips.sakura_sign_in.effect_select_list_player_mode");
+        put("列出模式\n所有进度 (%s)", "tips.sakura_sign_in.advancement_select_list_all_mode");
+        put("列出模式\n有图标的 (%s)", "tips.sakura_sign_in.advancement_select_list_icon_mode");
         put("设置数量\n当前 %s", "tips.sakura_sign_in.set_count_s");
         put("设置持续时间\n当前 %s", "tips.sakura_sign_in.set_duration_s");
         put("设置效果等级\n当前 %s", "tips.sakura_sign_in.set_amplifier_s");
         put("编辑NBT", "tips.sakura_sign_in.edit_nbt");
-        put("药水效果: %s", "tips.sakura_sign_in.mob_effect_s");
 
     }};
 

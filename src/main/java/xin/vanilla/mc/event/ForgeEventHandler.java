@@ -22,13 +22,10 @@ import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.PlayerSignInDataProvider;
 import xin.vanilla.mc.config.ClientConfig;
-import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.config.RewardOptionDataManager;
+import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.enums.ESignInType;
-import xin.vanilla.mc.network.ClientConfigSyncPacket;
-import xin.vanilla.mc.network.ModNetworkHandler;
-import xin.vanilla.mc.network.SignInDataSyncPacket;
-import xin.vanilla.mc.network.SignInPacket;
+import xin.vanilla.mc.network.*;
 import xin.vanilla.mc.rewards.RewardManager;
 
 import java.util.Date;
@@ -109,6 +106,8 @@ public class ForgeEventHandler {
             PlayerSignInDataCapability.syncPlayerData((ServerPlayerEntity) event.getPlayer());
             // 同步签到奖励配置到客户端
             ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new SignInDataSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+            // 同步进度列表到客户端
+            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new AdvancementPacket(((ServerPlayerEntity) event.getPlayer()).server.getAdvancements().getAllAdvancements()));
         }
     }
 }

@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -684,7 +685,18 @@ public class RewardOptionScreen extends Screen {
             }
             // 进度
             else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode())).equalsIgnoreCase(selectedString)) {
-
+                AdvancementSelectScreen callbackScreen = new AdvancementSelectScreen(this, input -> {
+                    if (input != null && StringUtils.isNotNullOrEmpty(input.toString()) && StringUtils.isNotNullOrEmpty(key[0])) {
+                        RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.ADVANCEMENT), ERewardType.ADVANCEMENT));
+                        RewardOptionDataManager.saveSignInData();
+                    }
+                }, new ResourceLocation(""), () -> StringUtils.isNullOrEmpty(key[0]));
+                if (rule != ERewaedRule.BASE_REWARD) {
+                    Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
+                } else {
+                    key[0] = "base";
+                    Minecraft.getInstance().setScreen(callbackScreen);
+                }
             }
             // 消息
             else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.MESSAGE.getCode())).equalsIgnoreCase(selectedString)) {
@@ -702,7 +714,7 @@ public class RewardOptionScreen extends Screen {
                     Minecraft.getInstance().setScreen(callbackScreen);
                 }
             }
-            // TODO 实现其他奖励类型
+            // 实现其他奖励类型
         } else if (popupOption.getId().startsWith("奖励按钮:")) {
             String id = popupOption.getId().replace("奖励按钮:", "");
             if (id.startsWith("标题")) {
@@ -817,6 +829,12 @@ public class RewardOptionScreen extends Screen {
                 }
                 // 进度
                 else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode())).equalsIgnoreCase(selectedString)) {
+                    Minecraft.getInstance().setScreen(new AdvancementSelectScreen(this, input -> {
+                        if (input != null && StringUtils.isNotNullOrEmpty(input.toString())) {
+                            RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.ADVANCEMENT), ERewardType.ADVANCEMENT));
+                            RewardOptionDataManager.saveSignInData();
+                        }
+                    }, new ResourceLocation("")));
 
                 }
                 // 消息
@@ -829,7 +847,7 @@ public class RewardOptionScreen extends Screen {
                         }
                     }));
                 }
-                // TODO 实现其他奖励类型
+                // 实现其他奖励类型
             } else {
                 String[] split = id.split(",");
                 if (split.length != 2) {
