@@ -111,7 +111,7 @@ public class OperationButton {
     /**
      * 鼠标提示
      */
-    private String tooltip;
+    private Text tooltip;
     /**
      * 提示文字是否仅按下按键时显示
      */
@@ -348,6 +348,16 @@ public class OperationButton {
         }
     }
 
+    public OperationButton setTooltip(String content) {
+        this.tooltip = Text.literal(content);
+        return this;
+    }
+
+    public OperationButton setTooltip(Text text) {
+        this.tooltip = text;
+        return this;
+    }
+
     /**
      * 绘制按钮
      */
@@ -406,10 +416,10 @@ public class OperationButton {
     public void renderPopup(MatrixStack matrixStack, FontRenderer font, double mouseX, double mouseY, int keyCode, int modifiers) {
         // 绘制提示
         if (this.keyCode == -1 || (this.keyCode == keyCode && this.modifiers == modifiers)) {
-            if (this.isHovered() && StringUtils.isNotNullOrEmpty(tooltip)) {
+            if (this.isHovered() && tooltip != null && StringUtils.isNotNullOrEmpty(tooltip.getContent())) {
                 if (Minecraft.getInstance().screen != null) {
                     if (font == null) font = Minecraft.getInstance().font;
-                    AbstractGuiUtils.drawPopupMessage(matrixStack, font, tooltip, (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+                    AbstractGuiUtils.drawPopupMessage(tooltip.setMatrixStack(matrixStack).setFont(font), (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
                 }
             }
         }

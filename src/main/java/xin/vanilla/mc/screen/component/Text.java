@@ -138,7 +138,9 @@ public class Text {
                 .setHoverItalic(this.hoverItalic)
                 .setHoverUnderlined(this.hoverUnderlined)
                 .setHoverStrikethrough(this.hoverStrikethrough)
-                .setHoverObfuscated(this.hoverObfuscated);
+                .setHoverObfuscated(this.hoverObfuscated)
+                .setMatrixStack(this.matrixStack)
+                .setFont(this.font);
     }
 
     public MatrixStack getMatrixStack() {

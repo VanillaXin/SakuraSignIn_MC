@@ -355,11 +355,8 @@ public class AdvancementSelectScreen extends Screen {
             AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.displayMode ? Items.CHEST : Items.COMPASS);
             this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            // 绘制进度详情悬浮窗
-            if (context.button.isHovered()) {
-                Text text = this.displayMode ? Text.i18n("列出模式\n有图标的 (%s)", allAdvancementList.size()) : Text.i18n("列出模式\n所有进度 (%s)", allAdvancementList.size());
-                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-            }
+            Text text = this.displayMode ? Text.i18n("列出模式\n有图标的 (%s)", allAdvancementList.size()) : Text.i18n("列出模式\n所有进度 (%s)", allAdvancementList.size());
+            context.button.setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.ADVANCEMENT.getCode(), new OperationButton(OperationButtonType.ADVANCEMENT.getCode(), context -> {
             // 绘制背景
@@ -367,10 +364,7 @@ public class AdvancementSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             this.itemRenderer.renderGuiItem(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getIcon(), (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            // 绘制进度详情悬浮窗
-            if (context.button.isHovered()) {
-                AbstractGuiUtils.drawPopupMessage(Text.literal(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getTitle()), (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-            }
+            context.button.setTooltip(Text.literal(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getTitle()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
         // 滚动条
@@ -427,9 +421,7 @@ public class AdvancementSelectScreen extends Screen {
                     AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), bgColor);
                     AbstractGuiUtils.drawLimitedText(Text.literal(AdvancementRewardParser.getDisplayName(advancementData)).setMatrixStack(context.matrixStack).setFont(this.font), context.button.getX() + AbstractGuiUtils.ITEM_ICON_SIZE + this.margin * 2, context.button.getY() + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 - this.font.lineHeight) / 2.0, (int) context.button.getWidth() - AbstractGuiUtils.ITEM_ICON_SIZE - 4);
                     this.itemRenderer.renderGuiItem(advancementData.getIcon(), (int) (context.button.getX() + this.margin), (int) context.button.getY());
-                    if (context.button.isHovered()) {
-                        AbstractGuiUtils.drawPopupMessage(Text.literal(AdvancementRewardParser.getDisplayName(advancementData) + "\n" + AdvancementRewardParser.getDescription(advancementData)), (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-                    }
+                    context.button.setTooltip(AdvancementRewardParser.getDisplayName(advancementData) + "\n" + AdvancementRewardParser.getDescription(advancementData));
                 } else {
                     context.button.setX(0).setY(0).setWidth(0).setHeight(0).setId("");
                 }

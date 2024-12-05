@@ -412,11 +412,8 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.inventoryMode ? Items.CHEST : Items.COMPASS);
             this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            // 绘制物品详情悬浮窗
-            if (context.button.isHovered()) {
-                Text text = this.inventoryMode ? Text.i18n("列出模式\n物品栏 (%s)", playerItemList.size()) : Text.i18n("列出模式\n所有物品 (%s)", allItemList.size());
-                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-            }
+            Text text = this.inventoryMode ? Text.i18n("列出模式\n物品栏 (%s)", playerItemList.size()) : Text.i18n("列出模式\n所有物品 (%s)", allItemList.size());
+            context.button.setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.ITEM.getCode(), new OperationButton(OperationButtonType.ITEM.getCode(), context -> {
             // 绘制背景
@@ -424,16 +421,7 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             this.itemRenderer.renderGuiItem(this.currentItem, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            // 绘制物品详情悬浮窗
-            if (context.button.isHovered()) {
-                AbstractGuiUtils.drawPopupMessage(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()), (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-                // List<ITextComponent> list = this.currentItem.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-                // List<ITextComponent> list1 = Lists.newArrayList(list);
-                // FontRenderer font = this.currentItem.getItem().getFontRenderer(this.currentItem);
-                // GuiUtils.preItemToolTip(this.currentItem);
-                // this.renderWrappedToolTip(context.matrixStack, list1, (int) context.mouseX, (int) context.mouseY, (font == null ? this.font : font));
-                // GuiUtils.postItemToolTip();
-            }
+            context.button.setTooltip(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.COUNT.getCode(), new OperationButton(OperationButtonType.COUNT.getCode(), context -> {
             // 绘制背景
@@ -442,11 +430,8 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.WRITABLE_BOOK);
             this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            // 绘制物品详情悬浮窗
-            if (context.button.isHovered()) {
-                Text text = Text.i18n("设置数量\n当前 %s", this.currentItem.getCount());
-                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-            }
+            Text text = Text.i18n("设置数量\n当前 %s", this.currentItem.getCount());
+            context.button.setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 2).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.NBT.getCode(), new OperationButton(OperationButtonType.NBT.getCode(), context -> {
             // 绘制背景
@@ -455,11 +440,8 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.NAME_TAG);
             this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            // 绘制物品详情悬浮窗
-            if (context.button.isHovered()) {
-                Text text = Text.i18n("编辑NBT");
-                AbstractGuiUtils.drawPopupMessage(text, (int) context.mouseX, (int) context.mouseY, this.width, this.height);
-            }
+            Text text = Text.i18n("编辑NBT");
+            context.button.setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
         // 滚动条

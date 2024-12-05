@@ -662,10 +662,7 @@ public class AbstractGuiUtils {
     public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, TextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
-            itemRenderer.renderGuiItem(itemStack, x, y);
-            if (showText) {
-                itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
-            }
+            renderItem(itemRenderer, fontRenderer, itemStack, x, y, showText);
         } else if (reward.getType().equals(ERewardType.EFFECT)) {
             EffectInstance effectInstance = RewardManager.deserializeReward(reward);
             AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
@@ -684,6 +681,13 @@ public class AbstractGuiUtils {
                     .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
                     .findFirst().orElse(new AdvancementData(resourceLocation, "", "", new ItemStack(Items.AIR)));
             itemRenderer.renderGuiItem(advancementData.getIcon(), x, y);
+        }
+    }
+
+    public static void renderItem(ItemRenderer itemRenderer, FontRenderer fontRenderer, ItemStack itemStack, int x, int y, boolean showText) {
+        itemRenderer.renderGuiItem(itemStack, x, y);
+        if (showText) {
+            itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
         }
     }
 
@@ -729,8 +733,8 @@ public class AbstractGuiUtils {
      * @param radius      圆角半径(0-10)
      */
     public static void fill(MatrixStack matrixStack, int x, int y, int width, int height, int color, int radius) {
+        // 如果半径为0，则直接绘制普通矩形
         if (radius <= 0) {
-            // 如果半径为0，则直接绘制普通矩形
             AbstractGui.fill(matrixStack, x, y, x + width, y + height, color);
             return;
         }
