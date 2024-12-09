@@ -32,6 +32,7 @@ public class I18nUtils {
         put("清空", "option.sakura_sign_in.clear");
         put("取消", "option.sakura_sign_in.cancel");
         put("提交", "option.sakura_sign_in.submit");
+        put("确认", "option.sakura_sign_in.confirm");
         put("请输入", "tips.sakura_sign_in.enter_something");
         put("请输入规则名称", "tips.sakura_sign_in.enter_reward_rule_key");
         put("请输入物品Json", "tips.sakura_sign_in.enter_item_json");
@@ -57,8 +58,8 @@ public class I18nUtils {
         put("展开侧边栏", "tips.sakura_sign_in.open_sidebar");
         put("收起侧边栏", "tips.sakura_sign_in.close_sidebar");
         put("Y轴偏移:\n%.1f\n点击重置", "tips.sakura_sign_in.y_offset");
-        put("左键取消\n右键确认", "tips.sakura_sign_in.cancel_or_confirm");
-        put("是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认", "tips.sakura_sign_in.clear_all_config");
+        put("Ctrl + 鼠标右键确认", "tips.sakura_sign_in.cancel_or_confirm");
+        put("是否清空当前规则类型下所有配置\nCtrl + 鼠标右键确认", "tips.sakura_sign_in.clear_all_config");
         put("列出模式\n物品栏 (%s)", "tips.sakura_sign_in.item_select_list_inventory_mode");
         put("列出模式\n所有物品 (%s)", "tips.sakura_sign_in.item_select_list_all_mode");
         put("列出模式\n所有效果 (%s)", "tips.sakura_sign_in.effect_select_list_all_mode");
@@ -69,6 +70,8 @@ public class I18nUtils {
         put("设置持续时间\n当前 %s", "tips.sakura_sign_in.set_duration_s");
         put("设置效果等级\n当前 %s", "tips.sakura_sign_in.set_amplifier_s");
         put("编辑NBT", "tips.sakura_sign_in.edit_nbt");
+        put("页面上部分元素\n按住Shift键可查看帮助信息", "tips.sakura_sign_in.help_button");
+        put("比如红色字体按钮, 按住Shift时会给予帮助信息:\n按住Control键 并且 鼠标右键点击以确认\n直接点击是取消哦", "tips.sakura_sign_in.help_button_shift");
 
     }};
 

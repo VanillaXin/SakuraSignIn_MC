@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import org.lwjgl.glfw.GLFW;
+import xin.vanilla.mc.util.AbstractGuiUtils;
 
 /**
  * 自定义的鼠标光标
@@ -56,6 +57,7 @@ public class MouseCursor {
             color3 = 0xFF777777;
         }
 
+        AbstractGuiUtils.setDepth(matrixStack, AbstractGuiUtils.EDepth.MOUSE);
         AbstractGui.fill(matrixStack, mouseX, mouseY + this.scroll, mouseX + 1, mouseY + this.scroll + 1, color3);
 
         AbstractGui.fill(matrixStack, mouseX - 1, mouseY + 2, mouseX - 1 - 3, mouseY + 2 + 1, color1);
@@ -67,6 +69,7 @@ public class MouseCursor {
         AbstractGui.fill(matrixStack, mouseX + 2, mouseY + 2, mouseX + 2 + 1, mouseY + 2 + 3, color2);
         AbstractGui.fill(matrixStack, mouseX + 2, mouseY - 1, mouseX + 2 + 3, mouseY - 1 - 1, color2);
         AbstractGui.fill(matrixStack, mouseX + 2, mouseY - 1, mouseX + 2 + 1, mouseY - 1 - 3, color2);
+        AbstractGuiUtils.resetDepth(matrixStack);
         // 恢复鼠标滚动偏移
         this.scroll = 0;
     }

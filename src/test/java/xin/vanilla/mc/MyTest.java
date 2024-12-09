@@ -85,7 +85,7 @@ public class MyTest {
         TextureCoordinate aDefault = TextureCoordinate.getDefault();
         switch (fileName) {
             case "original":
-                aDefault.setTotalHeight(880);
+                // aDefault.setTotalHeight(880);
                 break;
             case "sakura":
                 aDefault.getCellCoordinate().setX(70).setY(128).setWidth(34).setHeight(34);
@@ -98,7 +98,7 @@ public class MyTest {
                 aDefault.setTextColorDate(0xFF000000);
                 break;
             case "clover":
-                aDefault.setTotalHeight(880);
+                // aDefault.setTotalHeight(880);
                 aDefault.getCellCoordinate().setX(80);
                 aDefault.setTextColorDefault(0xFFEFCE8B);
                 aDefault.setTextColorCurrent(0xFF426812);
@@ -107,7 +107,7 @@ public class MyTest {
                 aDefault.setTextColorDate(0xFF000000);
                 break;
             case "maple":
-                aDefault.setTotalHeight(880);
+                // aDefault.setTotalHeight(880);
                 aDefault.setTextColorDefault(0xFFFFAA85);
                 aDefault.setTextColorCurrent(0xFFCE4906);
                 aDefault.setTextColorCanRepair(0xFFFFFCD2);

@@ -149,7 +149,10 @@ public class RewardOptionScreen extends Screen {
         MONTH_REWARD(205),
         WEEK_REWARD(206),
         DATE_TIME_REWARD(207),
-        OFFSET_Y(301);
+        OFFSET_Y(301),
+        HELP(302),
+        DOWNLOAD(303),
+        UPLOAD(304);
 
         final int code;
 
@@ -461,7 +464,7 @@ public class RewardOptionScreen extends Screen {
                 // 绘制弹出层选项
                 this.popupOption.clear();
                 this.popupOption.addOption(Text.i18n("清空").setColor(0xFFFF0000))
-                        .addTips(Text.i18n("是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认"))
+                        .addTips(Text.i18n("是否清空当前规则类型下所有配置\nCtrl + 鼠标右键确认"))
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励规则类型按钮:%s", value.getOperation()));
@@ -483,6 +486,14 @@ public class RewardOptionScreen extends Screen {
                     flag.set(true);
                 }
             }
+        }
+        // 上传奖励配置
+        else if (value.getOperation() == OperationButtonType.UPLOAD.getCode()) {
+            // TODO 上传奖励配置 仅管理员可上传
+        }
+        // 下载奖励配置
+        else if (value.getOperation() == OperationButtonType.DOWNLOAD.getCode()) {
+            // TODO 下载奖励配置
         }
     }
 
@@ -512,8 +523,8 @@ public class RewardOptionScreen extends Screen {
                 if (!"标题,base".equalsIgnoreCase(key)) {
                     this.popupOption.addOption(Text.i18n("删除").setColor(0xFFFF0000));
                 }
-                this.popupOption.addTips(Text.i18n("左键取消\n右键确认"), -1)
-                        .addTips(Text.i18n("左键取消\n右键确认"), -2)
+                this.popupOption.addTips(Text.i18n("Ctrl + 鼠标右键确认"), -1)
+                        .addTips(Text.i18n("Ctrl + 鼠标右键确认"), -2)
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励按钮:%s", key));
@@ -522,7 +533,7 @@ public class RewardOptionScreen extends Screen {
                 this.popupOption.addOption(Text.i18n("修改"))
                         .addOption(Text.i18n("复制"))
                         .addOption(Text.i18n("删除").setColor(0xFFFF0000))
-                        .addTips(Text.i18n("左键取消\n右键确认"), -1)
+                        .addTips(Text.i18n("Ctrl + 鼠标右键确认"), -1)
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励按钮:%s", key));
@@ -548,41 +559,44 @@ public class RewardOptionScreen extends Screen {
             int opCode = StringUtils.toInt(popupOption.getId().replace("奖励规则类型按钮:", ""));
             // 若选择了清空
             if (popupOption.getSelectedIndex() == 0 && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                if (opCode >= OperationButtonType.BASE_REWARD.getCode() && opCode <= OperationButtonType.DATE_TIME_REWARD.getCode()) {
-                    switch (OperationButtonType.valueOf(opCode)) {
-                        case BASE_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getBaseRewards().clear();
+                // 并且按住了Control按钮
+                if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
+                    if (opCode >= OperationButtonType.BASE_REWARD.getCode() && opCode <= OperationButtonType.DATE_TIME_REWARD.getCode()) {
+                        switch (OperationButtonType.valueOf(opCode)) {
+                            case BASE_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getBaseRewards().clear();
+                            }
+                            break;
+                            case CONTINUOUS_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getContinuousRewards().clear();
+                            }
+                            break;
+                            case CYCLE_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getCycleRewards().clear();
+                            }
+                            break;
+                            case YEAR_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getYearRewards().clear();
+                            }
+                            break;
+                            case MONTH_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getMonthRewards().clear();
+                            }
+                            break;
+                            case WEEK_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getWeekRewards().clear();
+                            }
+                            break;
+                            case DATE_TIME_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getDateTimeRewards().clear();
+                            }
+                            break;
                         }
-                        break;
-                        case CONTINUOUS_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getContinuousRewards().clear();
-                        }
-                        break;
-                        case CYCLE_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getCycleRewards().clear();
-                        }
-                        break;
-                        case YEAR_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getYearRewards().clear();
-                        }
-                        break;
-                        case MONTH_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getMonthRewards().clear();
-                        }
-                        break;
-                        case WEEK_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getWeekRewards().clear();
-                        }
-                        break;
-                        case DATE_TIME_REWARD: {
-                            RewardOptionDataManager.getRewardOptionData().getDateTimeRewards().clear();
-                        }
-                        break;
+                        RewardOptionDataManager.saveSignInData();
+                        updateLayout.set(true);
+                        flag.set(true);
+                        // TODO 发包同步至服务器, 做成右侧边栏按钮
                     }
-                    RewardOptionDataManager.saveSignInData();
-                    updateLayout.set(true);
-                    flag.set(true);
-                    // TODO 发包同步至服务器, 做成右侧边栏按钮
                 }
             }
         } else if (popupOption.getId().startsWith("奖励面板按钮:")) {
@@ -752,13 +766,17 @@ public class RewardOptionScreen extends Screen {
                     }
                 } else if (getByZh("清空").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        RewardOptionDataManager.clearKey(rule, key);
-                        RewardOptionDataManager.saveSignInData();
+                        if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
+                            RewardOptionDataManager.clearKey(rule, key);
+                            RewardOptionDataManager.saveSignInData();
+                        }
                     }
                 } else if (getByZh("删除").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        RewardOptionDataManager.deleteKey(rule, key);
-                        RewardOptionDataManager.saveSignInData();
+                        if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
+                            RewardOptionDataManager.deleteKey(rule, key);
+                            RewardOptionDataManager.saveSignInData();
+                        }
                     }
                 }
                 // 添加物品
@@ -876,8 +894,10 @@ public class RewardOptionScreen extends Screen {
                     }
                 } else if (getByZh("删除").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                        RewardOptionDataManager.deleteReward(rule, key, Integer.parseInt(index));
-                        RewardOptionDataManager.saveSignInData();
+                        if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
+                            RewardOptionDataManager.deleteReward(rule, key, Integer.parseInt(index));
+                            RewardOptionDataManager.saveSignInData();
+                        }
                     }
                 }
             }
@@ -981,9 +1001,31 @@ public class RewardOptionScreen extends Screen {
         })
                 .setX(super.width - rightBarWidth).setY(super.height - font.lineHeight * 2 - 2).setWidth(rightBarWidth).setHeight(font.lineHeight * 2 + 2)
                 .setTransparentCheck(false));
-        // TODO 添加帮助按钮
+        OP_BUTTONS.put(OperationButtonType.HELP.getCode(), new OperationButton(OperationButtonType.HELP.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getHelpUV())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getHelpUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getHelpUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getHelpUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setX(super.width - rightBarWidth + 1).setY(2).setWidth(18).setHeight(18)
+                .setHoverFgColor(0xAA808080).setTapFgColor(0xAA808080)
+                .setTransparentCheck(false));
+        OP_BUTTONS.put(OperationButtonType.DOWNLOAD.getCode(), new OperationButton(OperationButtonType.DOWNLOAD.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getDownloadUV())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getDownloadUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getDownloadUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getDownloadUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setX(super.width - rightBarWidth + 1).setY(22).setWidth(18).setHeight(18)
+                .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0)
+                .setTransparentCheck(false));
+        OP_BUTTONS.put(OperationButtonType.UPLOAD.getCode(), new OperationButton(OperationButtonType.UPLOAD.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getUploadUV())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getUploadUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getUploadUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getUploadUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setX(super.width - rightBarWidth + 1).setY(42).setWidth(18).setHeight(18)
+                .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0)
+                .setTransparentCheck(false));
         // TODO 添加排序按钮
-        // TODO 添加同步至服务器按钮
         // TODO 添加打开配置文件夹按钮
         this.updateLayout();
     }
@@ -1054,6 +1096,14 @@ public class RewardOptionScreen extends Screen {
             else {
                 if (op == OperationButtonType.OFFSET_Y.getCode()) {
                     button.setTooltip(getByZh("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
+                }
+                // 帮助按钮
+                else if (op == OperationButtonType.HELP.getCode()) {
+                    if ((this.keyCode == GLFW.GLFW_KEY_LEFT_SHIFT || this.keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) && this.modifiers == GLFW.GLFW_MOD_SHIFT) {
+                        button.setTooltip(getByZh("比如红色字体按钮, 按住Shift时会给予帮助信息:\n按住Control键 并且 鼠标右键点击以确认\n直接点击是取消哦"));
+                    } else {
+                        button.setTooltip(getByZh("页面上部分元素\n按住Shift键可查看帮助信息"));
+                    }
                 }
                 button.renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);
             }

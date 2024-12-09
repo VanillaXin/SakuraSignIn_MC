@@ -48,7 +48,8 @@ public class AbstractGuiUtils {
         FOREGROUND(250),
         OVERLAY(500),
         TOOLTIP(750),
-        POPUP_TIPS(900);
+        POPUP_TIPS(900),
+        MOUSE(1000);
 
         private final int depth;
 

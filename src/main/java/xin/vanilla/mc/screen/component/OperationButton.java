@@ -96,6 +96,14 @@ public class OperationButton {
      */
     private double tapU, tapV, tapWidth, tapHeight;
     /**
+     * 按钮背景颜色
+     */
+    private int normalBgColor, hoverBgColor, tapBgColor;
+    /**
+     * 按钮前景色
+     */
+    private int normalFgColor, hoverFgColor, tapFgColor;
+    /**
      * 横向翻转或纵向翻转
      */
     private boolean flipHorizontal, flipVertical;
@@ -348,6 +356,26 @@ public class OperationButton {
         }
     }
 
+    public int getBackgroundColor() {
+        if (hovered && pressed) {
+            return tapBgColor;
+        } else if (hovered) {
+            return hoverBgColor;
+        } else {
+            return normalBgColor;
+        }
+    }
+
+    private int getForegroundColor() {
+        if (hovered && pressed) {
+            return tapFgColor;
+        } else if (hovered) {
+            return hoverFgColor;
+        } else {
+            return normalFgColor;
+        }
+    }
+
     public OperationButton setTooltip(String content) {
         this.tooltip = Text.literal(content);
         return this;
@@ -378,10 +406,21 @@ public class OperationButton {
             TextureCoordinate textureCoordinate = new TextureCoordinate().setTotalWidth(this.textureWidth).setTotalHeight(this.textureHeight);
             Coordinate coordinate = new Coordinate().setX(this.x).setY(this.y).setWidth(this.width).setHeight(this.height)
                     .setU0(getU()).setV0(getV()).setUWidth(getUWidth()).setVHeight(getVHeight());
+            // 绘制背景颜色
+            int bgColor = this.getBackgroundColor();
+            if (bgColor != 0) {
+                AbstractGuiUtils.fill(matrixStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), bgColor);
+            }
+            // 绘制纹理
             if (this.isHovered() && this.getTremblingAmplitude() > 0) {
                 AbstractGuiUtils.renderTremblingTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());
             } else {
                 AbstractGuiUtils.renderRotatedTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
+            }
+            // 绘制前景颜色
+            int fgColor = this.getForegroundColor();
+            if (fgColor != 0) {
+                AbstractGuiUtils.fill(matrixStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), fgColor);
             }
         }
         if (renderPopup) {

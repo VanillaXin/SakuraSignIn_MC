@@ -49,6 +49,7 @@
   "option.sakura_sign_in.clear": "清空",
   "option.sakura_sign_in.cancel": "取消",
   "option.sakura_sign_in.submit": "提交",
+  "option.sakura_sign_in.confirm": "确认",
   "tips.sakura_sign_in.enter_something": "请输入",
   "tips.sakura_sign_in.enter_reward_rule_key": "请输入规则",
   "tips.sakura_sign_in.enter_item_json": "请输入物品Json",
@@ -74,8 +75,8 @@
   "tips.sakura_sign_in.open_sidebar": "展开侧边栏",
   "tips.sakura_sign_in.close_sidebar": "关闭侧边栏",
   "tips.sakura_sign_in.y_offset": "Y轴偏移:\n%.1f\n点击重置",
-  "tips.sakura_sign_in.cancel_or_confirm": "左键取消\n右键确认",
-  "tips.sakura_sign_in.clear_all_config": "是否清空当前奖励规则类型下所有配置\n        左键取消     右键确认",
+  "tips.sakura_sign_in.cancel_or_confirm": "Ctrl + 鼠标右键确认",
+  "tips.sakura_sign_in.clear_all_config": "是否清空当前规则类型下所有配置\nCtrl + 鼠标右键确认",
   "tips.sakura_sign_in.item_select_list_inventory_mode": "列出模式\n物品栏 (%s)",
   "tips.sakura_sign_in.item_select_list_all_mode": "列出模式\n所有物品 (%s)",
   "tips.sakura_sign_in.effect_select_list_all_mode": "列出模式\n所有效果 (%s)",
@@ -85,5 +86,7 @@
   "tips.sakura_sign_in.set_count_s": "设置数量\n当前 %s",
   "tips.sakura_sign_in.set_duration_s": "设置持续时间\n当前 %ss",
   "tips.sakura_sign_in.set_amplifier_s": "设置效果等级\n当前 %s",
-  "tips.sakura_sign_in.edit_nbt": "编辑NBT"
+  "tips.sakura_sign_in.edit_nbt": "编辑NBT",
+  "tips.sakura_sign_in.help_button": "页面上部分元素\n按住Shift键可查看帮助信息",
+  "tips.sakura_sign_in.help_button_shift": "比如红色字体按钮, 按住Shift时会给予帮助信息:\n按住Control键 并且 鼠标右键点击以确认\n直接点击是取消哦"
 }

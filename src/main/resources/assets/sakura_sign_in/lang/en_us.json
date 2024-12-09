@@ -49,6 +49,7 @@
   "option.sakura_sign_in.clear": "Clear",
   "option.sakura_sign_in.cancel": "Cancel",
   "option.sakura_sign_in.submit": "Submit",
+  "option.sakura_sign_in.confirm": "Confirm",
   "tips.sakura_sign_in.enter_something": "Please enter",
   "tips.sakura_sign_in.enter_reward_rule_key": "Please enter the rule key",
   "tips.sakura_sign_in.enter_item_json": "Please enter the Item's Json",
@@ -74,8 +75,8 @@
   "tips.sakura_sign_in.open_sidebar": "Open sidebar",
   "tips.sakura_sign_in.close_sidebar": "Close sidebar",
   "tips.sakura_sign_in.y_offset": "Offset of Y:\n%.1f\nClick to reset",
-  "tips.sakura_sign_in.cancel_or_confirm": "Left-click to cancel\nRight-click to confirm",
-  "tips.sakura_sign_in.clear_all_config": "Clear all config under the current rule\n            Left-click to cancel\n           Right-click to confirm",
+  "tips.sakura_sign_in.cancel_or_confirm": "Ctrl + Right-click to confirm",
+  "tips.sakura_sign_in.clear_all_config": "Clear all config under the current rule\nCtrl + Right-click to confirm",
   "tips.sakura_sign_in.item_select_list_inventory_mode": "List Mode\nInventory (%s)",
   "tips.sakura_sign_in.item_select_list_all_mode": "List Mode\nAll Items (%s)",
   "tips.sakura_sign_in.effect_select_list_all_mode": "List Mode\nAll Effects (%s)",
@@ -85,5 +86,7 @@
   "tips.sakura_sign_in.set_count_s": "Set Quantity\nCurrently %s",
   "tips.sakura_sign_in.set_duration_s": "Set Duration\nCurrently %ss",
   "tips.sakura_sign_in.set_amplifier_s": "Set Amplifier\nCurrently %s",
-  "tips.sakura_sign_in.edit_nbt": "Edit NBT"
+  "tips.sakura_sign_in.edit_nbt": "Edit NBT",
+  "tips.sakura_sign_in.help_button": "Hold down the Shift key on some elements\non the page to view help information",
+  "tips.sakura_sign_in.help_button_shift": "For example, for the red font button,\npressing and holding Shift will provide help information:\nHold down the Control key and right-click with the mouse to confirm.\nClicking directly cancels the operation"
 }
