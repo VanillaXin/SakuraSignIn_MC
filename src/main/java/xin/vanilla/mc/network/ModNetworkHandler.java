@@ -22,9 +22,10 @@ public class ModNetworkHandler {
     public static void registerPackets() {
         INSTANCE.registerMessage(nextID(), PlayerDataSyncPacket.class, PlayerDataSyncPacket::toBytes, PlayerDataSyncPacket::new, PlayerDataSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ClientConfigSyncPacket.class, ClientConfigSyncPacket::toBytes, ClientConfigSyncPacket::new, ClientConfigSyncPacket::handle);
-        INSTANCE.registerMessage(nextID(), SignInDataSyncPacket.class, SignInDataSyncPacket::toBytes, SignInDataSyncPacket::new, SignInDataSyncPacket::handle);
+        INSTANCE.registerMessage(nextID(), RewardOptionSyncPacket.class, RewardOptionSyncPacket::toBytes, RewardOptionSyncPacket::new, RewardOptionSyncPacket::handle);
         INSTANCE.registerMessage(nextID(), ItemStackPacket.class, ItemStackPacket::toBytes, ItemStackPacket::new, ItemStackPacket::handle);
         INSTANCE.registerMessage(nextID(), SignInPacket.class, SignInPacket::toBytes, SignInPacket::new, SignInPacket::handle);
         INSTANCE.registerMessage(nextID(), AdvancementPacket.class, AdvancementPacket::toBytes, AdvancementPacket::new, AdvancementPacket::handle);
+        INSTANCE.registerMessage(nextID(), DownloadRewardOptionNotice.class, DownloadRewardOptionNotice::toBytes, DownloadRewardOptionNotice::new, DownloadRewardOptionNotice::handle);
     }
 }

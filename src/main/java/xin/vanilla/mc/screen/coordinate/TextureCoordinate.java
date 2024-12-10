@@ -246,6 +246,18 @@ public class TextureCoordinate implements Serializable {
     @NonNull
     private Coordinate uploadUV = new Coordinate().setU0(200).setV0(880).setUWidth(40).setVHeight(40);
 
+    /**
+     * 文件夹按钮纹理坐标
+     */
+    @NonNull
+    private Coordinate folderUV = new Coordinate().setU0(240).setV0(880).setUWidth(40).setVHeight(40);
+
+    /**
+     * 排序按钮纹理坐标
+     */
+    @NonNull
+    private Coordinate sortUV = new Coordinate().setU0(280).setV0(880).setUWidth(40).setVHeight(40);
+
     // region Always NON-NULL Getter
 
     public @NonNull Coordinate getYearCoordinate() {
@@ -370,6 +382,14 @@ public class TextureCoordinate implements Serializable {
 
     public @NonNull Coordinate getUploadUV() {
         return uploadUV = uploadUV == null ? new Coordinate() : uploadUV;
+    }
+
+    public @NonNull Coordinate getFolderUV() {
+        return folderUV = folderUV == null ? new Coordinate() : folderUV;
+    }
+
+    public @NonNull Coordinate getSortUV() {
+        return sortUV = sortUV == null ? new Coordinate() : sortUV;
     }
 
     // endregion Always NON-NULL Getter

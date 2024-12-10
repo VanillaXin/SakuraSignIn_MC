@@ -163,8 +163,12 @@ public class AbstractGuiUtils {
         }
         // 平移回原点
         matrixStack.translate(-width / 2.0, -height / 2.0, 0);
+        // 启用混合模式来正确处理透明度
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         // 绘制纹理
         AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        RenderSystem.disableBlend();
         // 恢复矩阵状态
         matrixStack.popPose();
     }

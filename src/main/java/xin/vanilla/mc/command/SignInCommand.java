@@ -53,11 +53,10 @@ public class SignInCommand {
      */
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         /*
-            0 - 所有玩家。
-            1 - 拥有操作员权限的玩家（/op 命令）。
-            2 - 能够使用 /give 和 /clear 等管理指令的操作员。
-            3 - 能够使用 /ban 和 /kick 等服务器管理指令的操作员。
-            4 - 服务器所有者或控制台。
+        1：绕过服务器原版的出生点保护系统，可以破坏出生点地形。
+        2：使用原版单机一切作弊指令（除了/publish，因为其只能在单机使用，/debug也不能使用）。
+        3：可以使用大多数多人游戏指令，例如/op，/ban（/debug属于3级OP使用的指令）。
+        4：使用所有命令，可以使用/stop关闭服务器。
          */
         Command<CommandSource> signInCommand = context -> {
             Date signInTime;

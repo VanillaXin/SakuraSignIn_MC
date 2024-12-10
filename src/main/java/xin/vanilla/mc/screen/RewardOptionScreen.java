@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -18,6 +19,7 @@ import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -25,9 +27,12 @@ import org.lwjgl.opengl.GL11;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
-import xin.vanilla.mc.enums.ERewaedRule;
+import xin.vanilla.mc.enums.ERewardRule;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.event.ClientEventHandler;
+import xin.vanilla.mc.network.DownloadRewardOptionNotice;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.RewardOptionSyncPacket;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
@@ -41,6 +46,7 @@ import xin.vanilla.mc.util.I18nUtils;
 import xin.vanilla.mc.util.StringUtils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -152,7 +158,9 @@ public class RewardOptionScreen extends Screen {
         OFFSET_Y(301),
         HELP(302),
         DOWNLOAD(303),
-        UPLOAD(304);
+        UPLOAD(304),
+        FOLDER(305),
+        SORT(306);
 
         final int code;
 
@@ -301,7 +309,7 @@ public class RewardOptionScreen extends Screen {
         }
     }
 
-    private StringInputScreen getRuleKeyInputScreen(Screen callbackScreen, ERewaedRule rule, String[] key) {
+    private StringInputScreen getRuleKeyInputScreen(Screen callbackScreen, ERewardRule rule, String[] key) {
         return new StringInputScreen(callbackScreen, Text.i18n("请输入规则名称").setShadow(true), Text.i18n("请输入"), "[\\d +~/:T-]*", "", input -> {
             String result = "";
             if (StringUtils.isNotNullOrEmpty(input)) {
@@ -321,6 +329,7 @@ public class RewardOptionScreen extends Screen {
     private void updateRewardList() {
         if (OperationButtonType.valueOf(currOpButton) == null) return;
         REWARD_BUTTONS.clear();
+        RewardOptionDataManager.setRewardOptionDataChanged(false);
         RewardOptionData rewardOptionData = RewardOptionDataManager.getRewardOptionData();
         int titleIndex = -1;
         rewardListIndex.set(0);
@@ -464,7 +473,7 @@ public class RewardOptionScreen extends Screen {
                 // 绘制弹出层选项
                 this.popupOption.clear();
                 this.popupOption.addOption(Text.i18n("清空").setColor(0xFFFF0000))
-                        .addTips(Text.i18n("是否清空当前规则类型下所有配置\nCtrl + 鼠标右键确认"))
+                        .addTips(Text.i18n("Ctrl + 鼠标右键确认"))
                         .setTipsKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
                         .setTipsModifiers(GLFW.GLFW_MOD_SHIFT)
                         .build(super.font, mouseX, mouseY, String.format("奖励规则类型按钮:%s", value.getOperation()));
@@ -489,11 +498,39 @@ public class RewardOptionScreen extends Screen {
         }
         // 上传奖励配置
         else if (value.getOperation() == OperationButtonType.UPLOAD.getCode()) {
-            // TODO 上传奖励配置 仅管理员可上传
+            // 仅管理员可上传
+            if (!Minecraft.getInstance().isLocalServer()) {
+                if (Minecraft.getInstance().player != null) {
+                    if (Minecraft.getInstance().player.hasPermissions(3)) {
+                        ModNetworkHandler.INSTANCE.sendToServer(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                        flag.set(true);
+                    }
+                }
+            }
         }
         // 下载奖励配置
         else if (value.getOperation() == OperationButtonType.DOWNLOAD.getCode()) {
-            // TODO 下载奖励配置
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                if (!Minecraft.getInstance().isLocalServer()) {
+                    // 备份签到奖励配置
+                    RewardOptionDataManager.backupRewardOption();
+                    // 同步签到奖励配置到客户端
+                    ModNetworkHandler.INSTANCE.sendToServer(new DownloadRewardOptionNotice());
+                    flag.set(true);
+                }
+            }
+        }
+        // 排序
+        else if (value.getOperation() == OperationButtonType.SORT.getCode()) {
+            RewardOptionDataManager.sortRewards();
+            RewardOptionDataManager.saveRewardOption();
+            updateLayout.set(true);
+            flag.set(true);
+        }
+        // 打开配置文件夹
+        else if (value.getOperation() == OperationButtonType.FOLDER.getCode()) {
+            SakuraSignIn.openFileInFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), RewardOptionDataManager.FILE_NAME).toPath());
+            flag.set(true);
         }
     }
 
@@ -554,7 +591,7 @@ public class RewardOptionScreen extends Screen {
     private void handlePopupOption(double mouseX, double mouseY, int button, AtomicBoolean updateLayout, AtomicBoolean flag) {
         LOGGER.debug("选择了弹出选项:\tButton: {}\tId: {}\tIndex: {}\tContent: {}", button, popupOption.getId(), popupOption.getSelectedIndex(), popupOption.getSelectedString());
         String selectedString = popupOption.getSelectedString();
-        ERewaedRule rule = ERewaedRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+        ERewardRule rule = ERewardRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
         if (popupOption.getId().startsWith("奖励规则类型按钮:")) {
             int opCode = StringUtils.toInt(popupOption.getId().replace("奖励规则类型按钮:", ""));
             // 若选择了清空
@@ -592,10 +629,9 @@ public class RewardOptionScreen extends Screen {
                             }
                             break;
                         }
-                        RewardOptionDataManager.saveSignInData();
+                        RewardOptionDataManager.saveRewardOption();
                         updateLayout.set(true);
                         flag.set(true);
-                        // TODO 发包同步至服务器, 做成右侧边栏按钮
                     }
                 }
             }
@@ -606,10 +642,10 @@ public class RewardOptionScreen extends Screen {
                 ItemSelectScreen callbackScreen = new ItemSelectScreen(this, input -> {
                     if (input != null && input.getItem() != Items.AIR && StringUtils.isNotNullOrEmpty(key[0])) {
                         RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.ITEM), ERewardType.ITEM));
-                        RewardOptionDataManager.saveSignInData();
+                        RewardOptionDataManager.saveRewardOption();
                     }
                 }, new ItemStack(Items.AIR), () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -621,10 +657,10 @@ public class RewardOptionScreen extends Screen {
                 EffecrSelectScreen callbackScreen = new EffecrSelectScreen(this, input -> {
                     if (input != null && input.getDuration() > 0 && StringUtils.isNotNullOrEmpty(key[0])) {
                         RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.EFFECT), ERewardType.EFFECT));
-                        RewardOptionDataManager.saveSignInData();
+                        RewardOptionDataManager.saveRewardOption();
                     }
                 }, new EffectInstance(Effects.LUCK), () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -639,14 +675,14 @@ public class RewardOptionScreen extends Screen {
                         int count = StringUtils.toInt(input);
                         if (count != 0) {
                             RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(count, ERewardType.EXP_POINT), ERewardType.EXP_POINT));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         } else {
                             result = getByZh("输入值[%s]有误", input);
                         }
                     }
                     return result;
                 }, () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -661,14 +697,14 @@ public class RewardOptionScreen extends Screen {
                         int count = StringUtils.toInt(input);
                         if (count != 0) {
                             RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(count, ERewardType.EXP_LEVEL), ERewardType.EXP_LEVEL));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         } else {
                             result = getByZh("输入值[%s]有误", input);
                         }
                     }
                     return result;
                 }, () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -683,14 +719,14 @@ public class RewardOptionScreen extends Screen {
                         int count = StringUtils.toInt(input);
                         if (count != 0) {
                             RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(count, ERewardType.SIGN_IN_CARD), ERewardType.SIGN_IN_CARD));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         } else {
                             result = getByZh("输入值[%s]有误", input);
                         }
                     }
                     return result;
                 }, () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -702,10 +738,10 @@ public class RewardOptionScreen extends Screen {
                 AdvancementSelectScreen callbackScreen = new AdvancementSelectScreen(this, input -> {
                     if (input != null && StringUtils.isNotNullOrEmpty(input.toString()) && StringUtils.isNotNullOrEmpty(key[0])) {
                         RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.ADVANCEMENT), ERewardType.ADVANCEMENT));
-                        RewardOptionDataManager.saveSignInData();
+                        RewardOptionDataManager.saveRewardOption();
                     }
                 }, new ResourceLocation(""), () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -718,10 +754,10 @@ public class RewardOptionScreen extends Screen {
                     if (StringUtils.isNotNullOrEmpty(input) && StringUtils.isNotNullOrEmpty(key[0])) {
                         IFormattableTextComponent textToComponent = AbstractGuiUtils.textToComponent(Text.literal(input));
                         RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(textToComponent, ERewardType.MESSAGE), ERewardType.MESSAGE));
-                        RewardOptionDataManager.saveSignInData();
+                        RewardOptionDataManager.saveRewardOption();
                     }
                 }, () -> StringUtils.isNullOrEmpty(key[0]));
-                if (rule != ERewaedRule.BASE_REWARD) {
+                if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
                 } else {
                     key[0] = "base";
@@ -740,7 +776,7 @@ public class RewardOptionScreen extends Screen {
                             if (StringUtils.isNotNullOrEmpty(input)) {
                                 if (RewardOptionDataManager.validateKeyName(rule, input)) {
                                     RewardOptionDataManager.updateKeyName(rule, key, input);
-                                    RewardOptionDataManager.saveSignInData();
+                                    RewardOptionDataManager.saveRewardOption();
                                 } else {
                                     result = getByZh("规则名称[%s]输入有误", input);
                                 }
@@ -756,7 +792,7 @@ public class RewardOptionScreen extends Screen {
                                 if (RewardOptionDataManager.validateKeyName(rule, input)) {
                                     RewardList rewardList = RewardOptionDataManager.getKeyName(rule, key).clone();
                                     RewardOptionDataManager.addKeyName(rule, input, rewardList);
-                                    RewardOptionDataManager.saveSignInData();
+                                    RewardOptionDataManager.saveRewardOption();
                                 } else {
                                     result = getByZh("规则名称[%s]输入有误", input);
                                 }
@@ -768,14 +804,14 @@ public class RewardOptionScreen extends Screen {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                         if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
                             RewardOptionDataManager.clearKey(rule, key);
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }
                 } else if (getByZh("删除").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                         if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
                             RewardOptionDataManager.deleteKey(rule, key);
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }
                 }
@@ -784,7 +820,7 @@ public class RewardOptionScreen extends Screen {
                     Minecraft.getInstance().setScreen(new ItemSelectScreen(this, input -> {
                         if (input != null && input.getItem() != Items.AIR) {
                             RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.ITEM), ERewardType.ITEM));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }, new ItemStack(Items.AIR)));
                 }
@@ -793,7 +829,7 @@ public class RewardOptionScreen extends Screen {
                     Minecraft.getInstance().setScreen(new EffecrSelectScreen(this, input -> {
                         if (input != null && input.getDuration() > 0) {
                             RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.EFFECT), ERewardType.EFFECT));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }, new EffectInstance(Effects.LUCK)));
                 }
@@ -805,7 +841,7 @@ public class RewardOptionScreen extends Screen {
                             int count = StringUtils.toInt(input);
                             if (count != 0) {
                                 RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(count, ERewardType.EXP_POINT), ERewardType.EXP_POINT));
-                                RewardOptionDataManager.saveSignInData();
+                                RewardOptionDataManager.saveRewardOption();
                             } else {
                                 result = getByZh("输入值[%s]有误", input);
                             }
@@ -821,7 +857,7 @@ public class RewardOptionScreen extends Screen {
                             int count = StringUtils.toInt(input);
                             if (count != 0) {
                                 RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(count, ERewardType.EXP_LEVEL), ERewardType.EXP_LEVEL));
-                                RewardOptionDataManager.saveSignInData();
+                                RewardOptionDataManager.saveRewardOption();
                             } else {
                                 result = getByZh("输入值[%s]有误", input);
                             }
@@ -837,7 +873,7 @@ public class RewardOptionScreen extends Screen {
                             int count = StringUtils.toInt(input);
                             if (count != 0) {
                                 RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(count, ERewardType.SIGN_IN_CARD), ERewardType.SIGN_IN_CARD));
-                                RewardOptionDataManager.saveSignInData();
+                                RewardOptionDataManager.saveRewardOption();
                             } else {
                                 result = getByZh("输入值[%s]有误", input);
                             }
@@ -850,7 +886,7 @@ public class RewardOptionScreen extends Screen {
                     Minecraft.getInstance().setScreen(new AdvancementSelectScreen(this, input -> {
                         if (input != null && StringUtils.isNotNullOrEmpty(input.toString())) {
                             RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.ADVANCEMENT), ERewardType.ADVANCEMENT));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }, new ResourceLocation("")));
 
@@ -861,7 +897,7 @@ public class RewardOptionScreen extends Screen {
                         if (StringUtils.isNotNullOrEmpty(input)) {
                             IFormattableTextComponent textToComponent = AbstractGuiUtils.textToComponent(Text.literal(input));
                             RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(textToComponent, ERewardType.MESSAGE), ERewardType.MESSAGE));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }));
                 }
@@ -881,22 +917,118 @@ public class RewardOptionScreen extends Screen {
                             Minecraft.getInstance().setScreen(new ItemSelectScreen(this, input -> {
                                 if (input != null && input.getItem() != Items.AIR) {
                                     RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(input, ERewardType.ITEM), ERewardType.ITEM));
-                                    RewardOptionDataManager.saveSignInData();
+                                    RewardOptionDataManager.saveRewardOption();
                                 }
                             }, RewardManager.deserializeReward(reward)));
+                        }
+                        // 药水效果
+                        else if (reward.getType() == ERewardType.EFFECT) {
+                            Minecraft.getInstance().setScreen(new EffecrSelectScreen(this, input -> {
+                                if (input != null && input.getDuration() > 0) {
+                                    RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(input, ERewardType.EFFECT), ERewardType.EFFECT));
+                                    RewardOptionDataManager.saveRewardOption();
+                                }
+                            }, RewardManager.deserializeReward(reward)));
+                        }
+                        // 经验点
+                        else if (reward.getType() == ERewardType.EXP_POINT) {
+                            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入经验点值").setShadow(true),
+                                    Text.i18n("请输入"),
+                                    "-?\\d*",
+                                    String.valueOf((Integer) RewardManager.deserializeReward(reward)),
+                                    input -> {
+                                        String result = "";
+                                        if (StringUtils.isNotNullOrEmpty(input)) {
+                                            int count = StringUtils.toInt(input);
+                                            if (count != 0) {
+                                                RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(count, ERewardType.EXP_POINT), ERewardType.EXP_POINT));
+                                                RewardOptionDataManager.saveRewardOption();
+                                            } else {
+                                                result = getByZh("输入值[%s]有误", input);
+                                            }
+                                        }
+                                        return result;
+                                    }
+                            ));
+                        }
+                        // 经验等级
+                        else if (reward.getType() == ERewardType.EXP_LEVEL) {
+                            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入经验等级").setShadow(true),
+                                    Text.i18n("请输入"),
+                                    "-?\\d*",
+                                    String.valueOf((Integer) RewardManager.deserializeReward(reward)),
+                                    input -> {
+                                        String result = "";
+                                        if (StringUtils.isNotNullOrEmpty(input)) {
+                                            int count = StringUtils.toInt(input);
+                                            if (count != 0) {
+                                                RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(count, ERewardType.EXP_LEVEL), ERewardType.EXP_LEVEL));
+                                                RewardOptionDataManager.saveRewardOption();
+                                            } else {
+                                                result = getByZh("输入值[%s]有误", input);
+                                            }
+                                        }
+                                        return result;
+                                    }
+                            ));
+                        }
+                        // 补签卡
+                        else if (reward.getType() == ERewardType.SIGN_IN_CARD) {
+                            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入补签卡数量").setShadow(true),
+                                    Text.i18n("请输入"),
+                                    "-?\\d*",
+                                    String.valueOf((Integer) RewardManager.deserializeReward(reward)),
+                                    input -> {
+                                        String result = "";
+                                        if (StringUtils.isNotNullOrEmpty(input)) {
+                                            int count = StringUtils.toInt(input);
+                                            if (count != 0) {
+                                                RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(count, ERewardType.SIGN_IN_CARD), ERewardType.SIGN_IN_CARD));
+                                                RewardOptionDataManager.saveRewardOption();
+                                            } else {
+                                                result = getByZh("输入值[%s]有误", input);
+                                            }
+                                        }
+                                        return result;
+                                    }
+                            ));
+                        }
+                        // 进度
+                        else if (reward.getType() == ERewardType.ADVANCEMENT) {
+                            Minecraft.getInstance().setScreen(new AdvancementSelectScreen(this, input -> {
+                                if (input != null && StringUtils.isNotNullOrEmpty(input.toString()) && StringUtils.isNotNullOrEmpty(key)) {
+                                    RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(input, ERewardType.ADVANCEMENT), ERewardType.ADVANCEMENT));
+                                    RewardOptionDataManager.saveRewardOption();
+                                }
+                            }, RewardManager.deserializeReward(reward)));
+                        }
+                        // 消息
+                        else if (reward.getType() == ERewardType.MESSAGE) {
+                            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入消息").setShadow(true),
+                                    Text.i18n("请输入"),
+                                    "",
+                                    ((IFormattableTextComponent) RewardManager.deserializeReward(reward)).getString(),
+                                    input -> {
+                                        if (StringUtils.isNotNullOrEmpty(input)) {
+                                            IFormattableTextComponent textToComponent = AbstractGuiUtils.textToComponent(Text.literal(input));
+                                            RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(textToComponent, ERewardType.MESSAGE), ERewardType.MESSAGE));
+                                            RewardOptionDataManager.saveRewardOption();
+                                        }
+                                    }
+                            ));
                         }
                     }
                 } else if (getByZh("复制").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                         Reward reward = RewardOptionDataManager.getReward(rule, key, Integer.parseInt(index)).clone();
                         RewardOptionDataManager.addReward(rule, key, reward);
-                        RewardOptionDataManager.saveSignInData();
+                        RewardOptionDataManager.saveRewardOption();
                     }
                 } else if (getByZh("删除").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                         if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
                             RewardOptionDataManager.deleteReward(rule, key, Integer.parseInt(index));
-                            RewardOptionDataManager.saveSignInData();
+                            RewardOptionDataManager.saveRewardOption();
                         }
                     }
                 }
@@ -1016,7 +1148,8 @@ public class RewardOptionScreen extends Screen {
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setX(super.width - rightBarWidth + 1).setY(22).setWidth(18).setHeight(18)
                 .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0)
-                .setTransparentCheck(false));
+                .setTransparentCheck(false)
+                .setTooltip(getByZh("从服务器同步配置文件")));
         OP_BUTTONS.put(OperationButtonType.UPLOAD.getCode(), new OperationButton(OperationButtonType.UPLOAD.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getUploadUV())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getUploadUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getUploadUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getUploadUV())
@@ -1025,8 +1158,24 @@ public class RewardOptionScreen extends Screen {
                 .setX(super.width - rightBarWidth + 1).setY(42).setWidth(18).setHeight(18)
                 .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0)
                 .setTransparentCheck(false));
-        // TODO 添加排序按钮
-        // TODO 添加打开配置文件夹按钮
+        OP_BUTTONS.put(OperationButtonType.FOLDER.getCode(), new OperationButton(OperationButtonType.FOLDER.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getFolderUV())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getFolderUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getFolderUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getFolderUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setX(super.width - rightBarWidth + 1).setY(62).setWidth(18).setHeight(18)
+                .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0)
+                .setTransparentCheck(false)
+                .setTooltip(getByZh("打开配置文件夹")));
+        OP_BUTTONS.put(OperationButtonType.SORT.getCode(), new OperationButton(OperationButtonType.SORT.getCode(), SakuraSignIn.getThemeTexture())
+                .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getSortUV())
+                .setNormal(SakuraSignIn.getThemeTextureCoordinate().getSortUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getSortUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getSortUV())
+                .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setX(super.width - rightBarWidth + 1).setY(82).setWidth(18).setHeight(18)
+                .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0)
+                .setTransparentCheck(false)
+                .setTooltip(getByZh("奖励规则排序")));
         this.updateLayout();
     }
 
@@ -1038,6 +1187,9 @@ public class RewardOptionScreen extends Screen {
         this.renderBackground(matrixStack);
         // 绘制缩放背景纹理
         this.renderBackgroundTexture(matrixStack);
+
+        // 刷新数据
+        if (RewardOptionDataManager.isRewardOptionDataChanged()) this.updateLayout();
 
         // 绘制奖励项目
         this.renderRewardList(matrixStack, mouseX, mouseY);
@@ -1103,6 +1255,15 @@ public class RewardOptionScreen extends Screen {
                         button.setTooltip(getByZh("比如红色字体按钮, 按住Shift时会给予帮助信息:\n按住Control键 并且 鼠标右键点击以确认\n直接点击是取消哦"));
                     } else {
                         button.setTooltip(getByZh("页面上部分元素\n按住Shift键可查看帮助信息"));
+                    }
+                } else if (op == OperationButtonType.UPLOAD.getCode()) {
+                    ClientPlayerEntity player = Minecraft.getInstance().player;
+                    if (player != null && player.hasPermissions(3)) {
+                        button.setTooltip(getByZh("将配置文件同步至服务器"))
+                                .setHoverFgColor(0xAA808080).setTapFgColor(0xAAA0A0A0);
+                    } else {
+                        button.setTooltip(Text.i18n("将配置文件同步至服务器\n权限不足").setColor(0xFFFF0000))
+                                .setHoverFgColor(0xAA808080).setTapFgColor(0xAA808080);
                     }
                 }
                 button.renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);

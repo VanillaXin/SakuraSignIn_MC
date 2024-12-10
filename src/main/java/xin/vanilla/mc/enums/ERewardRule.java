@@ -1,6 +1,6 @@
 package xin.vanilla.mc.enums;
 
-public enum ERewaedRule {
+public enum ERewardRule {
     BASE_REWARD(1),
     CONTINUOUS_REWARD(2),
     CYCLE_REWARD(3),
@@ -11,12 +11,12 @@ public enum ERewaedRule {
 
     private final int code;
 
-    ERewaedRule(int code) {
+    ERewardRule(int code) {
         this.code = code;
     }
 
-    public static ERewaedRule valueOf(int code) {
-        for (ERewaedRule type : ERewaedRule.values()) {
+    public static ERewardRule valueOf(int code) {
+        for (ERewardRule type : ERewardRule.values()) {
             if (type.code == code) {
                 return type;
             }

@@ -105,7 +105,7 @@ public class ForgeEventHandler {
             // 同步玩家签到数据到客户端
             PlayerSignInDataCapability.syncPlayerData((ServerPlayerEntity) event.getPlayer());
             // 同步签到奖励配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new SignInDataSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
             // 同步进度列表到客户端
             ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new AdvancementPacket(((ServerPlayerEntity) event.getPlayer()).server.getAdvancements().getAllAdvancements()));
         }

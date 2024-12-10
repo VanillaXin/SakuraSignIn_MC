@@ -76,7 +76,6 @@
   "tips.sakura_sign_in.close_sidebar": "Close sidebar",
   "tips.sakura_sign_in.y_offset": "Offset of Y:\n%.1f\nClick to reset",
   "tips.sakura_sign_in.cancel_or_confirm": "Ctrl + Right-click to confirm",
-  "tips.sakura_sign_in.clear_all_config": "Clear all config under the current rule\nCtrl + Right-click to confirm",
   "tips.sakura_sign_in.item_select_list_inventory_mode": "List Mode\nInventory (%s)",
   "tips.sakura_sign_in.item_select_list_all_mode": "List Mode\nAll Items (%s)",
   "tips.sakura_sign_in.effect_select_list_all_mode": "List Mode\nAll Effects (%s)",
@@ -88,5 +87,13 @@
   "tips.sakura_sign_in.set_amplifier_s": "Set Amplifier\nCurrently %s",
   "tips.sakura_sign_in.edit_nbt": "Edit NBT",
   "tips.sakura_sign_in.help_button": "Hold down the Shift key on some elements\non the page to view help information",
-  "tips.sakura_sign_in.help_button_shift": "For example, for the red font button,\npressing and holding Shift will provide help information:\nHold down the Control key and right-click with the mouse to confirm.\nClicking directly cancels the operation"
+  "tips.sakura_sign_in.help_button_shift": "For example, for the red font button,\npressing and holding Shift will provide help information:\nHold down the Ctrl key and right-click with the mouse to confirm.\nClicking directly cancels the operation",
+  "tips.sakura_sign_in.download_reward_config": "Synchronize the configuration file from the server",
+  "tips.sakura_sign_in.upload_reward_config": "Synchronize the configuration file to the server",
+  "tips.sakura_sign_in.upload_reward_config_no_permission": "Synchronize the configuration file to the server\nInsufficient permissions",
+  "tips.sakura_sign_in.open_config_folder": "Open the configuration folder",
+  "tips.sakura_sign_in.reward_rule_sort": "Sort reward rules",
+  "tips.sakura_sign_in.use_s_key": "You can also use the %s key on the keyboard",
+  "tips.sakura_sign_in.click_to_change_theme": "Click to change theme",
+  "tips.sakura_sign_in.click_to_change_theme_or_select_external_theme": "Left-click to change theme\nRight-click to select external theme"
 }

@@ -9,9 +9,10 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.SakuraSignIn;
-import xin.vanilla.mc.enums.ERewaedRule;
+import xin.vanilla.mc.enums.ERewardRule;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
+import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.StringUtils;
 
 import java.io.File;
@@ -20,19 +21,56 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashMap;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RewardOptionDataManager {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final String FILE_NAME = "reward_option_data.json";
 
-    private static final String FILE_NAME = "reward_option_data.json";
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Getter
     @Setter
     @NonNull
     private static RewardOptionData rewardOptionData = new RewardOptionData();
+    @Getter
+    @Setter
+    private static boolean rewardOptionDataChanged = true;
+
+    /**
+     * 对 LinkedHashMap 按键排序后替换原内容
+     */
+    private static void replaceWithSortedMap(LinkedHashMap<String, RewardList> map) {
+        LinkedHashMap<String, RewardList> sortedMap = map.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(RewardOptionDataManager::keyComparator))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+        // 清空原始 Map 并插入排序后的数据
+        map.clear();
+        map.putAll(sortedMap);
+    }
+
+    /**
+     * 自定义排序逻辑，用于比较键
+     */
+    private static int keyComparator(String key1, String key2) {
+        try {
+            // 尝试按数字比较
+            return Long.compare(Long.parseLong(key1), Long.parseLong(key2));
+        } catch (NumberFormatException e) {
+            // 如果不是数字，按字母顺序比较
+            return key1.compareTo(key2);
+        }
+    }
 
     /**
      * 获取配置文件路径
@@ -44,25 +82,25 @@ public class RewardOptionDataManager {
     /**
      * 加载 JSON 数据
      */
-    public static void loadSignInData() {
+    public static void loadRewardOption() {
         File file = new File(RewardOptionDataManager.getConfigDirectory().toFile(), FILE_NAME);
         if (file.exists()) {
             try {
-                rewardOptionData = RewardOptionDataManager.deserializeSignInData(new String(Files.readAllBytes(Paths.get(file.getPath()))));
+                rewardOptionData = RewardOptionDataManager.deserializeRewardOption(new String(Files.readAllBytes(Paths.get(file.getPath()))));
             } catch (IOException e) {
                 LOGGER.error("Error loading sign-in data: ", e);
             }
         } else {
             // 如果文件不存在，初始化默认值
             rewardOptionData = RewardOptionData.getDefault();
-            RewardOptionDataManager.saveSignInData();
+            RewardOptionDataManager.saveRewardOption();
         }
     }
 
     /**
      * 保存 JSON 数据
      */
-    public static void saveSignInData() {
+    public static void saveRewardOption() {
         File dir = RewardOptionDataManager.getConfigDirectory().toFile();
         if (!dir.exists()) {
             dir.mkdirs();
@@ -78,12 +116,74 @@ public class RewardOptionDataManager {
     }
 
     /**
+     * 备份 JSON 数据
+     */
+    public static void backupRewardOption() {
+        RewardOptionDataManager.backupRewardOption(true);
+    }
+
+    /**
+     * 备份 JSON 数据
+     */
+    public static void backupRewardOption(boolean save) {
+        // 备份文件
+        long dateTimeInt = DateUtils.toDateTimeInt(new Date());
+        File sourceFolder = FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile();
+        try {
+            File target = new File(new File(sourceFolder, "backups"), String.format("%s_%s.%s", RewardOptionDataManager.FILE_NAME, dateTimeInt, "old"));
+            if (target.getParent() != null && !Files.exists(target.getParentFile().toPath())) {
+                Files.createDirectories(target.getParentFile().toPath());
+            }
+            Files.move(new File(sourceFolder, RewardOptionDataManager.FILE_NAME).toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            LOGGER.error("Error moving file: ", e);
+        }
+        // 备份最新编辑的文件
+        if (save) {
+            RewardOptionDataManager.saveRewardOption();
+            try {
+                File target = new File(new File(sourceFolder, "backups"), String.format("%s_%s.%s", RewardOptionDataManager.FILE_NAME, dateTimeInt, "bak"));
+                if (target.getParent() != null && !Files.exists(target.getParentFile().toPath())) {
+                    Files.createDirectories(target.getParentFile().toPath());
+                }
+                Files.move(new File(sourceFolder, RewardOptionDataManager.FILE_NAME).toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                LOGGER.error("Error moving file: ", e);
+            }
+        }
+        // 删除旧文件
+        try (Stream<Path> pathStream = Files.walk(sourceFolder.toPath())) {
+            pathStream.filter(path -> Files.isRegularFile(path) && path.getFileName().toString().startsWith(RewardOptionDataManager.FILE_NAME))
+                    .sorted((path1, path2) -> {
+                        try {
+                            return Files.readAttributes(path2, BasicFileAttributes.class).creationTime()
+                                    .compareTo(Files.readAttributes(path1, BasicFileAttributes.class).creationTime());
+                        } catch (IOException e) {
+                            LOGGER.error("Error reading file attributes: ", e);
+                            return 0;
+                        }
+                    })
+                    // 跳过最新的20个文件
+                    .skip(20)
+                    .forEach(file -> {
+                        try {
+                            Files.delete(file);
+                        } catch (IOException e) {
+                            LOGGER.error("Error deleting file: ", e);
+                        }
+                    });
+        } catch (IOException e) {
+            LOGGER.error("Error walking directory: ", e);
+        }
+    }
+
+    /**
      * 校验 keyName 是否有效
      *
      * @param rule    规则类型
      * @param keyName 键名
      */
-    public static boolean validateKeyName(@NonNull ERewaedRule rule, @NonNull String keyName) {
+    public static boolean validateKeyName(@NonNull ERewardRule rule, @NonNull String keyName) {
         boolean result;
         switch (rule) {
             case BASE_REWARD:
@@ -123,7 +223,7 @@ public class RewardOptionDataManager {
      * @param keyName 规则
      */
     @NonNull
-    public static RewardList getKeyName(@NonNull ERewaedRule rule, @NonNull String keyName) {
+    public static RewardList getKeyName(@NonNull ERewardRule rule, @NonNull String keyName) {
         RewardList result;
         switch (rule) {
             case BASE_REWARD:
@@ -160,7 +260,7 @@ public class RewardOptionDataManager {
      * @param keyName    规则
      * @param rewardList 奖励列表
      */
-    public static void addKeyName(@NonNull ERewaedRule rule, @NonNull String keyName, @NonNull RewardList rewardList) {
+    public static void addKeyName(@NonNull ERewardRule rule, @NonNull String keyName, @NonNull RewardList rewardList) {
         switch (rule) {
             case BASE_REWARD:
                 rewardOptionData.setBaseRewards(rewardList);
@@ -195,7 +295,7 @@ public class RewardOptionDataManager {
      * @param oldKeyName 旧的 keyName
      * @param newKeyName 新的 keyName
      */
-    public static void updateKeyName(@NonNull ERewaedRule rule, @NonNull String oldKeyName, @NonNull String newKeyName) {
+    public static void updateKeyName(@NonNull ERewardRule rule, @NonNull String oldKeyName, @NonNull String newKeyName) {
         switch (rule) {
             case BASE_REWARD:
                 throw new IllegalArgumentException("Base reward has no key name");
@@ -240,7 +340,7 @@ public class RewardOptionDataManager {
      * @param rule    规则类型
      * @param keyName 规则
      */
-    public static void clearKey(@NonNull ERewaedRule rule, @NonNull String keyName) {
+    public static void clearKey(@NonNull ERewardRule rule, @NonNull String keyName) {
         switch (rule) {
             case BASE_REWARD:
                 rewardOptionData.getBaseRewards().clear();
@@ -274,7 +374,7 @@ public class RewardOptionDataManager {
      * @param rule    规则类型
      * @param keyName 规则
      */
-    public static void deleteKey(@NonNull ERewaedRule rule, @NonNull String keyName) {
+    public static void deleteKey(@NonNull ERewardRule rule, @NonNull String keyName) {
         switch (rule) {
             case BASE_REWARD:
                 throw new IllegalArgumentException("Base reward has no key name");
@@ -309,7 +409,7 @@ public class RewardOptionDataManager {
      * @param index   奖励索引
      */
     @NonNull
-    public static Reward getReward(ERewaedRule rule, String keyName, int index) {
+    public static Reward getReward(ERewardRule rule, String keyName, int index) {
         Reward result;
         try {
             switch (rule) {
@@ -350,7 +450,7 @@ public class RewardOptionDataManager {
      * @param keyName 规则
      * @param reward  奖励
      */
-    public static void addReward(ERewaedRule rule, String keyName, Reward reward) {
+    public static void addReward(ERewardRule rule, String keyName, Reward reward) {
         if (StringUtils.isNullOrEmpty(keyName)) return;
         switch (rule) {
             case BASE_REWARD:
@@ -405,7 +505,7 @@ public class RewardOptionDataManager {
      * @param index   奖励索引
      * @param reward  奖励
      */
-    public static void updateReward(ERewaedRule rule, String keyName, int index, Reward reward) {
+    public static void updateReward(ERewardRule rule, String keyName, int index, Reward reward) {
         try {
             switch (rule) {
                 case BASE_REWARD:
@@ -473,7 +573,7 @@ public class RewardOptionDataManager {
      * @param keyName 规则
      * @param index   奖励索引
      */
-    public static void deleteReward(ERewaedRule rule, String keyName, int index) {
+    public static void deleteReward(ERewardRule rule, String keyName, int index) {
         try {
             switch (rule) {
                 case BASE_REWARD:
@@ -505,19 +605,63 @@ public class RewardOptionDataManager {
         }
     }
 
-    // TODO 添加排序
+    /**
+     * 排序奖励配置
+     */
+    public static void sortRewards() {
+        RewardOptionDataManager.sortRewards(null);
+    }
 
     /**
-     * 序列化 SignInData
+     * 排序奖励配置
+     *
+     * @param rule 规则类型
      */
-    public static String serializeSignInData(RewardOptionData rewardOptionData) {
+    public static void sortRewards(ERewardRule rule) {
+        List<ERewardRule> rules;
+        if (rule == null) {
+            rules = Arrays.asList(ERewardRule.values());
+        } else {
+            rules = Collections.singletonList(rule);
+        }
+        for (ERewardRule rewardRule : rules) {
+            switch (rewardRule) {
+                case BASE_REWARD:
+                    break;
+                case CONTINUOUS_REWARD:
+                    // 对键排序并替换原始 Map 的内容
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getContinuousRewards());
+                    break;
+                case CYCLE_REWARD:
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getCycleRewards());
+                    break;
+                case YEAR_REWARD:
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getYearRewards());
+                    break;
+                case MONTH_REWARD:
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getMonthRewards());
+                    break;
+                case WEEK_REWARD:
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getWeekRewards());
+                    break;
+                case DATE_TIME_REWARD:
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getDateTimeRewards());
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 序列化 RewardOption
+     */
+    public static String serializeRewardOption(RewardOptionData rewardOptionData) {
         return GSON.toJson(rewardOptionData.toJsonObject());
     }
 
     /**
-     * 反序列化 SignInData
+     * 反序列化 RewardOption
      */
-    public static RewardOptionData deserializeSignInData(String jsonString) {
+    public static RewardOptionData deserializeRewardOption(String jsonString) {
         RewardOptionData result = new RewardOptionData();
         if (StringUtils.isNotNullOrEmpty(jsonString)) {
             try {
@@ -542,7 +686,7 @@ public class RewardOptionDataManager {
         } else {
             // 如果文件不存在，初始化默认值
             result = RewardOptionData.getDefault();
-            RewardOptionDataManager.saveSignInData();
+            RewardOptionDataManager.saveRewardOption();
         }
         return result;
     }

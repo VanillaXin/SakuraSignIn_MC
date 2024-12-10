@@ -30,6 +30,8 @@ import xin.vanilla.mc.network.AdvancementData;
 import xin.vanilla.mc.network.ModNetworkHandler;
 import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
@@ -85,6 +87,12 @@ public class SakuraSignIn {
     @Getter
     @Setter
     private static List<AdvancementData> advancementData;
+    /**
+     * 玩家权限等级
+     */
+    @Getter
+    @Setter
+    private static int permissionLevel;
 
     public SakuraSignIn() {
 
@@ -109,13 +117,13 @@ public class SakuraSignIn {
 
     // 服务器启动时加载数据
     private void onServerStarting(FMLServerStartingEvent event) {
-        RewardOptionDataManager.loadSignInData();
+        RewardOptionDataManager.loadRewardOption();
         LOGGER.debug("SignIn data loaded.");
     }
 
     // 服务器关闭时保存数据
     private void onServerStopping(FMLServerStoppingEvent event) {
-        // SignInDataManager.saveSignInData();
+        // RewardOptionDataManager.saveRewardOption();
     }
 
     /**
@@ -185,7 +193,21 @@ public class SakuraSignIn {
      * 打开指定路径的文件夹
      */
     @OnlyIn(Dist.CLIENT)
-    public static void openFolder(Path path) {
+    public static void openFileInFolder(Path path) {
+        try {
+            if (Files.isDirectory(path)) {
+                // 如果是文件夹，直接打开文件夹
+                openFolder(path);
+            } else if (Files.isRegularFile(path)) {
+                // 如果是文件，打开文件所在的文件夹，并选中文件
+                openFolderAndSelectFile(path);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to open file/folder: ", e);
+        }
+    }
+
+    private static void openFolder(Path path) {
         try {
             // Windows
             if (System.getProperty("os.name").toLowerCase().contains("win")) {
@@ -199,8 +221,27 @@ public class SakuraSignIn {
             else {
                 new ProcessBuilder("xdg-open", path.toString()).start();
             }
-        } catch (Exception e) {
-            LOGGER.error("Failed to open folder: {}", e.getMessage());
+        } catch (IOException e) {
+            LOGGER.error("Failed to open folder: ", e);
+        }
+    }
+
+    private static void openFolderAndSelectFile(Path file) {
+        try {
+            // Windows
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                new ProcessBuilder("explorer.exe", "/select,", file.toString()).start();
+            }
+            // macOS
+            else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+                new ProcessBuilder("open", "-R", file.toString()).start();
+            }
+            // Linux
+            else {
+                new ProcessBuilder("xdg-open", "--select", file.toString()).start();
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to open folder and select file: ", e);
         }
     }
 }

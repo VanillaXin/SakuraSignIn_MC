@@ -411,7 +411,7 @@ public class RewardOptionData implements Serializable {
                         setType(ERewardType.ITEM);
                     }});
                     add(new Reward() {{
-                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.DAMAGE_RESISTANCE, 1, 300)));
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.DAMAGE_RESISTANCE, 300, 1)));
                         setType(ERewardType.EFFECT);
                     }});
                 }});

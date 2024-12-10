@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static xin.vanilla.mc.screen.SignInScreen.OperationButtonType.*;
+import static xin.vanilla.mc.util.I18nUtils.getByZh;
 
 @OnlyIn(Dist.CLIENT)
 public class SignInScreen extends Screen {
@@ -171,51 +172,78 @@ public class SignInScreen extends Screen {
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setFlipHorizontal(true));
+                .setFlipHorizontal(true)
+                .setTooltip(getByZh("使用键盘%s键也可以哦", "←"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(RIGHT_ARROW.getCode(), new OperationButton(RIGHT_ARROW.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getRightArrowCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
-                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setTooltip(getByZh("使用键盘%s键也可以哦", "→"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(UP_ARROW.getCode(), new OperationButton(UP_ARROW.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getUpArrowCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setRotatedAngle(270));
+                .setRotatedAngle(270)
+                .setTooltip(getByZh("使用键盘%s键也可以哦", "↑"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(DOWN_ARROW.getCode(), new OperationButton(DOWN_ARROW.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getDownArrowCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getArrowUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getArrowHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getArrowTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setRotatedAngle(90).setFlipVertical(true));
+                .setRotatedAngle(90).setFlipVertical(true)
+                .setTooltip(getByZh("使用键盘%s键也可以哦", "↓"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
 
         BUTTONS.put(THEME_ORIGINAL_BUTTON.getCode(), new OperationButton(THEME_ORIGINAL_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
-                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setTooltip(getByZh("点击切换主题"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
-                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setTooltip(getByZh("点击切换主题"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
-                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setTooltip(getByZh("点击切换主题"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
-                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight()));
+                .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
+                .setTooltip(getByZh("点击切换主题"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
         BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setTremblingAmplitude(3.5));
+                .setTremblingAmplitude(3.5)
+                .setTooltip(getByZh("左键点击切换主题\n右键点击选择外部主题"))
+                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
+                .setModifiers(GLFW.GLFW_MOD_SHIFT));
     }
 
     /**
@@ -442,15 +470,12 @@ public class SignInScreen extends Screen {
             button.setScale(this.scale);
             button.render(matrixStack, mouseX, mouseY);
         }
-        // 渲染操作按钮的弹出提示
-        for (Integer op : BUTTONS.keySet()) {
-            BUTTONS.get(op).renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);
-        }
 
         // 渲染所有格子
         for (SignInCell cell : signInCells) {
             cell.render(matrixStack, super.font, this.itemRenderer, mouseX, mouseY);
         }
+
         // 渲染格子弹出层
         for (SignInCell cell : signInCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
@@ -460,6 +485,12 @@ public class SignInScreen extends Screen {
 
         // 绘制弹出选项
         popupOption.render(matrixStack, mouseX, mouseY);
+
+        // 渲染操作按钮的弹出提示
+        for (Integer op : BUTTONS.keySet()) {
+            OperationButton button = BUTTONS.get(op);
+            button.renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);
+        }
     }
 
     /**
@@ -504,7 +535,7 @@ public class SignInScreen extends Screen {
                     }
                 }
             } else {
-                SakuraSignIn.openFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
+                SakuraSignIn.openFileInFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
             }
             popupOption.clear();
         }

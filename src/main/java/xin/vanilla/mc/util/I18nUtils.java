@@ -59,7 +59,6 @@ public class I18nUtils {
         put("收起侧边栏", "tips.sakura_sign_in.close_sidebar");
         put("Y轴偏移:\n%.1f\n点击重置", "tips.sakura_sign_in.y_offset");
         put("Ctrl + 鼠标右键确认", "tips.sakura_sign_in.cancel_or_confirm");
-        put("是否清空当前规则类型下所有配置\nCtrl + 鼠标右键确认", "tips.sakura_sign_in.clear_all_config");
         put("列出模式\n物品栏 (%s)", "tips.sakura_sign_in.item_select_list_inventory_mode");
         put("列出模式\n所有物品 (%s)", "tips.sakura_sign_in.item_select_list_all_mode");
         put("列出模式\n所有效果 (%s)", "tips.sakura_sign_in.effect_select_list_all_mode");
@@ -72,6 +71,14 @@ public class I18nUtils {
         put("编辑NBT", "tips.sakura_sign_in.edit_nbt");
         put("页面上部分元素\n按住Shift键可查看帮助信息", "tips.sakura_sign_in.help_button");
         put("比如红色字体按钮, 按住Shift时会给予帮助信息:\n按住Control键 并且 鼠标右键点击以确认\n直接点击是取消哦", "tips.sakura_sign_in.help_button_shift");
+        put("从服务器同步配置文件", "tips.sakura_sign_in.download_reward_config");
+        put("将配置文件同步至服务器", "tips.sakura_sign_in.upload_reward_config");
+        put("将配置文件同步至服务器\n权限不足", "tips.sakura_sign_in.upload_reward_config_no_permission");
+        put("打开配置文件夹", "tips.sakura_sign_in.open_config_folder");
+        put("奖励规则排序", "tips.sakura_sign_in.reward_rule_sort");
+        put("使用键盘%s键也可以哦", "tips.sakura_sign_in.use_s_key");
+        put("点击切换主题", "tips.sakura_sign_in.click_to_change_theme");
+        put("左键点击切换主题\n右键点击选择外部主题", "tips.sakura_sign_in.click_to_change_theme_or_select_external_theme");
 
     }};
 
