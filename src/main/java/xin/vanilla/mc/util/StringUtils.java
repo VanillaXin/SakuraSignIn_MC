@@ -321,6 +321,11 @@ public class StringUtils {
                 .replaceAll("\r\n", "\n");
     }
 
+    public static int getLineCount(String s) {
+        if (StringUtils.isNullOrEmpty(s)) return 0;
+        return StringUtils.replaceLine(s).split("\n").length;
+    }
+
     public static String getAvatarUrl(long qq, int size) {
         return "http://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=" + size;
     }

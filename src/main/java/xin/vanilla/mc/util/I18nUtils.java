@@ -21,11 +21,11 @@ public class I18nUtils {
         put("周7", "title.sakura_sign_in.week_7");
         put("签到基础奖励", "button.sakura_sign_in.reward_base");
         put("连续签到奖励", "button.sakura_sign_in.reward_continuous");
-        put("连续签到周期奖励", "button.sakura_sign_in.reward_cycle");
+        put("签到周期奖励", "button.sakura_sign_in.reward_cycle");
         put("年度签到奖励", "button.sakura_sign_in.reward_year");
         put("月度签到奖励", "button.sakura_sign_in.reward_month");
         put("周度签到奖励", "button.sakura_sign_in.reward_week");
-        put("具体时间签到奖励", "button.sakura_sign_in.reward_time");
+        put("具体时间奖励", "button.sakura_sign_in.reward_time");
         put("修改", "option.sakura_sign_in.edit");
         put("复制", "option.sakura_sign_in.copy");
         put("删除", "option.sakura_sign_in.delete");
@@ -46,6 +46,7 @@ public class I18nUtils {
         put("请输入补签卡数量", "tips.sakura_sign_in.enter_sign_in_card");
         put("请输入进度Json", "tips.sakura_sign_in.enter_advancement_json");
         put("请输入消息", "tips.sakura_sign_in.enter_message");
+        put("请输入指令", "tips.sakura_sign_in.enter_command");
         put("规则名称[%s]输入有误", "tips.sakura_sign_in.reward_rule_s_error");
         put("物品Json[%s]输入有误", "tips.sakura_sign_in.item_json_s_error");
         put("物品数量[%s]输入有误", "tips.sakura_sign_in.item_count_s_error");

@@ -155,6 +155,7 @@ public class RewardOptionScreen extends Screen {
         MONTH_REWARD(205),
         WEEK_REWARD(206),
         DATE_TIME_REWARD(207),
+        CUMULATIVE_REWARD(208),
         OFFSET_Y(301),
         HELP(302),
         DOWNLOAD(303),
@@ -414,6 +415,18 @@ public class RewardOptionScreen extends Screen {
                 }
             }
             break;
+            case CUMULATIVE_REWARD: {
+                for (String key : rewardOptionData.getCumulativeRewards().keySet()) {
+                    if (rewardListIndex.get() > 0) {
+                        rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
+                    }
+                    this.addRewardTitleButton(getByZh(String.format("第%s天", key)), key, titleIndex, rewardListIndex.get());
+                    rewardListIndex.addAndGet(lineItemCount);
+                    this.addRewardButton(rewardOptionData.getCumulativeRewards(), key, rewardListIndex);
+                    titleIndex--;
+                }
+            }
+            break;
         }
     }
 
@@ -465,7 +478,7 @@ public class RewardOptionScreen extends Screen {
             }
         }
         // 左侧边栏奖励规则类型按钮
-        else if (value.getOperation() >= OperationButtonType.BASE_REWARD.getCode() && value.getOperation() <= OperationButtonType.DATE_TIME_REWARD.getCode()) {
+        else if (value.getOperation() > 200 && value.getOperation() <= 299) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 this.currOpButton = value.getOperation();
                 updateLayout.set(true);
@@ -486,7 +499,7 @@ public class RewardOptionScreen extends Screen {
         // 奖励配置列表面板
         else if (value.getOperation() == OperationButtonType.REWARD_PANEL.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                if (this.currOpButton >= OperationButtonType.BASE_REWARD.getCode() && this.currOpButton <= OperationButtonType.DATE_TIME_REWARD.getCode()) {
+                if (this.currOpButton > 200 && this.currOpButton <= 299) {
                     this.popupOption.clear();
                     for (ERewardType rewardType : ERewardType.values()) {
                         this.popupOption.addOption(Text.translatable(String.format("reward.sakura_sign_in.reward_type_%s", rewardType.getCode())));
@@ -495,6 +508,20 @@ public class RewardOptionScreen extends Screen {
                     flag.set(true);
                 }
             }
+        }
+        // 帮助按钮
+        else if (value.getOperation() == OperationButtonType.HELP.getCode()) {
+            // 绘制弹出层提示
+            this.popupOption.clear();
+            this.popupOption.addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_1"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_2"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_3"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_4"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_5"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_6"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_7"))
+                    .addOption(Text.translatable("tips.sakura_sign_in.reward_rule_description_8"))
+                    .build(super.font, mouseX, mouseY, "reward_rule_description");
         }
         // 上传奖励配置
         else if (value.getOperation() == OperationButtonType.UPLOAD.getCode()) {
@@ -591,14 +618,16 @@ public class RewardOptionScreen extends Screen {
     private void handlePopupOption(double mouseX, double mouseY, int button, AtomicBoolean updateLayout, AtomicBoolean flag) {
         LOGGER.debug("选择了弹出选项:\tButton: {}\tId: {}\tIndex: {}\tContent: {}", button, popupOption.getId(), popupOption.getSelectedIndex(), popupOption.getSelectedString());
         String selectedString = popupOption.getSelectedString();
-        ERewardRule rule = ERewardRule.valueOf(OperationButtonType.valueOf(currOpButton).toString());
+        OperationButtonType buttonType = OperationButtonType.valueOf(currOpButton);
+        if (buttonType == null) return;
+        ERewardRule rule = ERewardRule.valueOf(buttonType.toString());
         if (popupOption.getId().startsWith("奖励规则类型按钮:")) {
             int opCode = StringUtils.toInt(popupOption.getId().replace("奖励规则类型按钮:", ""));
             // 若选择了清空
             if (popupOption.getSelectedIndex() == 0 && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 // 并且按住了Control按钮
                 if ((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL) {
-                    if (opCode >= OperationButtonType.BASE_REWARD.getCode() && opCode <= OperationButtonType.DATE_TIME_REWARD.getCode()) {
+                    if (opCode > 200 && opCode <= 299) {
                         switch (OperationButtonType.valueOf(opCode)) {
                             case BASE_REWARD: {
                                 RewardOptionDataManager.getRewardOptionData().getBaseRewards().clear();
@@ -626,6 +655,10 @@ public class RewardOptionScreen extends Screen {
                             break;
                             case DATE_TIME_REWARD: {
                                 RewardOptionDataManager.getRewardOptionData().getDateTimeRewards().clear();
+                            }
+                            break;
+                            case CUMULATIVE_REWARD: {
+                                RewardOptionDataManager.getRewardOptionData().getCumulativeRewards().clear();
                             }
                             break;
                         }
@@ -756,6 +789,25 @@ public class RewardOptionScreen extends Screen {
                         RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(textToComponent, ERewardType.MESSAGE), ERewardType.MESSAGE));
                         RewardOptionDataManager.saveRewardOption();
                     }
+                }, () -> StringUtils.isNullOrEmpty(key[0]));
+                if (rule != ERewardRule.BASE_REWARD) {
+                    Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
+                } else {
+                    key[0] = "base";
+                    Minecraft.getInstance().setScreen(callbackScreen);
+                }
+            }
+            // 指令
+            else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.COMMAND.getCode())).equalsIgnoreCase(selectedString)) {
+                StringInputScreen callbackScreen = new StringInputScreen(this, Text.i18n("请输入指令").setShadow(true), Text.i18n("请输入"), "", "", input -> {
+                    String result = "";
+                    if (StringUtils.isNotNullOrEmpty(input) && input.startsWith("/") && StringUtils.isNotNullOrEmpty(key[0])) {
+                        RewardOptionDataManager.addReward(rule, key[0], new Reward(RewardManager.serializeReward(input, ERewardType.COMMAND), ERewardType.COMMAND));
+                        RewardOptionDataManager.saveRewardOption();
+                    } else {
+                        result = getByZh("输入值[%s]有误", input);
+                    }
+                    return result;
                 }, () -> StringUtils.isNullOrEmpty(key[0]));
                 if (rule != ERewardRule.BASE_REWARD) {
                     Minecraft.getInstance().setScreen(this.getRuleKeyInputScreen(callbackScreen, rule, key));
@@ -901,6 +953,19 @@ public class RewardOptionScreen extends Screen {
                         }
                     }));
                 }
+                // 指令
+                else if (I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.COMMAND.getCode())).equalsIgnoreCase(selectedString)) {
+                    Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入指令").setShadow(true), Text.i18n("请输入"), "", "", input -> {
+                        String result = "";
+                        if (StringUtils.isNotNullOrEmpty(input) && input.startsWith("/")) {
+                            RewardOptionDataManager.addReward(rule, key, new Reward(RewardManager.serializeReward(input, ERewardType.COMMAND), ERewardType.COMMAND));
+                            RewardOptionDataManager.saveRewardOption();
+                        } else {
+                            result = getByZh("输入值[%s]有误", input);
+                        }
+                        return result;
+                    }));
+                }
                 // 实现其他奖励类型
             } else {
                 String[] split = id.split(",");
@@ -1017,6 +1082,24 @@ public class RewardOptionScreen extends Screen {
                                     }
                             ));
                         }
+                        // 指令
+                        else if (reward.getType() == ERewardType.COMMAND) {
+                            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入指令").setShadow(true),
+                                    Text.i18n("请输入"),
+                                    "",
+                                    RewardManager.deserializeReward(reward),
+                                    input -> {
+                                        String result = "";
+                                        if (StringUtils.isNotNullOrEmpty(input) && input.startsWith("/")) {
+                                            RewardOptionDataManager.updateReward(rule, key, Integer.parseInt(index), new Reward(RewardManager.serializeReward(input, ERewardType.COMMAND), ERewardType.COMMAND));
+                                            RewardOptionDataManager.saveRewardOption();
+                                        } else {
+                                            result = getByZh("输入值[%s]有误", input);
+                                        }
+                                        return result;
+                                    }
+                            ));
+                        }
                     }
                 } else if (getByZh("复制").equalsIgnoreCase(selectedString)) {
                     if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -1113,7 +1196,7 @@ public class RewardOptionScreen extends Screen {
                 , new OperationButton(OperationButtonType.CONTINUOUS_REWARD.getCode(), this.generateCustomRenderFunction("连续签到奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1)).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
         OP_BUTTONS.put(OperationButtonType.CYCLE_REWARD.getCode()
-                , new OperationButton(OperationButtonType.CYCLE_REWARD.getCode(), this.generateCustomRenderFunction("连续签到周期奖励"))
+                , new OperationButton(OperationButtonType.CYCLE_REWARD.getCode(), this.generateCustomRenderFunction("签到周期奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 2).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
         OP_BUTTONS.put(OperationButtonType.YEAR_REWARD.getCode()
                 , new OperationButton(OperationButtonType.YEAR_REWARD.getCode(), this.generateCustomRenderFunction("年度签到奖励"))
@@ -1125,8 +1208,11 @@ public class RewardOptionScreen extends Screen {
                 , new OperationButton(OperationButtonType.WEEK_REWARD.getCode(), this.generateCustomRenderFunction("周度签到奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 5).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
         OP_BUTTONS.put(OperationButtonType.DATE_TIME_REWARD.getCode()
-                , new OperationButton(OperationButtonType.DATE_TIME_REWARD.getCode(), this.generateCustomRenderFunction("具体时间签到奖励"))
+                , new OperationButton(OperationButtonType.DATE_TIME_REWARD.getCode(), this.generateCustomRenderFunction("具体时间奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 6).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
+        OP_BUTTONS.put(OperationButtonType.CUMULATIVE_REWARD.getCode()
+                , new OperationButton(OperationButtonType.CUMULATIVE_REWARD.getCode(), this.generateCustomRenderFunction("累计签到奖励"))
+                        .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 7).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
         OP_BUTTONS.put(OperationButtonType.OFFSET_Y.getCode(), new OperationButton(OperationButtonType.OFFSET_Y.getCode(), context -> {
             AbstractGuiUtils.drawString(context.matrixStack, super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
             AbstractGuiUtils.drawLimitedText(context.matrixStack, super.font, String.valueOf((int) yOffset), super.width - rightBarWidth + 1, super.height - font.lineHeight - 2, rightBarWidth, 0xFFACACAC);

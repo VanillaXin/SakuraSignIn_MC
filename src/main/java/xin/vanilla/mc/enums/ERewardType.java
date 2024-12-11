@@ -15,7 +15,8 @@ public enum ERewardType implements Serializable {
     EXP_LEVEL(4),
     SIGN_IN_CARD(5),
     ADVANCEMENT(6),
-    MESSAGE(7);
+    MESSAGE(7),
+    COMMAND(8);
 
     private final int code;
 

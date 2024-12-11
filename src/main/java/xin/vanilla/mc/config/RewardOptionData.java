@@ -55,7 +55,7 @@ public class RewardOptionData implements Serializable {
     private Map<String, String> continuousRewardsRelation;
 
     /**
-     * 连续签到周期奖励<p>
+     * 签到周期奖励<p>
      * 每 maxDay=max(cycleRewards.keySet()) 一个循环周期<p>
      * 例
      * 1 : 苹果
@@ -69,7 +69,7 @@ public class RewardOptionData implements Serializable {
     private Map<String, RewardList> cycleRewards;
 
     /**
-     * 连续签到周期奖励映射关系
+     * 签到周期奖励映射关系
      */
     @NonNull
     @Expose(deserialize = false)
@@ -101,7 +101,7 @@ public class RewardOptionData implements Serializable {
     private Map<String, RewardList> monthRewards;
     /**
      * 周度签到奖励<p>
-     * 可以设置每周几奖励, 与<strong>连续签到周期奖励</strong>类似, 但不需要<strong>连续签到</strong><p>
+     * 可以设置每周几奖励, 与<strong>签到周期奖励</strong>类似, 但不需要<strong>连续签到</strong><p>
      * 例
      * 1 : 苹果
      * 2 : 西瓜
@@ -130,6 +130,13 @@ public class RewardOptionData implements Serializable {
     @Expose(deserialize = false)
     private Map<String, String> dateTimeRewardsRelation;
 
+    /**
+     * 累计签到奖励<p>
+     * 累计签到达到一定天数时，会获得相应的奖励
+     */
+    @NonNull
+    private Map<String, RewardList> cumulativeRewards;
+
     public RewardOptionData() {
         this.baseRewards = new RewardList();
         this.continuousRewards = new LinkedHashMap<>();
@@ -141,6 +148,7 @@ public class RewardOptionData implements Serializable {
         this.weekRewards = new LinkedHashMap<>();
         this.dateTimeRewards = new LinkedHashMap<>();
         this.dateTimeRewardsRelation = new LinkedHashMap<>();
+        this.cumulativeRewards = new LinkedHashMap<>();
     }
 
     /**
@@ -316,16 +324,36 @@ public class RewardOptionData implements Serializable {
         }
     }
 
+    /**
+     * 设置累计签到奖励
+     */
+    public void setCumulativeRewards(@NonNull Map<String, RewardList> cumulativeRewards) {
+        // 只有键为有效正整数字符串时才会被添加到映射中，以确保数据的合法性
+        cumulativeRewards.forEach((key, value) -> {
+            if (StringUtils.isNotNullOrEmpty(key)) {
+                this.addCumulativeReward(key, value);
+            }
+        });
+    }
+
+    /**
+     * 添加累计签到奖励
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void addCumulativeReward(@NonNull String key, @NonNull RewardList value) {
+        if (this.cumulativeRewards == null) this.cumulativeRewards = new LinkedHashMap<>();
+        int keyInt = StringUtils.toInt(key);
+        if (keyInt > 0) {
+            this.cumulativeRewards.put(String.valueOf(keyInt), value);
+        }
+    }
+
     public static RewardOptionData getDefault() {
         return new RewardOptionData() {{
             setBaseRewards(new RewardList() {{
                 add(new Reward() {{
                     setContent(new ItemRewardParser().serialize(new ItemStack(Items.APPLE, 1)));
                     setType(ERewardType.ITEM);
-                }});
-                add(new Reward() {{
-                    setContent(new SignInCardRewardParser().serialize(1));
-                    setType(ERewardType.SIGN_IN_CARD);
                 }});
             }});
             setContinuousRewards(new LinkedHashMap<String, RewardList>() {{
@@ -335,48 +363,30 @@ public class RewardOptionData implements Serializable {
                         setType(ERewardType.EXP_POINT);
                     }});
                 }});
-                put("2", new RewardList() {{
-                    add(new Reward() {{
-                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.LUCK, 300, 1)));
-                        setType(ERewardType.EFFECT);
-                    }});
-                }});
                 put("4", new RewardList() {{
-                    add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.BREAD, 1)));
-                        setType(ERewardType.ITEM);
-                    }});
-                }});
-                put("8", new RewardList() {{
                     add(new Reward() {{
                         setContent(new ItemRewardParser().serialize(new ItemStack(Items.CAKE, 1)));
                         setType(ERewardType.ITEM);
                     }});
                 }});
+                put("8", new RewardList() {{
+                    add(new Reward() {{
+                        setContent(new SignInCardRewardParser().serialize(1));
+                        setType(ERewardType.SIGN_IN_CARD);
+                    }});
+                }});
             }});
             setCycleRewards(new LinkedHashMap<String, RewardList>() {{
-                put("1", new RewardList() {{
+                put("2", new RewardList() {{
+                    add(new Reward() {{
+                        setContent(new ExpPointRewardParser().serialize(3));
+                        setType(ERewardType.EXP_POINT);
+                    }});
+                }});
+                put("5", new RewardList() {{
                     add(new Reward() {{
                         setContent(new ExpLevelRewardParser().serialize(1));
                         setType(ERewardType.EXP_LEVEL);
-                    }});
-                }});
-                put("2", new RewardList() {{
-                    add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.MELON_SLICE, 1)));
-                        setType(ERewardType.ITEM);
-                    }});
-                }});
-                put("4", new RewardList() {{
-                    add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.BREAD, 3)));
-                        setType(ERewardType.ITEM);
-                    }});
-                }});
-                put("8", new RewardList() {{
-                    add(new Reward() {{
-                        setContent(new ItemRewardParser().serialize(new ItemStack(Items.CAKE, 5)));
-                        setType(ERewardType.ITEM);
                     }});
                 }});
             }});
@@ -391,7 +401,8 @@ public class RewardOptionData implements Serializable {
                 }});
                 put("7", new RewardList() {{
                     add(new Reward() {{
-                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.DIG_SPEED, 6000, 0)));
+                        // 急促
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.HEAL, 6000, 0)));
                         setType(ERewardType.EFFECT);
                     }});
                     add(new Reward() {{
@@ -412,6 +423,14 @@ public class RewardOptionData implements Serializable {
                     }});
                     add(new Reward() {{
                         setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.DAMAGE_RESISTANCE, 300, 1)));
+                        setType(ERewardType.EFFECT);
+                    }});
+                }});
+            }});
+            setCumulativeRewards(new LinkedHashMap<String, RewardList>() {{
+                put("100", new RewardList() {{
+                    add(new Reward() {{
+                        setContent(new EffectRewardParser().serialize(new EffectInstance(Effects.LUCK, 99999, 2)));
                         setType(ERewardType.EFFECT);
                     }});
                 }});
@@ -547,6 +566,12 @@ public class RewardOptionData implements Serializable {
             dateTimeRewardsRelationJson.addProperty(entry.getKey(), entry.getValue());
         }
         json.add("dateTimeRewardsRelation", dateTimeRewardsRelationJson);
+
+        JsonObject cumulativeRewardJson = new JsonObject();
+        for (Map.Entry<String, RewardList> entry : cumulativeRewards.entrySet()) {
+            cumulativeRewardJson.add(entry.getKey(), entry.getValue().toJsonArray());
+        }
+        json.add("cumulativeRewards", cumulativeRewardJson);
         return json;
     }
 }

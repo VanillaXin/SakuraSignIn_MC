@@ -13,10 +13,8 @@ import xin.vanilla.mc.util.AbstractGuiUtils;
 import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 弹出层选项框
@@ -30,6 +28,8 @@ public class PopupOption {
     private final int rightPadding = 5;
     private final int margin = 2;
     private final List<Text> optionList = new ArrayList<>();
+    private final List<Text> renderList = new ArrayList<>();
+    private final Map<Integer, Integer> relationMap = new HashMap<>();
     @Setter
     private int radius = 2;
     /**
@@ -42,10 +42,10 @@ public class PopupOption {
     private int height = -topPadding - bottomPadding;
     private int screenWidth;
     private int screenHeight;
-    private double x;
-    private double y;
-    private double adjustedX = -1;
-    private double adjustedY = -1;
+    private int x;
+    private int y;
+    private int adjustedX = -1;
+    private int adjustedY = -1;
     private int maxWidth = -1;
     private int maxHeight = -1;
     // 当前选中项
@@ -72,7 +72,7 @@ public class PopupOption {
         this.font = font;
     }
 
-    private PopupOption setPosition(double x, double y) {
+    private PopupOption setPosition(int x, int y) {
         this.x = x;
         this.y = y;
         return this;
@@ -85,8 +85,8 @@ public class PopupOption {
         // 计算弹出层的宽度和高度
         if (this.maxWidth <= 0) this.maxWidth = this.screenWidth - this.margin * 2;
         if (this.maxHeight <= 0) this.maxHeight = this.screenHeight - this.margin * 2;
-        this.width = Math.min(AbstractGuiUtils.getTextWidth(this.font, this.optionList) + this.leftPadding + this.rightPadding, this.maxWidth);
-        this.height = Math.min(AbstractGuiUtils.getTextHeight(this.font, this.optionList) + this.optionList.size() - 1 + this.topPadding + this.bottomPadding, this.maxHeight);
+        this.width = Math.min(AbstractGuiUtils.getTextWidth(this.font, renderList) + this.leftPadding + this.rightPadding, this.maxWidth);
+        this.height = Math.min(AbstractGuiUtils.getTextHeight(this.font, renderList) + renderList.size() - 1 + this.topPadding + this.bottomPadding, this.maxHeight);
         // 计算弹出层的最大行数
         this.maxLines = ((this.height - this.topPadding - this.bottomPadding) + 1) / (this.font.lineHeight + 1);
         // 初始化调整后的坐标
@@ -115,14 +115,19 @@ public class PopupOption {
         return new PopupOption(font);
     }
 
-    public static PopupOption init(FontRenderer font, double x, double y) {
+    public static PopupOption init(FontRenderer font, int x, int y) {
         return new PopupOption(font).setPosition(x, y).calculateSize();
     }
 
     public PopupOption addOption(@NonNull Text text) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
-        optionList.add(text);
+        List<Text> renderList = Arrays.stream(StringUtils.replaceLine(text.getContent()).split("\n")).map(s -> text.copy().setText(s).setHoverText(s)).collect(Collectors.toList());
+        for (int i = 0; i < renderList.size(); i++) {
+            this.relationMap.put(this.renderList.size() + i, optionList.size());
+        }
+        this.optionList.add(text);
+        this.renderList.addAll(renderList);
         return this;
     }
 
@@ -130,7 +135,13 @@ public class PopupOption {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         for (String s : text) {
-            optionList.add(Text.literal(s));
+            Text literal = Text.literal(s);
+            List<Text> renderList = Arrays.stream(StringUtils.replaceLine(s).split("\n")).map(Text::literal).collect(Collectors.toList());
+            for (int i = 0; i < renderList.size(); i++) {
+                this.relationMap.put(this.renderList.size() + i, optionList.size());
+            }
+            this.optionList.add(literal);
+            this.renderList.addAll(renderList);
         }
         return this;
     }
@@ -203,11 +214,12 @@ public class PopupOption {
             throw new RuntimeException("The build method must be called after the addOption method.");
         this.font = font;
         this.id = id;
-        return this.setPosition(x, y).calculateSize();
+        return this.setPosition((int) x, (int) y).calculateSize();
     }
 
     public void clear() {
         this.optionList.clear();
+        this.renderList.clear();
         this.tipsMap.clear();
         this.width = -topPadding * 2;
         this.height = -topPadding * 2;
@@ -227,19 +239,20 @@ public class PopupOption {
     }
 
     public boolean isHovered() {
-        return !CollectionUtils.isNullOrEmpty(optionList) && selectedIndex >= 0;
+        return !CollectionUtils.isNullOrEmpty(optionList) && this.relationMap.getOrDefault(selectedIndex, -1) >= 0;
     }
 
     public int getSelectedIndex() {
-        return CollectionUtils.isNullOrEmpty(optionList) ? -1 : this.selectedIndex;
+        return CollectionUtils.isNullOrEmpty(optionList) ? -1 : this.relationMap.getOrDefault(selectedIndex, -1);
     }
 
     @NonNull
     public String getSelectedString() {
-        return !CollectionUtils.isNullOrEmpty(optionList)
+        return (!CollectionUtils.isNullOrEmpty(optionList)
                 && this.getSelectedIndex() >= 0
                 && this.getSelectedIndex() < this.optionList.size()
-                ? this.optionList.get(selectedIndex).getContent() : "";
+                && this.relationMap.getOrDefault(selectedIndex, -1) >= 0)
+                ? this.optionList.get(this.relationMap.get(selectedIndex)).getContent() : "";
     }
 
     /**
@@ -254,19 +267,19 @@ public class PopupOption {
         if (this.isHovered()) {
             // 选项过多时滚动单位合理增大
             int scrollUnit;
-            // 当 optionList.size() 远大于 maxLines 时，滚动单位为 maxLines - 1
-            if (optionList.size() / maxLines > 25) {
+            // 当 renderList.size() 远大于 maxLines 时，滚动单位为 maxLines - 1
+            if (renderList.size() / maxLines > 25) {
                 scrollUnit = Math.max(1, maxLines - 1);
             }
             // 动态调整滚动单位，滚动速度随选项增多逐渐增加
             else {
-                scrollUnit = Math.min(Math.max(1, (int) Math.ceil(Math.sqrt(optionList.size() / (double) maxLines))), maxLines - 1);
+                scrollUnit = Math.min(Math.max(1, (int) Math.ceil(Math.sqrt(renderList.size() / (double) maxLines))), maxLines - 1);
             }
             if (delta > 0) {
                 scrollOffset = Math.max(scrollOffset - scrollUnit, 0);
                 result = true;
             } else if (delta < 0) {
-                scrollOffset = Math.min(scrollOffset + scrollUnit, optionList.size() - maxLines);
+                scrollOffset = Math.min(scrollOffset + scrollUnit, renderList.size() - maxLines);
                 result = true;
             }
         }
@@ -285,10 +298,19 @@ public class PopupOption {
         selectedIndex = -1;
         if (this.adjustedY >= 0 && this.width >= 0) {
             int relativeY = (int) (mouseY - this.adjustedY - this.topPadding);
-            if (this.adjustedX <= mouseX && mouseX <= this.adjustedX + this.width) {
+            if (this.adjustedX < mouseX && mouseX < this.adjustedX + this.width - 1) {
                 if (relativeY >= 0 && relativeY <= height) {
-                    int index = relativeY / (font.lineHeight + 1) + scrollOffset;
-                    if (index < optionList.size()) {
+                    int lines = 0;
+                    int index = -1;
+                    for (int i = 0; i < (this.maxLines > 0 ? this.maxLines : renderList.size()); i++) {
+                        if (scrollOffset + i >= renderList.size()) break;
+                        int curLines = StringUtils.getLineCount(renderList.get(scrollOffset + i).getContent());
+                        if (relativeY >= lines * (font.lineHeight + 1) && relativeY < (lines + curLines) * (font.lineHeight + 1) - 1 && relativeY < this.height - this.topPadding - this.bottomPadding) {
+                            index = scrollOffset + i;
+                        }
+                        lines += curLines;
+                    }
+                    if (index < renderList.size()) {
                         selectedIndex = index;
                     }
                 }
@@ -296,20 +318,22 @@ public class PopupOption {
         }
 
         AbstractGuiUtils.setDepth(matrixStack, AbstractGuiUtils.EDepth.TOOLTIP);
-        AbstractGuiUtils.fill(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 0x88000000, radius);
-        AbstractGuiUtils.fillOutLine(matrixStack, (int) adjustedX, (int) adjustedY, width, height, 1, 0xFF000000, radius);
+        AbstractGuiUtils.fill(matrixStack, adjustedX, adjustedY, width, height, 0x88000000, radius);
+        AbstractGuiUtils.fillOutLine(matrixStack, adjustedX, adjustedY, width, height, 1, 0xFF000000, radius);
+        int lineOffset = 0;
         for (int i = 0; i < this.maxLines; i++) {
             int index = i + scrollOffset;
-            if (index >= 0 && index < optionList.size()) {
-                Text text = optionList.get(index);
+            if (index >= 0 && index < renderList.size()) {
+                Text text = renderList.get(index);
                 if (selectedIndex == index) {
-                    AbstractGuiUtils.fill(matrixStack, (int) adjustedX + 1, (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), width - 2, this.font.lineHeight, 0x88ACACAC);
+                    AbstractGuiUtils.fill(matrixStack, adjustedX + 1, adjustedY + topPadding + (lineOffset * (this.font.lineHeight + 1)), width - 2, this.font.lineHeight * StringUtils.getLineCount(text.getContent()), 0x88ACACAC);
                 }
                 if (maxWidth > 0) {
-                    AbstractGuiUtils.drawLimitedText(text.setMatrixStack(matrixStack).setFont(this.font), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))), maxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(text.setMatrixStack(matrixStack).setFont(this.font), adjustedX + leftPadding, adjustedY + topPadding + (i * (this.font.lineHeight + 1)), maxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 } else {
-                    AbstractGuiUtils.drawString(text.setMatrixStack(matrixStack).setFont(this.font), (int) (adjustedX + leftPadding), (int) (adjustedY + topPadding + (i * (this.font.lineHeight + 1))));
+                    AbstractGuiUtils.drawString(text.setMatrixStack(matrixStack).setFont(this.font), adjustedX + leftPadding, adjustedY + topPadding + (i * (this.font.lineHeight + 1)));
                 }
+                lineOffset += StringUtils.getLineCount(text.getContent());
             }
         }
         AbstractGuiUtils.resetDepth(matrixStack);
@@ -318,7 +342,7 @@ public class PopupOption {
             if (this.getSelectedIndex() >= 0 && !tipsMap.isEmpty()) {
                 Text text = tipsMap.getOrDefault(this.getSelectedIndex(), Text.literal(""));
                 if (StringUtils.isNullOrEmpty(text.getContent())) {
-                    text = tipsMap.getOrDefault(this.getSelectedIndex() - optionList.size(), Text.literal(""));
+                    text = tipsMap.getOrDefault(this.getSelectedIndex() - renderList.size(), Text.literal(""));
                 }
                 if (StringUtils.isNotNullOrEmpty(text.getContent())) {
                     AbstractGuiUtils.drawPopupMessage(text.setMatrixStack(matrixStack).setFont(this.font), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight);

@@ -24,6 +24,7 @@ import xin.vanilla.mc.network.SignInPacket;
 import xin.vanilla.mc.rewards.impl.*;
 import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.DateUtils;
+import xin.vanilla.mc.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ public class RewardManager {
         rewardParsers.put(ERewardType.SIGN_IN_CARD, new SignInCardRewardParser());
         rewardParsers.put(ERewardType.ADVANCEMENT, new AdvancementRewardParser());
         rewardParsers.put(ERewardType.MESSAGE, new MessageRewardParser());
+        rewardParsers.put(ERewardType.COMMAND, new CommandRewardParser());
         // MORE ...
     }
 
@@ -274,6 +276,8 @@ public class RewardManager {
         else if (!onlyHistory && key < nowCompensate8 && ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get()) {
             // 基础奖励
             result.addAll(serverData.getBaseRewards());
+            // 累计签到奖励
+            result.addAll(serverData.getCumulativeRewards().getOrDefault(String.valueOf(playerData.getTotalSignInDays() + 1), new RewardList()));
         } else if (!onlyHistory) {
             // 基础奖励
             result.addAll(serverData.getBaseRewards());
@@ -296,6 +300,8 @@ public class RewardManager {
                     .flatMap(Collection::stream)
                     .collect(Collectors.toList());
             if (!CollectionUtils.isNullOrEmpty(dateTimeRewards)) result.addAll(dateTimeRewards);
+            // 累计签到奖励
+            result.addAll(serverData.getCumulativeRewards().getOrDefault(String.valueOf(playerData.getTotalSignInDays() + 1), new RewardList()));
 
             //  若日历日期>=当前日期，则添加连续签到奖励(不同玩家不一样)
             if (key >= nowCompensate8) {
@@ -313,7 +319,7 @@ public class RewardManager {
                         )
                 );
                 if (!CollectionUtils.isNullOrEmpty(continuousRewards)) result.addAll(continuousRewards);
-                // 连续签到周期奖励
+                // 签到周期奖励
                 int cycleMax = serverData.getCycleRewardsRelation().keySet().stream().map(Integer::parseInt).max(Comparator.naturalOrder()).orElse(0);
                 RewardList cycleRewards = new RewardList();
                 if (cycleMax > 0) {
@@ -524,6 +530,7 @@ public class RewardManager {
             signInData.setLastSignInTime(packet.getSignInTime());
             signInData.getSignInRecords().add(signInRecord);
             signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), serverCompensateDate));
+            signInData.plusTotalSignInDays();
             player.sendMessage(new StringTextComponent(String.format("签到成功, %s/%s", signInData.getContinuousSignInDays(), getTotalSignInDays(signInData))), player.getUUID());
         }
         // PlayerSignInDataCapability.setData(player, signInData);
@@ -560,6 +567,13 @@ public class RewardManager {
                 break;
             case MESSAGE:
                 player.sendMessage((StringTextComponent) object, player.getUUID());
+                break;
+            case COMMAND:
+                String command = (String) object;
+                command = command.replaceAll("@s", player.getName().getString());
+                if (StringUtils.isNotNullOrEmpty(command)) {
+                    player.server.getCommands().performCommand(player.createCommandSourceStack().withSuppressedOutput().withPermission(2), command);
+                }
                 break;
             default:
         }

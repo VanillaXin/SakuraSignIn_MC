@@ -210,6 +210,11 @@ public class RewardOptionDataManager {
             case DATE_TIME_REWARD:
                 result = !RewardOptionData.parseDateRange(keyName).isEmpty();
                 break;
+            case CUMULATIVE_REWARD: {
+                int anInt = StringUtils.toInt(keyName);
+                result = anInt > 0;
+            }
+            break;
             default:
                 result = false;
         }
@@ -247,6 +252,9 @@ public class RewardOptionDataManager {
             case DATE_TIME_REWARD:
                 result = rewardOptionData.getDateTimeRewards().get(keyName);
                 break;
+            case CUMULATIVE_REWARD:
+                result = rewardOptionData.getCumulativeRewards().get(keyName);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
         }
@@ -282,6 +290,9 @@ public class RewardOptionDataManager {
                 break;
             case DATE_TIME_REWARD:
                 rewardOptionData.addDateTimeRewards(keyName, rewardList);
+                break;
+            case CUMULATIVE_REWARD:
+                rewardOptionData.addCumulativeReward(keyName, rewardList);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
@@ -329,6 +340,11 @@ public class RewardOptionDataManager {
                 rewardOptionData.addDateTimeRewards(newKeyName, remove);
             }
             break;
+            case CUMULATIVE_REWARD: {
+                RewardList remove = rewardOptionData.getCumulativeRewards().remove(oldKeyName);
+                rewardOptionData.addCumulativeReward(newKeyName, remove);
+            }
+            break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
         }
@@ -363,6 +379,9 @@ public class RewardOptionDataManager {
             case DATE_TIME_REWARD:
                 rewardOptionData.getDateTimeRewards().get(keyName).clear();
                 break;
+            case CUMULATIVE_REWARD:
+                rewardOptionData.getCumulativeRewards().get(keyName).clear();
+                break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
         }
@@ -395,6 +414,9 @@ public class RewardOptionDataManager {
                 break;
             case DATE_TIME_REWARD:
                 rewardOptionData.getDateTimeRewards().remove(keyName);
+                break;
+            case CUMULATIVE_REWARD:
+                rewardOptionData.getCumulativeRewards().remove(keyName);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
@@ -433,6 +455,9 @@ public class RewardOptionDataManager {
                     break;
                 case DATE_TIME_REWARD:
                     result = rewardOptionData.getDateTimeRewards().get(keyName).get(index);
+                    break;
+                case CUMULATIVE_REWARD:
+                    result = rewardOptionData.getCumulativeRewards().get(keyName).get(index);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown rule: " + rule);
@@ -491,6 +516,12 @@ public class RewardOptionDataManager {
                     rewardOptionData.getDateTimeRewards().put(keyName, new RewardList());
                 }
                 rewardOptionData.getDateTimeRewards().get(keyName).add(reward);
+                break;
+            case CUMULATIVE_REWARD:
+                if (!rewardOptionData.getCumulativeRewards().containsKey(keyName)) {
+                    rewardOptionData.getCumulativeRewards().put(keyName, new RewardList());
+                }
+                rewardOptionData.getCumulativeRewards().get(keyName).add(reward);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule);
@@ -559,6 +590,14 @@ public class RewardOptionDataManager {
                     }
                     rewardOptionData.getDateTimeRewards().get(keyName).set(index, reward);
                     break;
+                case CUMULATIVE_REWARD:
+                    if (!rewardOptionData.getCumulativeRewards().containsKey(keyName)) {
+                        rewardOptionData.getCumulativeRewards().put(keyName, new RewardList() {{
+                            add(reward);
+                        }});
+                    }
+                    rewardOptionData.getCumulativeRewards().get(keyName).set(index, reward);
+                    break;
                 default:
                     throw new IllegalArgumentException("Unknown rule: " + rule);
             }
@@ -596,6 +635,9 @@ public class RewardOptionDataManager {
                     break;
                 case DATE_TIME_REWARD:
                     rewardOptionData.getDateTimeRewards().get(keyName).remove(index);
+                    break;
+                case CUMULATIVE_REWARD:
+                    rewardOptionData.getCumulativeRewards().get(keyName).remove(index);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown rule: " + rule);
@@ -647,6 +689,9 @@ public class RewardOptionDataManager {
                 case DATE_TIME_REWARD:
                     replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getDateTimeRewards());
                     break;
+                case CUMULATIVE_REWARD:
+                    replaceWithSortedMap((LinkedHashMap<String, RewardList>) rewardOptionData.getCumulativeRewards());
+                    break;
             }
         }
     }
@@ -679,6 +724,8 @@ public class RewardOptionDataManager {
                 result.setWeekRewards(GSON.fromJson(jsonObject.get("weekRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
                 }.getType()));
                 result.setDateTimeRewards(GSON.fromJson(jsonObject.get("dateTimeRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
+                }.getType()));
+                result.setCumulativeRewards(GSON.fromJson(jsonObject.get("cumulativeRewards"), new TypeToken<LinkedHashMap<String, RewardList>>() {
                 }.getType()));
             } catch (JsonSyntaxException | JsonIOException e) {
                 LOGGER.error("Error loading sign-in data: ", e);

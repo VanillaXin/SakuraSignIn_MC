@@ -1,5 +1,13 @@
 package xin.vanilla.mc.enums;
 
+import lombok.Getter;
+
+import java.util.Arrays;
+
+/**
+ * 奖励规则
+ */
+@Getter
 public enum ERewardRule {
     BASE_REWARD(1),
     CONTINUOUS_REWARD(2),
@@ -7,7 +15,8 @@ public enum ERewardRule {
     YEAR_REWARD(4),
     MONTH_REWARD(5),
     WEEK_REWARD(6),
-    DATE_TIME_REWARD(7);
+    DATE_TIME_REWARD(7),
+    CUMULATIVE_REWARD(8);
 
     private final int code;
 
@@ -16,11 +25,6 @@ public enum ERewardRule {
     }
 
     public static ERewardRule valueOf(int code) {
-        for (ERewardRule type : ERewardRule.values()) {
-            if (type.code == code) {
-                return type;
-            }
-        }
-        throw new IllegalArgumentException("Invalid code: " + code);
+        return Arrays.stream(values()).filter(v -> v.getCode() == code).findFirst().orElse(null);
     }
 }

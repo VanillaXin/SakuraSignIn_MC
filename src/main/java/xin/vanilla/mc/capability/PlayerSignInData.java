@@ -18,15 +18,31 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 玩家签到数据
  */
 public class PlayerSignInData implements IPlayerSignInData {
-    private AtomicInteger continuousSignInDays = new AtomicInteger();
+    private final AtomicInteger totalSignInDays = new AtomicInteger();
+    private final AtomicInteger continuousSignInDays = new AtomicInteger();
     private Date lastSignInTime;
     private final AtomicInteger signInCard = new AtomicInteger();
     private boolean autoRewarded;
     private List<SignInRecord> signInRecords;
 
     @Override
+    public int getTotalSignInDays() {
+        return this.totalSignInDays.get();
+    }
+
+    @Override
+    public void setTotalSignInDays(int days) {
+        this.totalSignInDays.set(days);
+    }
+
+    @Override
+    public int plusTotalSignInDays() {
+        return this.totalSignInDays.incrementAndGet();
+    }
+
+    @Override
     public int getContinuousSignInDays() {
-        return continuousSignInDays.get();
+        return this.continuousSignInDays.get();
     }
 
     @Override
@@ -106,6 +122,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     public void writeToBuffer(PacketBuffer buffer) {
+        buffer.writeInt(this.getTotalSignInDays());
         buffer.writeInt(this.getContinuousSignInDays());
         buffer.writeDate(this.getLastSignInTime());
         buffer.writeInt(this.getSignInCard());
@@ -117,6 +134,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     public void readFromBuffer(PacketBuffer buffer) {
+        this.totalSignInDays.set(buffer.readInt());
         this.continuousSignInDays.set(buffer.readInt());
         this.lastSignInTime = buffer.readDate();
         this.signInCard.set(buffer.readInt());
@@ -129,6 +147,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     }
 
     public void copyFrom(IPlayerSignInData capability) {
+        this.totalSignInDays.set(capability.getTotalSignInDays());
         this.continuousSignInDays.set(capability.getContinuousSignInDays());
         this.lastSignInTime = capability.getLastSignInTime();
         this.signInCard.set(capability.getSignInCard());
@@ -140,6 +159,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     public CompoundNBT serializeNBT() {
         // 创建一个CompoundNBT对象，并将玩家的分数和活跃状态写入其中
         CompoundNBT tag = new CompoundNBT();
+        tag.putInt("totalSignInDays", this.getTotalSignInDays());
         tag.putInt("continuousSignInDays", this.getContinuousSignInDays());
         tag.putString("lastSignInTime", DateUtils.toDateTimeString(this.getLastSignInTime()));
         tag.putInt("signInCard", this.getSignInCard());
@@ -156,6 +176,7 @@ public class PlayerSignInData implements IPlayerSignInData {
     @Override
     public void deserializeNBT(CompoundNBT nbt) {
         // 从NBT标签中读取玩家的分数和活跃状态，并更新到实例中
+        this.setTotalSignInDays(nbt.getInt("totalSignInDays"));
         this.setContinuousSignInDays(nbt.getInt("continuousSignInDays"));
         this.setLastSignInTime(DateUtils.format(nbt.getString("lastSignInTime")));
         this.setSignInCard(nbt.getInt("signInCard"));

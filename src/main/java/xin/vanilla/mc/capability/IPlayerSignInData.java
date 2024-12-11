@@ -16,6 +16,21 @@ public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
     // TIPS 加完属性记得去 PlayerSignInDataStorage 里注册
 
     /**
+     * 获取累计签到天数
+     */
+    int getTotalSignInDays();
+
+    /**
+     * 设置累计签到天数
+     */
+    void setTotalSignInDays(int days);
+
+    /**
+     * 递增累计签到天数
+     */
+    int plusTotalSignInDays();
+
+    /**
      * 获取连续签到天数
      */
     int getContinuousSignInDays();

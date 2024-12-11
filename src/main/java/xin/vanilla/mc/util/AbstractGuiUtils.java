@@ -316,8 +316,10 @@ public class AbstractGuiUtils {
 
     public static int getTextWidth(FontRenderer font, Collection<Text> texts) {
         int width = 0;
-        for (Text s : texts) {
-            width = Math.max(width, font.width(s.getContent()));
+        for (Text text : texts) {
+            for (String string : StringUtils.replaceLine(text.getContent()).split("\n")) {
+                width = Math.max(width, font.width(string));
+            }
         }
         return width;
     }

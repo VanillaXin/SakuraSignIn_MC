@@ -40,16 +40,21 @@ public class RewardOptionSyncPacket {
                 RewardOptionDataManager.setRewardOptionDataChanged(true);
                 RewardOptionDataManager.saveRewardOption();
             } else if (ctx.get().getDirection().getReceptionSide().isServer()) {
-                // 备份 RewardOption
-                RewardOptionDataManager.backupRewardOption(false);
-                // 更新 RewardOption
-                RewardOptionDataManager.setRewardOptionData(packet.getRewardOptionData());
-                RewardOptionDataManager.saveRewardOption();
                 ServerPlayerEntity sender = ctx.get().getSender();
                 if (sender != null) {
-                    for (ServerPlayerEntity player : sender.server.getPlayerList().getPlayers()) {
-                        // 同步 RewardOption 至所有在线玩家
-                        ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                    // 判断是否为管理员
+                    if (sender.hasPermissions(3)) {
+                        // 备份 RewardOption
+                        RewardOptionDataManager.backupRewardOption(false);
+                        // 更新 RewardOption
+                        RewardOptionDataManager.setRewardOptionData(packet.getRewardOptionData());
+                        RewardOptionDataManager.saveRewardOption();
+                        for (ServerPlayerEntity player : sender.server.getPlayerList().getPlayers()) {
+                            // 排除发送者
+                            if (player.getStringUUID().equalsIgnoreCase(sender.getStringUUID())) continue;
+                            // 同步 RewardOption 至所有在线玩家
+                            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                        }
                     }
                 }
             }
