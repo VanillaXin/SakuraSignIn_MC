@@ -3,7 +3,7 @@ package xin.vanilla.mc.event;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.util.Date;
 
 import static xin.vanilla.mc.SakuraSignIn.PNG_CHUNK_NAME;
+import static xin.vanilla.mc.util.I18nUtils.getI18nKey;
 
 /**
  * 客户端事件处理器
@@ -103,7 +104,7 @@ public class ClientEventHandler {
             } else {
                 ClientPlayerEntity player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.sendMessage(new StringTextComponent("SakuraSignIn server is offline!"), player.getUUID());
+                    player.sendMessage(new TranslationTextComponent(getI18nKey("SakuraSignIn server is offline!")), player.getUUID());
                 }
             }
         } else if (REWARD_OPTION_SCREEN_KEY.consumeClick()) {

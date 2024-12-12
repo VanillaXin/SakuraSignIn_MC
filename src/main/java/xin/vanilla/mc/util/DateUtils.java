@@ -145,13 +145,13 @@ public class DateUtils {
         if (getLocalFromLanguageTag(languageTag).getLanguage().equalsIgnoreCase(Locale.CHINESE.getLanguage())) {
             return localDateTime.format(DateTimeFormatter.ofPattern("M月"));
         } else {
-            return localDateTime.getMonth().getDisplayName(TextStyle.SHORT_STANDALONE, getLocalFromLanguageTag(languageTag));
+            return localDateTime.getMonth().getDisplayName(TextStyle.SHORT, getLocalFromLanguageTag(languageTag));
         }
     }
 
     public static String toLocalStringWeek(Date date, String languageTag) {
         LocalDateTime localDateTime = getLocalDateTime(date);
-        return localDateTime.getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, getLocalFromLanguageTag(languageTag));
+        return localDateTime.getDayOfWeek().getDisplayName(TextStyle.SHORT, getLocalFromLanguageTag(languageTag));
     }
 
     public static String toLocalStringDay(Date date, String languageTag) {

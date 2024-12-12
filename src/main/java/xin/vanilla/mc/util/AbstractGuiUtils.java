@@ -667,27 +667,44 @@ public class AbstractGuiUtils {
      * @param showText     是否显示物品数量等信息
      */
     public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, TextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
+        // 物品
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
             renderItem(itemRenderer, fontRenderer, itemStack, x, y, showText);
-        } else if (reward.getType().equals(ERewardType.EFFECT)) {
+        }
+        // 效果
+        else if (reward.getType().equals(ERewardType.EFFECT)) {
             EffectInstance effectInstance = RewardManager.deserializeReward(reward);
             AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
-        } else if (reward.getType().equals(ERewardType.EXP_POINT)) {
+        }
+        // 经验点
+        else if (reward.getType().equals(ERewardType.EXP_POINT)) {
             AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getPointUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
-        } else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
+        }
+        // 经验等级
+        else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
             AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getLevelUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
-        } else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
+        }
+        // 补签卡
+        else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
             AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getCardUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
-        } else if (reward.getType().equals(ERewardType.MESSAGE)) {
+        }
+        // 消息
+        else if (reward.getType().equals(ERewardType.MESSAGE)) {
             // 这玩意不是Integer类型也没有数量, 不能showText
             AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
-        } else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
+        }
+        // 进度
+        else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
             ResourceLocation resourceLocation = RewardManager.deserializeReward(reward);
             AdvancementData advancementData = SakuraSignIn.getAdvancementData().stream()
                     .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
                     .findFirst().orElse(new AdvancementData(resourceLocation, "", "", new ItemStack(Items.AIR)));
             itemRenderer.renderGuiItem(advancementData.getIcon(), x, y);
+        }
+        // 指令
+        else if (reward.getType().equals(ERewardType.COMMAND)) {
+            renderItem(itemRenderer, fontRenderer, new ItemStack(Items.REPEATING_COMMAND_BLOCK), x, y, false);
         }
     }
 

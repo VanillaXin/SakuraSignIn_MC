@@ -26,6 +26,7 @@ public class I18nUtils {
         put("月度签到奖励", "button.sakura_sign_in.reward_month");
         put("周度签到奖励", "button.sakura_sign_in.reward_week");
         put("具体时间奖励", "button.sakura_sign_in.reward_time");
+        put("累计签到奖励", "button.sakura_sign_in.reward_cumulative");
         put("修改", "option.sakura_sign_in.edit");
         put("复制", "option.sakura_sign_in.copy");
         put("删除", "option.sakura_sign_in.delete");
@@ -80,8 +81,49 @@ public class I18nUtils {
         put("使用键盘%s键也可以哦", "tips.sakura_sign_in.use_s_key");
         put("点击切换主题", "tips.sakura_sign_in.click_to_change_theme");
         put("左键点击切换主题\n右键点击选择外部主题", "tips.sakura_sign_in.click_to_change_theme_or_select_external_theme");
+        put("已选择主题文件: %s", "message.sakura_sign_in.selected_theme_file_s");
+        put("前面的的日期以后再来探索吧。", "message.sakura_sign_in.next_day_cannot_operate");
+        put("已经签过到了哦。", "message.sakura_sign_in.already_signed");
+        put("不论怎么点也不会获取俩次奖励吧。", "message.sakura_sign_in.already_get_reward");
+        put("服务器未开启补签功能哦。", "message.sakura_sign_in.server_not_enable_sign_in_card");
+        put("补签卡不足了哦。", "message.sakura_sign_in.not_enough_sign_in_card");
+        put("过去的的日期怎么想也回不去了吧。", "message.sakura_sign_in.past_day_cannot_operate");
+
+        put("SakuraSignIn server is offline!", "message.sakura_sign_in.sakurasignin_server_is_offline");
+        put("当前拥有%d张补签卡", "message.sakura_sign_in.has_sign_in_card_d");
+        put("给予%d张补签卡", "message.sakura_sign_in.give_sign_in_card_d");
+        put("获得%d张补签卡", "message.sakura_sign_in.get_sign_in_card_d");
+        put("补签卡被设置为了%d张", "message.sakura_sign_in.set_sign_in_card_d");
+        put("玩家[%s]拥有%d张补签卡", "message.sakura_sign_in.set_player_s_sign_in_card_d");
+        put("服务器已启用自动签到", "message.sakura_sign_in.server_enabled_auto_sign");
+        put("服务器未启用自动签到", "message.sakura_sign_in.server_disabled_auto_sign");
+        put("服务器签到时间冷却方式为: %s", "message.sakura_sign_in.sign_in_time_cool_down_mode_s");
+        put("服务器签到冷却刷新时间为: %05.2f", "message.sakura_sign_in.sign_in_time_cool_down_refresh_time_f");
+        put("服务器签到冷却刷新间隔为: %05.2f", "message.sakura_sign_in.sign_in_time_cool_down_refresh_interval_f");
+        put("服务器已启用补签卡", "message.sakura_sign_in.server_enabled_sign_in_card");
+        put("服务器未启用补签卡", "message.sakura_sign_in.server_disabled_sign_in_card");
+        put("服务器最大补签天数为: %d", "message.sakura_sign_in.max_sign_in_day_d");
+        put("服务器已启用补签仅获得基础奖励", "message.sakura_sign_in.server_enabled_sign_in_card_only_basic_reward");
+        put("服务器未启用补签仅获得基础奖励", "message.sakura_sign_in.server_disabled_sign_in_card_only_basic_reward");
+        put("服务器当前时间: %s", "message.sakura_sign_in.server_current_time_s");
+        put("服务器时间已设置为: %s", "message.sakura_sign_in.set_server_time_s");
+        put("要到今天的%05.2f后才能签到哦", "message.sakura_sign_in.next_sign_in_time_f");
+        put("签到日期晚于服务器当前日期，签到失败", "message.sakura_sign_in.sign_in_date_late_server_current_date_fail");
+        put("签到日期早于服务器当前日期，签到失败", "message.sakura_sign_in.sign_in_date_early_server_current_date_fail");
+        put("补签日期不早于服务器当前日期，补签失败", "message.sakura_sign_in.compensate_date_not_early_server_current_date_fail");
+        put("签到冷却中，签到失败，请稍后再试", "message.sakura_sign_in.sign_in_cool_down_fail");
+        put("服务器未开启补签功能，补签失败", "message.sakura_sign_in.server_not_enable_sign_in_card_fail");
+        put("补签卡不足，补签失败", "message.sakura_sign_in.not_enough_sign_in_card_fail");
+        put("%s的奖励已经领取过啦", "message.sakura_sign_in.already_receive_reward_s");
+        put("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！", "message.sakura_sign_in.not_sign_in");
+        put("奖励领取成功", "message.sakura_sign_in.receive_reward_success");
+        put("签到成功, %s/%s", "message.sakura_sign_in.sign_in_success_s");
 
     }};
+
+    public static String getI18nKey(String key) {
+        return ZH_CN_KEY_MAP.getOrDefault(key, key);
+    }
 
     public static String get(String key, Object... args) {
         return I18n.get(key, args);

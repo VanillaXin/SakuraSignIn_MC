@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static xin.vanilla.mc.screen.SignInScreen.OperationButtonType.*;
 import static xin.vanilla.mc.util.I18nUtils.getByZh;
+import static xin.vanilla.mc.util.I18nUtils.getI18nKey;
 
 @OnlyIn(Dist.CLIENT)
 public class SignInScreen extends Screen {
@@ -208,42 +209,32 @@ public class SignInScreen extends Screen {
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setTooltip(getByZh("点击切换主题"))
-                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
-                .setModifiers(GLFW.GLFW_MOD_SHIFT));
+                .setTooltip(getByZh("点击切换主题")));
         BUTTONS.put(THEME_SAKURA_BUTTON.getCode(), new OperationButton(THEME_SAKURA_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setTooltip(getByZh("点击切换主题"))
-                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
-                .setModifiers(GLFW.GLFW_MOD_SHIFT));
+                .setTooltip(getByZh("点击切换主题")));
         BUTTONS.put(THEME_CLOVER_BUTTON.getCode(), new OperationButton(THEME_CLOVER_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setTooltip(getByZh("点击切换主题"))
-                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
-                .setModifiers(GLFW.GLFW_MOD_SHIFT));
+                .setTooltip(getByZh("点击切换主题")));
         BUTTONS.put(THEME_MAPLE_BUTTON.getCode(), new OperationButton(THEME_MAPLE_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
-                .setTooltip(getByZh("点击切换主题"))
-                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
-                .setModifiers(GLFW.GLFW_MOD_SHIFT));
+                .setTooltip(getByZh("点击切换主题")));
         BUTTONS.put(THEME_CHAOS_BUTTON.getCode(), new OperationButton(THEME_CHAOS_BUTTON.getCode(), SakuraSignIn.getThemeTexture())
                 .setCoordinate(SakuraSignIn.getThemeTextureCoordinate().getThemeCoordinate())
                 .setNormal(SakuraSignIn.getThemeTextureCoordinate().getThemeUV()).setHover(SakuraSignIn.getThemeTextureCoordinate().getThemeHoverUV()).setTap(SakuraSignIn.getThemeTextureCoordinate().getThemeTapUV())
                 .setTextureWidth(SakuraSignIn.getThemeTextureCoordinate().getTotalWidth())
                 .setTextureHeight(SakuraSignIn.getThemeTextureCoordinate().getTotalHeight())
                 .setTremblingAmplitude(3.5)
-                .setTooltip(getByZh("左键点击切换主题\n右键点击选择外部主题"))
-                .setKeyCode(GLFW.GLFW_KEY_LEFT_SHIFT)
-                .setModifiers(GLFW.GLFW_MOD_SHIFT));
+                .setTooltip(getByZh("左键点击切换主题\n右键点击选择外部主题")));
     }
 
     /**
@@ -526,7 +517,7 @@ public class SignInScreen extends Screen {
                 ClientPlayerEntity player = Minecraft.getInstance().player;
                 String selectedFile = themeFileList.get(popupOption.getSelectedIndex()).getPath();
                 if (player != null) {
-                    player.sendMessage(new StringTextComponent("已选择主题文件: " + selectedFile), player.getUUID());
+                    player.sendMessage(new TranslationTextComponent(getI18nKey("已选择主题文件: %s"), selectedFile), player.getUUID());
                     ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
                     if (TextureUtils.isTextureAvailable(resourceLocation)) {
                         ClientConfig.THEME.set(selectedFile);
@@ -680,7 +671,7 @@ public class SignInScreen extends Screen {
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
-                    player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                    player.sendMessage(new TranslationTextComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
                 } else {
                     cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
@@ -688,10 +679,10 @@ public class SignInScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new StringTextComponent("已经签过到了哦。"), player.getUUID());
+                player.sendMessage(new TranslationTextComponent(getI18nKey("已经签过到了哦。")), player.getUUID());
             } else {
                 if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
-                    player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+                    player.sendMessage(new TranslationTextComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
@@ -700,10 +691,10 @@ public class SignInScreen extends Screen {
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!ServerConfig.SIGN_IN_CARD.get()) {
-                    player.sendMessage(new StringTextComponent("服务器未开启补签功能哦。"), player.getUUID());
+                    player.sendMessage(new TranslationTextComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                        player.sendMessage(new StringTextComponent("补签卡不足了哦。"), player.getUUID());
+                        player.sendMessage(new TranslationTextComponent(getI18nKey("补签卡不足了哦。")), player.getUUID());
                     } else {
                         cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                         ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
@@ -712,12 +703,12 @@ public class SignInScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
             if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
-                player.sendMessage(new StringTextComponent("前面的的日期以后再来探索吧。"), player.getUUID());
+                player.sendMessage(new TranslationTextComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
             } else {
-                player.sendMessage(new StringTextComponent("后面的的日期怎么想也回不去了吧。"), player.getUUID());
+                player.sendMessage(new TranslationTextComponent(getI18nKey("过去的的日期怎么想也回不去了吧。")), player.getUUID());
             }
         } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
-            player.sendMessage(new StringTextComponent("不论怎么点也不会获取俩次奖励吧。"), player.getUUID());
+            player.sendMessage(new TranslationTextComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
         } else {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());

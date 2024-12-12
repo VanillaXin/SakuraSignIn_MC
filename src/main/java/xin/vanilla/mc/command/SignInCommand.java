@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static xin.vanilla.mc.util.I18nUtils.getI18nKey;
+
 public class SignInCommand {
 
     public static int HELP_INFO_NUM_PER_PAGE = 5;
@@ -217,9 +219,9 @@ public class SignInCommand {
                         .executes(context -> {
                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                             if (!ServerConfig.SIGN_IN_CARD.get()) {
-                                player.sendMessage(new StringTextComponent("服务器未开启补签功能"), player.getUUID());
+                                player.sendMessage(new TranslationTextComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
                             } else {
-                                player.sendMessage(new StringTextComponent(String.format("当前拥有%d张补签卡", PlayerSignInDataCapability.getData(player).getSignInCard())), player.getUUID());
+                                player.sendMessage(new TranslationTextComponent(getI18nKey("当前拥有%d张补签卡"), PlayerSignInDataCapability.getData(player).getSignInCard()), player.getUUID());
                             }
                             return 1;
                         })
@@ -232,7 +234,7 @@ public class SignInCommand {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(signInData.getSignInCard() + num);
-                                            player.sendMessage(new StringTextComponent(String.format("给予%d张补签卡", num)), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("给予%d张补签卡"), num), player.getUUID());
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
@@ -242,7 +244,7 @@ public class SignInCommand {
                                                     ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                    player.sendMessage(new StringTextComponent(String.format("获得%d张补签卡", num)), player.getUUID());
+                                                    player.sendMessage(new TranslationTextComponent(getI18nKey("获得%d张补签卡"), num), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -259,7 +261,7 @@ public class SignInCommand {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(num);
-                                            player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("补签卡被设置为了%d张"), num), player.getUUID());
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
@@ -269,7 +271,7 @@ public class SignInCommand {
                                                     ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(num);
-                                                    player.sendMessage(new StringTextComponent(String.format("补签卡被设置为了%d张", num)), player.getUUID());
+                                                    player.sendMessage(new TranslationTextComponent(getI18nKey("补签卡被设置为了%d张"), num), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -285,7 +287,7 @@ public class SignInCommand {
                                             ServerPlayerEntity target = EntityArgument.getPlayer(context, "player");
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(target);
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new StringTextComponent(String.format("玩家[%s]拥有%d张补签卡", target.getDisplayName().getString(), signInData.getSignInCard())), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("玩家[%s]拥有%d张补签卡"), target.getDisplayName().getString(), signInData.getSignInCard()), player.getUUID());
                                             PlayerSignInDataCapability.syncPlayerData(target);
                                             return 1;
                                         })
@@ -299,7 +301,7 @@ public class SignInCommand {
                                 .then(Commands.literal("autoSignIn")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用")), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用"))), player.getUUID());
                                             return 1;
                                         })
                                 )
@@ -307,7 +309,7 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                             ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器签到时间冷却方式为: %s", coolingMethod.getName())), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器签到时间冷却方式为: %s"), coolingMethod.getName()), player.getUUID());
                                             return 1;
                                         })
                                 )
@@ -315,7 +317,7 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                             Double time = ServerConfig.TIME_COOLING_TIME.get();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器签到冷却刷新时间为: %05.2f", time)), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器签到冷却刷新时间为: %05.2f"), time), player.getUUID());
                                             return 1;
                                         })
                                 )
@@ -323,14 +325,14 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                             Double time = ServerConfig.TIME_COOLING_INTERVAL.get();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器签到冷却刷新间隔为: %05.2f", time)), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器签到冷却刷新间隔为: %05.2f"), time), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("signInCard")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用")), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用"))), player.getUUID());
                                             return 1;
                                         })
                                 )
@@ -338,21 +340,21 @@ public class SignInCommand {
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
                                             int time = ServerConfig.RE_SIGN_IN_DAYS.get();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器最大补签天数为: %d", time)), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器最大补签天数为: %d"), time), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("signInCardOnlyBaseReward")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用")), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用"))), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("date")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new StringTextComponent(String.format("服务器当前时间: %s", DateUtils.toDateTimeString(DateUtils.getServerDate()))), player.getUUID());
+                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器当前时间: %s"), DateUtils.toDateTimeString(DateUtils.getServerDate())), player.getUUID());
                                             return 1;
                                         })
                                 )
@@ -378,7 +380,7 @@ public class SignInCommand {
                                                                                                     ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
                                                                                                     ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
                                                                                                     ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                                                                                    player.sendMessage(new StringTextComponent(String.format("服务器时间已设置为: %s", DateUtils.toDateTimeString(date))), player.getUUID());
+                                                                                                    player.sendMessage(new TranslationTextComponent(getI18nKey("服务器时间已设置为: %s"), DateUtils.toDateTimeString(date)), player.getUUID());
                                                                                                     return 1;
                                                                                                 })
                                                                                         )

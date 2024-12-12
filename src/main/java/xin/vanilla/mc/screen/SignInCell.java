@@ -209,7 +209,9 @@ public class SignInCell {
             }
         }
         // 绘制文字
-        StringTextComponent title = new StringTextComponent(month + "月" + day + "日");
+        String monthTitle = DateUtils.toLocalStringMonth(DateUtils.getDate(year, month, day), Minecraft.getInstance().options.languageCode);
+        String dayTitle = DateUtils.toLocalStringDay(DateUtils.getDate(year, month, day), Minecraft.getInstance().options.languageCode);
+        StringTextComponent title = new StringTextComponent(String.format("%s %s", monthTitle, dayTitle));
         double fontWidth = fontRenderer.width(title);
         Coordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
         double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;
