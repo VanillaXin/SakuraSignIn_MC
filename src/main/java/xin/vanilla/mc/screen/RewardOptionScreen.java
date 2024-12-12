@@ -420,7 +420,7 @@ public class RewardOptionScreen extends Screen {
                     if (rewardListIndex.get() > 0) {
                         rewardListIndex.set((int) ((Math.floor((double) rewardListIndex.get() / lineItemCount) + 1) * lineItemCount));
                     }
-                    this.addRewardTitleButton(getByZh(String.format("第%s天", key)), key, titleIndex, rewardListIndex.get());
+                    this.addRewardTitleButton(getByZh("第%s天", key), key, titleIndex, rewardListIndex.get());
                     rewardListIndex.addAndGet(lineItemCount);
                     this.addRewardButton(rewardOptionData.getCumulativeRewards(), key, rewardListIndex);
                     titleIndex--;
