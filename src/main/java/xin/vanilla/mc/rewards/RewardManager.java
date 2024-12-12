@@ -506,7 +506,7 @@ public class RewardManager {
         }
         // 签到/补签
         else {
-            RewardList rewardList = RewardManager.getRewardListByDate(packet.getSignInTime(), signInData, false);
+            RewardList rewardList = RewardManager.getRewardListByDate(packet.getSignInTime(), signInData, false).clone();
             if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType())) signInData.subSignInCard();
             SignInRecord signInRecord = new SignInRecord();
             signInRecord.setRewarded(packet.isAutoRewarded());
@@ -535,7 +535,7 @@ public class RewardManager {
         }
         // PlayerSignInDataCapability.setData(player, signInData);
         signInData.save(player);
-        // 同步数据只客户端
+        // 同步数据至客户端
         PlayerSignInDataCapability.syncPlayerData(player);
     }
 
