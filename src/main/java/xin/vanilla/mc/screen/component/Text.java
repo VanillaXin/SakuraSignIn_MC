@@ -148,7 +148,7 @@ public class Text {
     }
 
     public FontRenderer getFont() {
-        return font == null ? Minecraft.getInstance().getSelf().font : this.font;
+        return font == null ? Minecraft.getInstance().gui.getFont() : this.font;
     }
 
     public int getColor() {
