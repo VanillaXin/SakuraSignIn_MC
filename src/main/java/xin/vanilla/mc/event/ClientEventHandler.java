@@ -79,7 +79,7 @@ public class ClientEventHandler {
             SakuraSignIn.setThemeTextureCoordinate(TextureCoordinate.getDefault());
         }
         // 设置内置主题特殊图标UV的偏移量
-        if (SakuraSignIn.isSpecialVersionTheme()) {
+        if (SakuraSignIn.isSpecialVersionTheme() && SakuraSignIn.getThemeTextureCoordinate().isSpecial()) {
             SakuraSignIn.getThemeTextureCoordinate().getNotSignedInUV().setX(320);
             SakuraSignIn.getThemeTextureCoordinate().getSignedInUV().setX(320);
         } else {

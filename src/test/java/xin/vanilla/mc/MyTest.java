@@ -85,9 +85,11 @@ public class MyTest {
         TextureCoordinate aDefault = TextureCoordinate.getDefault();
         switch (fileName) {
             case "original":
+                aDefault.setSpecial(true);
                 // aDefault.setTotalHeight(880);
                 break;
             case "sakura":
+                aDefault.setSpecial(true);
                 aDefault.getCellCoordinate().setX(70).setY(128).setWidth(34).setHeight(34);
                 aDefault.setCellHMargin(20);
                 aDefault.setCellVMargin(24);
@@ -98,6 +100,7 @@ public class MyTest {
                 aDefault.setTextColorDate(0xFF000000);
                 break;
             case "clover":
+                aDefault.setSpecial(true);
                 // aDefault.setTotalHeight(880);
                 aDefault.getCellCoordinate().setX(80);
                 aDefault.setTextColorDefault(0xFFEFCE8B);
@@ -107,6 +110,7 @@ public class MyTest {
                 aDefault.setTextColorDate(0xFF000000);
                 break;
             case "maple":
+                aDefault.setSpecial(true);
                 // aDefault.setTotalHeight(880);
                 aDefault.setTextColorDefault(0xFFFFAA85);
                 aDefault.setTextColorCurrent(0xFFCE4906);
@@ -116,6 +120,46 @@ public class MyTest {
                 break;
             case "chaos":
                 aDefault.setWeekStart(1);
+                aDefault.setTextColorDefault(0xFFFFD9E2);
+                aDefault.setTextColorCurrent(0xFFF27690);
+                aDefault.setTextColorCanRepair(0xFFFFFFBB);
+                aDefault.setTextColorToday(0xFFE03D63);
+                aDefault.setTextColorDate(0xFF000000);
+                aDefault.setTotalWidth(600);
+                aDefault.setTotalHeight(1044);
+                aDefault.getYearCoordinate().setX(168).setY(60).setWidth(92).setHeight(16);
+                aDefault.getMonthCoordinate().setX(410).setY(60).setWidth(62).setHeight(16);
+                aDefault.getCellCoordinate().setX(91).setY(116).setWidth(34).setHeight(34);
+                aDefault.setCellHMargin(30);
+                aDefault.setCellVMargin(8);
+                aDefault.setDateOffset(24);
+                aDefault.getUpArrowCoordinate().setX(168).setY(60).setWidth(92).setHeight(16);
+                aDefault.getDownArrowCoordinate().setX(168).setY(60).setWidth(92).setHeight(16);
+                aDefault.getLeftArrowCoordinate().setX(410).setY(60).setWidth(62).setHeight(16);
+                aDefault.getRightArrowCoordinate().setX(410).setY(60).setWidth(62).setHeight(16);
+                aDefault.getThemeCoordinate().setX(356).setY(440).setWidth(40).setHeight(48);
+                aDefault.getBgUV().setU0(0).setV0(0).setUWidth(600).setVHeight(500);
+                aDefault.getTooltipUV().setU0(0).setV0(828).setUWidth(300).setVHeight(96);
+                aDefault.getArrowUV().setU0(0).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getArrowHoverUV().setU0(0).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getArrowTapUV().setU0(40).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getNotSignedInUV().setU0(80).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getSignedInUV().setU0(120).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getRewardedUV().setU0(160).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getBuffUV().setU0(200).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getPointUV().setU0(240).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getLevelUV().setU0(280).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getCardUV().setU0(320).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getMessageUV().setU0(360).setV0(500).setUWidth(40).setVHeight(40);
+                aDefault.getThemeUV().setU0(0).setV0(540).setUWidth(80).setVHeight(96);
+                aDefault.getThemeHoverUV().setU0(0).setV0(636).setUWidth(80).setVHeight(96);
+                aDefault.getThemeTapUV().setU0(0).setV0(732).setUWidth(80).setVHeight(96);
+                aDefault.getOptionBgUV().setU0(0).setV0(924).setUWidth(120).setVHeight(120);
+                aDefault.getHelpUV().setU0(120).setV0(924).setUWidth(40).setVHeight(40);
+                aDefault.getDownloadUV().setU0(160).setV0(924).setUWidth(40).setVHeight(40);
+                aDefault.getUploadUV().setU0(200).setV0(924).setUWidth(40).setVHeight(40);
+                aDefault.getFolderUV().setU0(240).setV0(924).setUWidth(40).setVHeight(40);
+                aDefault.getSortUV().setU0(280).setV0(924).setUWidth(40).setVHeight(40);
                 break;
         }
         PNGUtils.writePrivateChunk(sourceFile, tempFile, "vacb", aDefault, true);
@@ -132,6 +176,6 @@ public class MyTest {
         testWriteChunk("sakura");
         testWriteChunk("clover");
         testWriteChunk("maple");
-        // testWriteChunk("chaos");
+        testWriteChunk("chaos");
     }
 }

@@ -78,16 +78,20 @@ public class SignInScreen extends Screen {
      */
     private static final int rows = 6;
 
-    // 背景渲染坐标大小定义
-    private int bgH = Math.max(super.height - 20, 120);
-    private int bgW = Math.max(bgH * 5 / 6, 100);
-    private int bgX = (super.width - bgW) / 2;
-    private int bgY = 0;
-
     /**
      * UI缩放比例
      */
-    private double scale = 1.0F;
+    private double scale = 1.0D;
+    /**
+     * 背景宽高比
+     */
+    private double aspectRatio = SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth() / SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight();
+
+    // 背景渲染坐标大小定义
+    private int bgH = Math.max(super.height - 20, 120);
+    private int bgW = (int) Math.max(bgH * aspectRatio, 100);
+    private int bgX = (super.width - bgW) / 2;
+    private int bgY = 0;
 
     /**
      * 操作按钮集合
@@ -241,10 +245,12 @@ public class SignInScreen extends Screen {
      * 计算并更新布局信息
      */
     private void updateLayout() {
+        // 更新背景宽高比
+        aspectRatio = SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth() / SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight();
         // 限制背景高度大于120
         bgH = Math.max(super.height - 20, 120);
         // 限制背景宽度大于100
-        bgW = Math.max(bgH * 5 / 6, 100);
+        bgW = (int) Math.max(bgH * aspectRatio, 100);
         // 使背景水平居中
         bgX = (super.width - bgW) / 2;
         // 更新缩放比例

@@ -18,6 +18,10 @@ public class TextureCoordinate implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * 特殊主题
+     */
+    private boolean special;
+    /**
      * 纹理图片总宽度
      */
     private int totalWidth = 500;
@@ -83,6 +87,10 @@ public class TextureCoordinate implements Serializable {
      * 日期单元格上下边距
      */
     private int cellVMargin = 26;
+    /**
+     * 日期偏移
+     */
+    private int dateOffset = (int) this.cellCoordinate.getHeight();
 
     /**
      * 左箭头区域坐标

@@ -139,7 +139,7 @@ public class SignInCell {
                 color = textureCoordinate.getTextColorCanRepair();
             }
             float dayWidth = font.width(dayStr);
-            font.draw(matrixStack, dayStr, (float) (x + (width - dayWidth) / 2), (float) (y + height + 0.1f), color);
+            font.draw(matrixStack, dayStr, (float) (x + (width - dayWidth) / 2), (float) (y + textureCoordinate.getDateOffset() * this.scale + 0.1f), color);
         }
     }
 
