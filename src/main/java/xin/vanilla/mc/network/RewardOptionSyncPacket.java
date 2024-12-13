@@ -3,8 +3,8 @@ package xin.vanilla.mc.network;
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
-import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.PacketDistributor;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
 
