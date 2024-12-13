@@ -27,8 +27,8 @@ public class MessageRewardParser implements RewardParser<MutableComponent> {
             style.withBold(styleJson.get("bold").getAsBoolean());
             style.withItalic(styleJson.get("italic").getAsBoolean());
             style.withUnderlined(styleJson.get("underlined").getAsBoolean());
-            style.setStrikethrough(styleJson.get("strikethrough").getAsBoolean());
-            style.setObfuscated(styleJson.get("obfuscated").getAsBoolean());
+            style.withStrikethrough(styleJson.get("strikethrough").getAsBoolean());
+            style.withObfuscated(styleJson.get("obfuscated").getAsBoolean());
             style.withFont(new ResourceLocation(styleJson.get("font").getAsString()));
             message.setStyle(style);
         } catch (Exception e) {

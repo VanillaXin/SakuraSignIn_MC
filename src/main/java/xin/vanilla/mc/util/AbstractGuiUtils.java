@@ -242,8 +242,8 @@ public class AbstractGuiUtils {
                 .withBold(text.isBold())
                 .withItalic(text.isItalic())
                 .withUnderlined(text.isUnderlined())
-                .setStrikethrough(text.isStrikethrough())
-                .setObfuscated(text.isObfuscated())
+                .withStrikethrough(text.isStrikethrough())
+                .withObfuscated(text.isObfuscated())
         );
     }
 

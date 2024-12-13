@@ -1,7 +1,6 @@
 package xin.vanilla.mc.screen;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
@@ -18,9 +17,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.Tag;
-import net.minecraft.tags.TagCollection;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -97,7 +94,7 @@ public class ItemSelectScreen extends Screen {
     /**
      * 显示的标签
      */
-    private final Map<ResourceLocation, Tag<Item>> visibleTags = Maps.newTreeMap();
+    private final Set<TagKey<Item>> visibleTags = new HashSet<>();
     /**
      * 当前选择的物品 ID
      */
@@ -512,9 +509,9 @@ public class ItemSelectScreen extends Screen {
                                         }
                                     }
                                 }
-                                this.visibleTags.forEach((resourceLocation, itemITag) -> {
-                                    if (itemITag.contains(item)) {
-                                        list1.add(1, (new TextComponent("#" + resourceLocation)).withStyle(ChatFormatting.DARK_PURPLE));
+                                this.visibleTags.forEach((itemITag) -> {
+                                    if (itemStack.is(itemITag)) {
+                                        list1.add(1, (new TextComponent("#" + itemITag.location())).withStyle(ChatFormatting.DARK_PURPLE));
                                     }
 
                                 });
@@ -566,8 +563,7 @@ public class ItemSelectScreen extends Screen {
             predicate = (resourceLocation) -> resourceLocation.getNamespace().contains(s) && resourceLocation.getPath().contains(s1);
         }
 
-        TagCollection<Item> itagcollection = ItemTags.getAllTags();
-        itagcollection.getAvailableTags().stream().filter(predicate).forEach((resourceLocation) -> this.visibleTags.put(resourceLocation, itagcollection.getTag(resourceLocation)));
+        Registry.ITEM.getTagNames().filter((p_205410_) -> predicate.test(p_205410_.location())).forEach(this.visibleTags::add);
     }
 
     private void setScrollOffset(double offset) {
