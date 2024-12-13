@@ -4,14 +4,14 @@ package xin.vanilla.mc.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.EntityArgument;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
@@ -53,14 +53,14 @@ public class SignInCommand {
      *
      * @param dispatcher 命令调度器，用于管理服务器中的所有命令
      */
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         /*
         1：绕过服务器原版的出生点保护系统，可以破坏出生点地形。
         2：使用原版单机一切作弊指令（除了/publish，因为其只能在单机使用，/debug也不能使用）。
         3：可以使用大多数多人游戏指令，例如/op，/ban（/debug属于3级OP使用的指令）。
         4：使用所有命令，可以使用/stop关闭服务器。
          */
-        Command<CommandSource> signInCommand = context -> {
+        Command<CommandSourceStack> signInCommand = context -> {
             Date signInTime;
             ESignInType signInType;
             try {
@@ -73,12 +73,12 @@ public class SignInCommand {
                 signInTime = DateUtils.getServerDate();
                 signInType = ESignInType.SIGN_IN;
             }
-            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+            ServerPlayer player = context.getSource().getPlayerOrException();
             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
             RewardManager.signIn(player, new SignInPacket(signInTime, signInData.isAutoRewarded(), signInType));
             return 1;
         };
-        Command<CommandSource> rewardCommand = context -> {
+        Command<CommandSourceStack> rewardCommand = context -> {
             Date signInTime;
             try {
                 int year = RelativeDateArgument.getInteger(context, "year");
@@ -88,11 +88,11 @@ public class SignInCommand {
             } catch (IllegalArgumentException ignored) {
                 signInTime = DateUtils.getServerDate();
             }
-            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+            ServerPlayer player = context.getSource().getPlayerOrException();
             RewardManager.signIn(player, new SignInPacket(signInTime, true, ESignInType.REWARD));
             return 1;
         };
-        Command<CommandSource> signAndRewardCommand = context -> {
+        Command<CommandSourceStack> signAndRewardCommand = context -> {
             Date signInTime;
             ESignInType signInType;
             try {
@@ -105,11 +105,11 @@ public class SignInCommand {
                 signInTime = DateUtils.getServerDate();
                 signInType = ESignInType.SIGN_IN;
             }
-            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+            ServerPlayer player = context.getSource().getPlayerOrException();
             RewardManager.signIn(player, new SignInPacket(signInTime, true, signInType));
             return 1;
         };
-        Command<CommandSource> helpCommand = context -> {
+        Command<CommandSourceStack> helpCommand = context -> {
             int page = 1;
             try {
                 page = IntegerArgumentType.getInteger(context, "page");
@@ -119,19 +119,19 @@ public class SignInCommand {
             if (page < 1 || page > pages) {
                 throw new IllegalArgumentException("page must be between 1 and " + (HELP_MESSAGE.size() / HELP_INFO_NUM_PER_PAGE));
             }
-            StringTextComponent helpInfo = new StringTextComponent("-----==== Sakura Sign In Help (" + page + "/" + pages + ") ====-----\n");
+            TextComponent helpInfo = new TextComponent("-----==== Sakura Sign In Help (" + page + "/" + pages + ") ====-----\n");
             for (int i = 0; (page - 1) * HELP_INFO_NUM_PER_PAGE + i < HELP_MESSAGE.size() && i < HELP_INFO_NUM_PER_PAGE; i++) {
                 KeyValue<String, String> keyValue = HELP_MESSAGE.get((page - 1) * HELP_INFO_NUM_PER_PAGE + i);
-                TranslationTextComponent commandTips = new TranslationTextComponent("command." + SakuraSignIn.MODID + "." + keyValue.getValue());
-                commandTips.withStyle(Style.EMPTY.withColor(TextFormatting.GRAY));
+                TranslatableComponent commandTips = new TranslatableComponent("command." + SakuraSignIn.MODID + "." + keyValue.getValue());
+                commandTips.withStyle(Style.EMPTY.withColor(ChatFormatting.GRAY));
                 helpInfo.append(keyValue.getKey())
-                        .append(new StringTextComponent(" -> ").withStyle(Style.EMPTY.withColor(TextFormatting.YELLOW)))
+                        .append(new TextComponent(" -> ").withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
                         .append(commandTips);
                 if (i != HELP_MESSAGE.size() - 1) {
                     helpInfo.append("\n");
                 }
             }
-            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+            ServerPlayer player = context.getSource().getPlayerOrException();
             player.sendMessage(helpInfo, player.getUUID());
             return 1;
         };
@@ -217,11 +217,11 @@ public class SignInCommand {
                 // 获取补签卡数量 /va card
                 .then(Commands.literal("card")
                         .executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                            ServerPlayer player = context.getSource().getPlayerOrException();
                             if (!ServerConfig.SIGN_IN_CARD.get()) {
-                                player.sendMessage(new TranslationTextComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
+                                player.sendMessage(new TranslatableComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
                             } else {
-                                player.sendMessage(new TranslationTextComponent(getI18nKey("当前拥有%d张补签卡"), PlayerSignInDataCapability.getData(player).getSignInCard()), player.getUUID());
+                                player.sendMessage(new TranslatableComponent(getI18nKey("当前拥有%d张补签卡"), PlayerSignInDataCapability.getData(player).getSignInCard()), player.getUUID());
                             }
                             return 1;
                         })
@@ -231,20 +231,20 @@ public class SignInCommand {
                                 .then(Commands.argument("num", IntegerArgumentType.integer())
                                         .executes(context -> {
                                             int num = IntegerArgumentType.getInteger(context, "num");
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(signInData.getSignInCard() + num);
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("给予%d张补签卡"), num), player.getUUID());
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("给予%d张补签卡"), num), player.getUUID());
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
                                         .then(Commands.argument("player", EntityArgument.player())
                                                 .executes(context -> {
                                                     int num = IntegerArgumentType.getInteger(context, "num");
-                                                    ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
+                                                    ServerPlayer player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                    player.sendMessage(new TranslationTextComponent(getI18nKey("获得%d张补签卡"), num), player.getUUID());
+                                                    player.sendMessage(new TranslatableComponent(getI18nKey("获得%d张补签卡"), num), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -258,20 +258,20 @@ public class SignInCommand {
                                 .then(Commands.argument("num", IntegerArgumentType.integer())
                                         .executes(context -> {
                                             int num = IntegerArgumentType.getInteger(context, "num");
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(num);
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("补签卡被设置为了%d张"), num), player.getUUID());
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("补签卡被设置为了%d张"), num), player.getUUID());
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
                                         .then(Commands.argument("player", EntityArgument.player())
                                                 .executes(context -> {
                                                     int num = IntegerArgumentType.getInteger(context, "num");
-                                                    ServerPlayerEntity player = EntityArgument.getPlayer(context, "player");
+                                                    ServerPlayer player = EntityArgument.getPlayer(context, "player");
                                                     IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                     signInData.setSignInCard(num);
-                                                    player.sendMessage(new TranslationTextComponent(getI18nKey("补签卡被设置为了%d张"), num), player.getUUID());
+                                                    player.sendMessage(new TranslatableComponent(getI18nKey("补签卡被设置为了%d张"), num), player.getUUID());
                                                     PlayerSignInDataCapability.syncPlayerData(player);
                                                     return 1;
                                                 })
@@ -284,10 +284,10 @@ public class SignInCommand {
                                 .requires(source -> source.hasPermission(2))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(context -> {
-                                            ServerPlayerEntity target = EntityArgument.getPlayer(context, "player");
+                                            ServerPlayer target = EntityArgument.getPlayer(context, "player");
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(target);
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("玩家[%s]拥有%d张补签卡"), target.getDisplayName().getString(), signInData.getSignInCard()), player.getUUID());
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("玩家[%s]拥有%d张补签卡"), target.getDisplayName().getString(), signInData.getSignInCard()), player.getUUID());
                                             PlayerSignInDataCapability.syncPlayerData(target);
                                             return 1;
                                         })
@@ -300,61 +300,61 @@ public class SignInCommand {
                         .then(Commands.literal("get")
                                 .then(Commands.literal("autoSignIn")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用"))), player.getUUID());
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new TranslatableComponent(getI18nKey(String.format("服务器%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "已启用" : "未启用"))), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("timeCoolingMethod")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
                                             ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器签到时间冷却方式为: %s"), coolingMethod.getName()), player.getUUID());
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("服务器签到时间冷却方式为: %s"), coolingMethod.getName()), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("timeCoolingTime")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
                                             Double time = ServerConfig.TIME_COOLING_TIME.get();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器签到冷却刷新时间为: %05.2f"), time), player.getUUID());
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("服务器签到冷却刷新时间为: %05.2f"), time), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("timeCoolingInterval")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
                                             Double time = ServerConfig.TIME_COOLING_INTERVAL.get();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器签到冷却刷新间隔为: %05.2f"), time), player.getUUID());
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("服务器签到冷却刷新间隔为: %05.2f"), time), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("signInCard")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用"))), player.getUUID());
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new TranslatableComponent(getI18nKey(String.format("服务器%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "已启用" : "未启用"))), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("reSignInDays")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
                                             int time = ServerConfig.RE_SIGN_IN_DAYS.get();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器最大补签天数为: %d"), time), player.getUUID());
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("服务器最大补签天数为: %d"), time), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("signInCardOnlyBaseReward")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用"))), player.getUUID());
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new TranslatableComponent(getI18nKey(String.format("服务器%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "已启用" : "未启用"))), player.getUUID());
                                             return 1;
                                         })
                                 )
                                 .then(Commands.literal("date")
                                         .executes(context -> {
-                                            ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                            player.sendMessage(new TranslationTextComponent(getI18nKey("服务器当前时间: %s"), DateUtils.toDateTimeString(DateUtils.getServerDate())), player.getUUID());
+                                            ServerPlayer player = context.getSource().getPlayerOrException();
+                                            player.sendMessage(new TranslatableComponent(getI18nKey("服务器当前时间: %s"), DateUtils.toDateTimeString(DateUtils.getServerDate())), player.getUUID());
                                             return 1;
                                         })
                                 )
@@ -379,8 +379,8 @@ public class SignInCommand {
                                                                                                     Date date = DateUtils.getDate(year, month, day, hour, minute, second);
                                                                                                     ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
                                                                                                     ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
-                                                                                                    ServerPlayerEntity player = context.getSource().getPlayerOrException();
-                                                                                                    player.sendMessage(new TranslationTextComponent(getI18nKey("服务器时间已设置为: %s"), DateUtils.toDateTimeString(date)), player.getUUID());
+                                                                                                    ServerPlayer player = context.getSource().getPlayerOrException();
+                                                                                                    player.sendMessage(new TranslatableComponent(getI18nKey("服务器时间已设置为: %s"), DateUtils.toDateTimeString(date)), player.getUUID());
                                                                                                     return 1;
                                                                                                 })
                                                                                         )

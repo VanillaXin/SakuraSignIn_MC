@@ -2,10 +2,10 @@ package xin.vanilla.mc.network;
 
 import lombok.Getter;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +25,7 @@ public class AdvancementPacket {
                 .collect(Collectors.toList());
     }
 
-    public AdvancementPacket(PacketBuffer buf) {
+    public AdvancementPacket(FriendlyByteBuf buf) {
         int size = buf.readVarInt();
         List<AdvancementData> advancements = new ArrayList<>();
         for (int i = 0; i < size; i++) {
@@ -34,7 +34,7 @@ public class AdvancementPacket {
         this.advancements = advancements;
     }
 
-    public void toBytes(PacketBuffer buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         buf.writeVarInt(this.advancements.size());
         for (AdvancementData data : this.advancements) {
             data.writeToBuffer(buf);

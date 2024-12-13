@@ -3,33 +3,27 @@ package xin.vanilla.mc.screen;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import lombok.NonNull;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.ISearchTree;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.client.util.SearchTreeManager;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.ITagCollection;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.searchtree.SearchRegistry;
+import net.minecraft.client.searchtree.SearchTree;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.client.gui.GuiUtils;
+import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagCollection;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -83,7 +77,7 @@ public class ItemSelectScreen extends Screen {
     /**
      * 输入框
      */
-    private TextFieldWidget inputField;
+    private EditBox inputField;
     /**
      * 输入框文本
      */
@@ -103,7 +97,7 @@ public class ItemSelectScreen extends Screen {
     /**
      * 显示的标签
      */
-    private final Map<ResourceLocation, ITag<Item>> visibleTags = Maps.newTreeMap();
+    private final Map<ResourceLocation, Tag<Item>> visibleTags = Maps.newTreeMap();
     /**
      * 当前选择的物品 ID
      */
@@ -171,7 +165,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived, @NonNull ItemStack defaultItem, Supplier<Boolean> shouldClose) {
-        super(new StringTextComponent("ItemSelectScreen"));
+        super(new TextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -181,7 +175,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived, @NonNull ItemStack defaultItem, Supplier<Boolean> shouldClose) {
-        super(new StringTextComponent("ItemSelectScreen"));
+        super(new TextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -191,7 +185,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived, @NonNull ItemStack defaultItem) {
-        super(new StringTextComponent("ItemSelectScreen"));
+        super(new TextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -201,7 +195,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived, @NonNull ItemStack defaultItem) {
-        super(new StringTextComponent("ItemSelectScreen"));
+        super(new TextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -211,7 +205,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived) {
-        super(new StringTextComponent("ItemSelectScreen"));
+        super(new TextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -219,7 +213,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived) {
-        super(new StringTextComponent("ItemSelectScreen"));
+        super(new TextComponent("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -233,11 +227,11 @@ public class ItemSelectScreen extends Screen {
         this.updateSearchResults();
         this.updateLayout();
         // 创建文本输入框
-        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 180, 15, new StringTextComponent(""));
+        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 180, 15, new TextComponent(""));
         this.inputField.setValue(this.inputFieldText);
-        this.addButton(this.inputField);
+        this.addRenderableWidget(this.inputField);
         // 创建提交按钮
-        this.addButton(AbstractGuiUtils.newButton((int) (this.bgX + 90 + this.margin), (int) (this.bgY + (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + margin))
+        this.addRenderableWidget(AbstractGuiUtils.newButton((int) (this.bgX + 90 + this.margin), (int) (this.bgY + (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + margin))
                 , (int) (90 - this.margin * 2), 20
                 , AbstractGuiUtils.textToComponent(Text.i18n("提交")), button -> {
                     if (this.currentItem == null) {
@@ -259,7 +253,7 @@ public class ItemSelectScreen extends Screen {
                     }
                 }));
         // 创建取消按钮
-        this.addButton(AbstractGuiUtils.newButton((int) (this.bgX + this.margin), (int) (this.bgY + (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + margin))
+        this.addRenderableWidget(AbstractGuiUtils.newButton((int) (this.bgX + this.margin), (int) (this.bgY + (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + margin))
                 , (int) (90 - this.margin * 2), 20
                 , AbstractGuiUtils.textToComponent(Text.i18n("取消"))
                 , button -> Minecraft.getInstance().setScreen(previousScreen)));
@@ -267,16 +261,16 @@ public class ItemSelectScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
         // 绘制背景
-        this.renderBackground(matrixStack);
-        AbstractGuiUtils.fill(matrixStack, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
-        AbstractGuiUtils.fillOutLine(matrixStack, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
-        super.render(matrixStack, mouseX, mouseY, delta);
+        this.renderBackground(poseStack);
+        AbstractGuiUtils.fill(poseStack, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
+        AbstractGuiUtils.fillOutLine(poseStack, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
+        super.render(poseStack, mouseX, mouseY, delta);
         // 保存输入框的文本, 防止窗口重绘时输入框内容丢失
         this.inputFieldText = this.inputField.getValue();
 
-        this.renderButton(matrixStack, mouseX, mouseY);
+        this.renderButton(poseStack, mouseX, mouseY);
     }
 
     @Override
@@ -381,18 +375,18 @@ public class ItemSelectScreen extends Screen {
     private NonNullList<ItemStack> getAllItemList() {
         NonNullList<ItemStack> list = NonNullList.create();
         for (Item item : Registry.ITEM) {
-            item.fillItemCategory(ItemGroup.TAB_SEARCH, list);
+            item.fillItemCategory(CreativeModeTab.TAB_SEARCH, list);
         }
         return list;
     }
 
     private List<ItemStack> getPlayerItemList() {
         List<ItemStack> result = new ArrayList<>();
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
-            result.addAll(player.inventory.items);
-            result.addAll(player.inventory.armor);
-            result.addAll(player.inventory.offhand);
+            result.addAll(player.getInventory().items);
+            result.addAll(player.getInventory().armor);
+            result.addAll(player.getInventory().offhand);
             result = result.stream().filter(itemStack -> !itemStack.isEmpty() && itemStack.getItem() != Items.AIR).collect(Collectors.toList());
         }
         return result;
@@ -407,41 +401,41 @@ public class ItemSelectScreen extends Screen {
         // 初始化操作按钮
         this.OP_BUTTONS.put(OperationButtonType.TYPE.getCode(), new OperationButton(OperationButtonType.TYPE.getCode(), context -> {
             // 绘制背景
-            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.inventoryMode ? Items.CHEST : Items.COMPASS);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = this.inventoryMode ? Text.i18n("列出模式\n物品栏 (%s)", playerItemList.size()) : Text.i18n("列出模式\n所有物品 (%s)", allItemList.size());
-            context.button.setTooltip(text);
+            context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.ITEM.getCode(), new OperationButton(OperationButtonType.ITEM.getCode(), context -> {
             // 绘制背景
-            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
-            this.itemRenderer.renderGuiItem(this.currentItem, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
-            context.button.setTooltip(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()));
+            int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
+            this.itemRenderer.renderGuiItem(this.currentItem, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            context.button().setTooltip(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.COUNT.getCode(), new OperationButton(OperationButtonType.COUNT.getCode(), context -> {
             // 绘制背景
-            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.WRITABLE_BOOK);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("设置数量\n当前 %s", this.currentItem.getCount());
-            context.button.setTooltip(text);
+            context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 2).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.NBT.getCode(), new OperationButton(OperationButtonType.NBT.getCode(), context -> {
             // 绘制背景
-            int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
+            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.NAME_TAG);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("编辑NBT");
-            context.button.setTooltip(text);
+            context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
         // 滚动条
@@ -466,11 +460,11 @@ public class ItemSelectScreen extends Screen {
             this.inScrollHeight = Math.max(2, (outScrollHeight - 2) * inScrollWidthScale);
             this.inScrollY = outScrollY + inScrollTopHeight + 1;
             // 绘制滚动条外层背景
-            AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
+            AbstractGuiUtils.fill(context.poseStack(), (int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
             // 绘制滚动条滑块
-            int color = context.button.isHovered() ? 0xCCFFFFFF : 0xCC8B8B8B;
-            AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
-            context.button.setX(this.outScrollX).setY(this.outScrollY).setWidth(this.outScrollWidth).setHeight(this.outScrollHeight);
+            int color = context.button().isHovered() ? 0xCCFFFFFF : 0xCC8B8B8B;
+            AbstractGuiUtils.fill(context.poseStack(), (int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
+            context.button().setX(this.outScrollX).setY(this.outScrollY).setWidth(this.outScrollWidth).setHeight(this.outScrollHeight);
         }));
 
         // 物品列表
@@ -478,8 +472,8 @@ public class ItemSelectScreen extends Screen {
         for (int i = 0; i < maxLine; i++) {
             for (int j = 0; j < itemPerLine; j++) {
                 ITEM_BUTTONS.add(new OperationButton(itemPerLine * i + j, context -> {
-                    int i1 = context.button.getOperation() / itemPerLine;
-                    int j1 = context.button.getOperation() % itemPerLine;
+                    int i1 = context.button().getOperation() / itemPerLine;
+                    int j1 = context.button().getOperation() % itemPerLine;
                     int index = ((itemList.size() > itemPerLine * maxLine ? this.getScrollOffset() : 0) + i1) * itemPerLine + j1;
                     if (index >= 0 && index < itemList.size()) {
                         ItemStack itemStack = itemList.get(index);
@@ -489,51 +483,49 @@ public class ItemSelectScreen extends Screen {
                         double itemY = itemBgY + i1 * (AbstractGuiUtils.ITEM_ICON_SIZE + margin);
                         // 绘制背景
                         int bgColor;
-                        if (context.button.isHovered() || ItemRewardParser.getId(itemStack).equalsIgnoreCase(this.getSelectedItemId())) {
+                        if (context.button().isHovered() || ItemRewardParser.getId(itemStack).equalsIgnoreCase(this.getSelectedItemId())) {
                             bgColor = 0xEE7CAB7C;
                         } else {
                             bgColor = 0xEE707070;
                         }
-                        context.button.setX(itemX - 1).setY(itemY - 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 2).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 2)
+                        context.button().setX(itemX - 1).setY(itemY - 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 2).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 2)
                                 .setId(ItemRewardParser.getId(itemStack));
 
-                        AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), bgColor);
-                        this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 1, (int) context.button.getY() + 1);
+                        AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), bgColor);
+                        this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 1, (int) context.button().getY() + 1);
                         // 绘制物品详情悬浮窗
-                        if (context.button.isHovered()) {
-                            List<ITextComponent> list = itemStack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-                            List<ITextComponent> list1 = Lists.newArrayList(list);
-                            Item item = itemStack.getItem();
-                            ItemGroup itemgroup = item.getItemCategory();
-                            if (itemgroup == null && item == Items.ENCHANTED_BOOK) {
-                                Map<Enchantment, Integer> map = EnchantmentHelper.getEnchantments(itemStack);
-                                if (map.size() == 1) {
-                                    Enchantment enchantment = map.keySet().iterator().next();
-                                    for (ItemGroup itemGroup1 : ItemGroup.TABS) {
-                                        if (itemGroup1.hasEnchantmentCategory(enchantment.category)) {
-                                            itemgroup = itemGroup1;
-                                            break;
+                        context.button().setCustomPopupFunction(() -> {
+                            if (context.button().isHovered()) {
+                                List<Component> list = itemStack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
+                                List<Component> list1 = Lists.newArrayList(list);
+                                Item item = itemStack.getItem();
+                                CreativeModeTab itemgroup = item.getItemCategory();
+                                if (itemgroup == null && item == Items.ENCHANTED_BOOK) {
+                                    Map<Enchantment, Integer> map = EnchantmentHelper.getEnchantments(itemStack);
+                                    if (map.size() == 1) {
+                                        Enchantment enchantment = map.keySet().iterator().next();
+                                        for (CreativeModeTab itemGroup1 : CreativeModeTab.TABS) {
+                                            if (itemGroup1.hasEnchantmentCategory(enchantment.category)) {
+                                                itemgroup = itemGroup1;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            this.visibleTags.forEach((resourceLocation, itemITag) -> {
-                                if (itemITag.contains(item)) {
-                                    list1.add(1, (new StringTextComponent("#" + resourceLocation)).withStyle(TextFormatting.DARK_PURPLE));
+                                this.visibleTags.forEach((resourceLocation, itemITag) -> {
+                                    if (itemITag.contains(item)) {
+                                        list1.add(1, (new TextComponent("#" + resourceLocation)).withStyle(ChatFormatting.DARK_PURPLE));
+                                    }
+
+                                });
+                                if (itemgroup != null) {
+                                    list1.add(1, itemgroup.getDisplayName().copy().withStyle(ChatFormatting.BLUE));
                                 }
-
-                            });
-                            if (itemgroup != null) {
-                                list1.add(1, itemgroup.getDisplayName().copy().withStyle(TextFormatting.BLUE));
+                                this.renderTooltip(context.poseStack(), list1, itemStack.getTooltipImage(), (int) context.mouseX(), (int) context.mouseY(), itemStack);
                             }
-
-                            FontRenderer font = itemStack.getItem().getFontRenderer(itemStack);
-                            GuiUtils.preItemToolTip(itemStack);
-                            this.renderWrappedToolTip(context.matrixStack, list1, (int) context.mouseX, (int) context.mouseY, (font == null ? this.font : font));
-                            GuiUtils.postItemToolTip();
-                        }
+                        });
                     } else {
-                        context.button.setX(0).setY(0).setWidth(0).setHeight(0).setId("");
+                        context.button().setX(0).setY(0).setWidth(0).setHeight(0).setId("");
                     }
                 }));
             }
@@ -548,13 +540,13 @@ public class ItemSelectScreen extends Screen {
         this.itemList.clear();
         this.visibleTags.clear();
         if (StringUtils.isNotNullOrEmpty(s)) {
-            ISearchTree<ItemStack> isearchtree;
+            SearchTree<ItemStack> isearchtree;
             if (s.startsWith("#")) {
                 s = s.substring(1);
-                isearchtree = Minecraft.getInstance().getSearchTree(SearchTreeManager.CREATIVE_TAGS);
+                isearchtree = Minecraft.getInstance().getSearchTree(SearchRegistry.CREATIVE_TAGS);
                 this.updateVisibleTags(s);
             } else {
-                isearchtree = Minecraft.getInstance().getSearchTree(SearchTreeManager.CREATIVE_NAMES);
+                isearchtree = Minecraft.getInstance().getSearchTree(SearchRegistry.CREATIVE_NAMES);
             }
             this.itemList.addAll(isearchtree.search(s.toLowerCase(Locale.ROOT)));
         } else {
@@ -574,7 +566,7 @@ public class ItemSelectScreen extends Screen {
             predicate = (resourceLocation) -> resourceLocation.getNamespace().contains(s) && resourceLocation.getPath().contains(s1);
         }
 
-        ITagCollection<Item> itagcollection = ItemTags.getAllTags();
+        TagCollection<Item> itagcollection = ItemTags.getAllTags();
         itagcollection.getAvailableTags().stream().filter(predicate).forEach((resourceLocation) -> this.visibleTags.put(resourceLocation, itagcollection.getTag(resourceLocation)));
     }
 
@@ -585,13 +577,13 @@ public class ItemSelectScreen extends Screen {
     /**
      * 绘制按钮
      */
-    private void renderButton(MatrixStack matrixStack, int mouseX, int mouseY) {
-        for (OperationButton button : OP_BUTTONS.values()) button.render(matrixStack, mouseX, mouseY);
-        for (OperationButton button : ITEM_BUTTONS) button.render(matrixStack, mouseX, mouseY);
+    private void renderButton(PoseStack poseStack, int mouseX, int mouseY) {
+        for (OperationButton button : OP_BUTTONS.values()) button.render(poseStack, mouseX, mouseY);
+        for (OperationButton button : ITEM_BUTTONS) button.render(poseStack, mouseX, mouseY);
         for (OperationButton button : OP_BUTTONS.values())
-            button.renderPopup(matrixStack, this.font, mouseX, mouseY);
+            button.renderPopup(poseStack, this.font, mouseX, mouseY);
         for (OperationButton button : ITEM_BUTTONS)
-            button.renderPopup(matrixStack, this.font, mouseX, mouseY);
+            button.renderPopup(poseStack, this.font, mouseX, mouseY);
     }
 
     private void handleItem(OperationButton bt, int button, AtomicBoolean flag) {

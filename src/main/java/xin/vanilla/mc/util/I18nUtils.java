@@ -1,12 +1,12 @@
 package xin.vanilla.mc.util;
 
-import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class I18nUtils {
-    private static final Map<String, String> ZH_CN_KEY_MAP = new HashMap<String, String>() {{
+    private static final Map<String, String> ZH_CN_KEY_MAP = new HashMap<>() {{
         put("奖励规则类型", "title.sakura_sign_in.reward_rule_type");
         put("基础奖励", "title.sakura_sign_in.base_reward");
         put("第%s天", "title.sakura_sign_in.day_s");

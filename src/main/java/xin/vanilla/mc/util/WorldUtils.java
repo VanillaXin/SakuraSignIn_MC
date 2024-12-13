@@ -1,9 +1,10 @@
 package xin.vanilla.mc.util;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 
 public class WorldUtils {
     /**
@@ -12,21 +13,21 @@ public class WorldUtils {
      * @param player 当前玩家实体
      * @return 当前环境亮度（范围0-15）
      */
-    public static int getEnvironmentBrightness(PlayerEntity player) {
+    public static int getEnvironmentBrightness(Player player) {
         int result = 0;
         if (player != null) {
-            World world = player.level;
+            Level world = player.level;
             BlockPos pos = player.blockPosition();
             // 获取基础的天空光亮度和方块光亮度
-            int skyLight = world.getBrightness(LightType.SKY, pos);
-            int blockLight = world.getBrightness(LightType.BLOCK, pos);
+            int skyLight = world.getBrightness(LightLayer.SKY, pos);
+            int blockLight = world.getBrightness(LightLayer.BLOCK, pos);
             // 获取世界时间、天气和维度的影响
             boolean isDay = world.isDay();
             boolean isRaining = world.isRaining();
             boolean isThundering = world.isThundering();
             boolean isUnderground = !world.canSeeSky(pos);
             // 判断世界维度（地表、下界、末地）
-            if (world.dimension() == World.OVERWORLD) {
+            if (world.dimension() == Level.OVERWORLD) {
                 // 如果在地表
                 if (!isUnderground) {
                     if (isDay) {
@@ -43,11 +44,11 @@ public class WorldUtils {
                     // 没有光源时最黑，有光源则受距离影响
                     result = Math.max(Math.min(blockLight, 12), 0);
                 }
-            } else if (world.dimension() == World.NETHER) {
+            } else if (world.dimension() == Level.NETHER) {
                 // 下界亮度较暗，但部分地方有熔岩光源
                 // 近光源则亮度提升，但不会超过10
                 result = Math.min(7 + blockLight / 2, 10);
-            } else if (world.dimension() == World.END) {
+            } else if (world.dimension() == Level.END) {
                 // 末地亮度通常较暗
                 // 即使贴近光源，末地的亮度上限设为10
                 result = Math.min(6 + blockLight / 2, 10);

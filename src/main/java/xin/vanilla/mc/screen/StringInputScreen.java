@@ -1,11 +1,11 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.screen.component.Text;
 import xin.vanilla.mc.util.AbstractGuiUtils;
@@ -53,7 +53,7 @@ public class StringInputScreen extends Screen {
     /**
      * 输入框
      */
-    private TextFieldWidget inputField;
+    private EditBox inputField;
     /**
      * 确认按钮
      */
@@ -69,7 +69,7 @@ public class StringInputScreen extends Screen {
 
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, Consumer<String> onDataReceived) {
-        super(new StringTextComponent("StringInputScreen"));
+        super(new TextComponent("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -81,7 +81,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Consumer<String> onDataReceived) {
-        super(new StringTextComponent("StringInputScreen"));
+        super(new TextComponent("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -93,7 +93,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Consumer<String> onDataReceived, Supplier<Boolean> shouldClose) {
-        super(new StringTextComponent("StringInputScreen"));
+        super(new TextComponent("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -105,7 +105,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, Function<String, String> onDataReceived) {
-        super(new StringTextComponent("StringInputScreen"));
+        super(new TextComponent("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -117,7 +117,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Function<String, String> onDataReceived) {
-        super(new StringTextComponent("StringInputScreen"));
+        super(new TextComponent("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -129,7 +129,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Function<String, String> onDataReceived, Supplier<Boolean> shouldClose) {
-        super(new StringTextComponent("StringInputScreen"));
+        super(new TextComponent("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -152,9 +152,9 @@ public class StringInputScreen extends Screen {
             this.inputField.setFilter(s -> s.matches(validator));
         }
         this.inputField.setValue(defaultValue);
-        this.addButton(this.inputField);
+        this.addRenderableWidget(this.inputField);
         // 创建提交按钮
-        this.submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new TextComponent(I18nUtils.getByZh("取消")), button -> {
             String value = this.inputField.getValue();
             if (StringUtils.isNullOrEmpty(value)) {
                 // 关闭当前屏幕并返回到调用者的 Screen
@@ -176,9 +176,9 @@ public class StringInputScreen extends Screen {
                 }
             }
         });
-        this.addButton(this.submitButton);
+        this.addRenderableWidget(this.submitButton);
         // 创建取消按钮
-        this.addButton(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.addRenderableWidget(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new TextComponent(I18nUtils.getByZh("取消")), button -> {
             // 关闭当前屏幕并返回到调用者的 Screen
             Minecraft.getInstance().setScreen(previousScreen);
         }));
@@ -186,10 +186,10 @@ public class StringInputScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrixStack);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
+        this.renderBackground(poseStack);
         // 绘制背景
-        super.render(matrixStack, mouseX, mouseY, delta);
+        super.render(poseStack, mouseX, mouseY, delta);
         // 绘制标题
         AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 33);
         // 绘制错误提示
@@ -197,9 +197,9 @@ public class StringInputScreen extends Screen {
             AbstractGuiUtils.drawLimitedText(errorText, this.width / 2.0f - 100, this.height / 2.0f + 2, 200, AbstractGuiUtils.EllipsisPosition.MIDDLE);
         }
         if (StringUtils.isNotNullOrEmpty(this.inputField.getValue())) {
-            this.submitButton.setMessage(new StringTextComponent(I18nUtils.getByZh("提交")));
+            this.submitButton.setMessage(new TextComponent(I18nUtils.getByZh("提交")));
         } else {
-            this.submitButton.setMessage(new StringTextComponent(I18nUtils.getByZh("取消")));
+            this.submitButton.setMessage(new TextComponent(I18nUtils.getByZh("取消")));
         }
     }
 

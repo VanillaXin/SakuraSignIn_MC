@@ -1,10 +1,10 @@
 package xin.vanilla.mc.event;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -14,7 +14,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.SakuraSignIn;
@@ -76,7 +76,7 @@ public class ForgeEventHandler {
     @SubscribeEvent
     public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<Entity> event) {
         // 检查事件对象是否为玩家实体，因为我们的目标是为玩家附加能力
-        if (event.getObject() instanceof PlayerEntity) {
+        if (event.getObject() instanceof Player) {
             // 为玩家实体附加一个名为 "player_sign_in_data" 的能力
             // 这个能力由 PlayerSignInDataProvider 提供，用于管理玩家的签到数据
             event.addCapability(new ResourceLocation(SakuraSignIn.MODID, "player_sign_in_data"), new PlayerSignInDataProvider());
@@ -100,14 +100,14 @@ public class ForgeEventHandler {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         // 服务器端逻辑
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
+        if (event.getPlayer() instanceof ServerPlayer) {
             LOGGER.debug("Server: Player logged in.");
             // 同步玩家签到数据到客户端
-            PlayerSignInDataCapability.syncPlayerData((ServerPlayerEntity) event.getPlayer());
+            PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getPlayer());
             // 同步签到奖励配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
             // 同步进度列表到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new AdvancementPacket(((ServerPlayerEntity) event.getPlayer()).server.getAdvancements().getAllAdvancements()));
+            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new AdvancementPacket(((ServerPlayer) event.getPlayer()).server.getAdvancements().getAllAdvancements()));
         }
     }
 }

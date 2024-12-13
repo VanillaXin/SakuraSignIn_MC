@@ -5,10 +5,10 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
  * 进度信息
@@ -32,7 +32,7 @@ public class AdvancementData {
         this.icon = icon;
     }
 
-    public void writeToBuffer(PacketBuffer buffer) {
+    public void writeToBuffer(FriendlyByteBuf buffer) {
         buffer.writeResourceLocation(id);
         buffer.writeUtf(title);
         buffer.writeUtf(description);
@@ -57,7 +57,7 @@ public class AdvancementData {
         );
     }
 
-    public static AdvancementData readFromBuffer(PacketBuffer buffer) {
+    public static AdvancementData readFromBuffer(FriendlyByteBuf buffer) {
         ResourceLocation id = buffer.readResourceLocation();
         String title = buffer.readUtf(32767);
         String description = buffer.readUtf(32767);

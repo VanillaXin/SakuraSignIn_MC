@@ -1,15 +1,15 @@
 package xin.vanilla.mc.event;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -40,9 +40,9 @@ public class ClientEventHandler {
     private static final String CATEGORIES = "key.sakura_sign_in.categories";
 
     // 定义按键绑定
-    public static KeyBinding SIGN_IN_SCREEN_KEY = new KeyBinding("key.sakura_sign_in.sign_in",
+    public static KeyMapping SIGN_IN_SCREEN_KEY = new KeyMapping("key.sakura_sign_in.sign_in",
             GLFW.GLFW_KEY_H, CATEGORIES);
-    public static KeyBinding REWARD_OPTION_SCREEN_KEY = new KeyBinding("key.sakura_sign_in.reward_option",
+    public static KeyMapping REWARD_OPTION_SCREEN_KEY = new KeyMapping("key.sakura_sign_in.reward_option",
             GLFW.GLFW_KEY_O, CATEGORIES);
 
     /**
@@ -74,7 +74,7 @@ public class ClientEventHandler {
             SakuraSignIn.setThemeTextureCoordinate(PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME));
         } catch (IOException | ClassNotFoundException ignored) {
         }
-        if (SakuraSignIn.getThemeTexture() == null) {
+        if (SakuraSignIn.getThemeTextureCoordinate(false) == null) {
             // 使用默认配置
             SakuraSignIn.setThemeTextureCoordinate(TextureCoordinate.getDefault());
         }
@@ -102,9 +102,9 @@ public class ClientEventHandler {
                 SakuraSignIn.setCalendarCurrentDate(RewardManager.getCompensateDate(new Date()));
                 Minecraft.getInstance().setScreen(new SignInScreen());
             } else {
-                ClientPlayerEntity player = Minecraft.getInstance().player;
+                LocalPlayer player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.sendMessage(new TranslationTextComponent(getI18nKey("SakuraSignIn server is offline!")), player.getUUID());
+                    player.sendMessage(new TranslatableComponent(getI18nKey("SakuraSignIn server is offline!")), player.getUUID());
                 }
             }
         } else if (REWARD_OPTION_SCREEN_KEY.consumeClick()) {

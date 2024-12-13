@@ -1,12 +1,12 @@
 package xin.vanilla.mc.screen.component;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.gui.Font;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.screen.coordinate.Coordinate;
@@ -27,18 +27,7 @@ public class OperationButton {
     /**
      * 渲染辅助类：用于向自定义渲染函数传递上下文
      */
-    public static class RenderContext {
-        public final MatrixStack matrixStack;
-        public final double mouseX;
-        public final double mouseY;
-        public final OperationButton button;
-
-        public RenderContext(MatrixStack matrixStack, double mouseX, double mouseY, OperationButton button) {
-            this.matrixStack = matrixStack;
-            this.mouseX = mouseX;
-            this.mouseY = mouseY;
-            this.button = button;
-        }
+    public record RenderContext(PoseStack poseStack, double mouseX, double mouseY, OperationButton button) {
     }
 
     /**
@@ -50,6 +39,11 @@ public class OperationButton {
      * 自定义渲染函数
      */
     private Consumer<RenderContext> customRenderFunction;
+
+    /**
+     * 自定义弹出层渲染函数
+     */
+    private Runnable customPopupFunction = null;
 
     /**
      * 按钮材质资源
@@ -389,8 +383,8 @@ public class OperationButton {
     /**
      * 绘制按钮
      */
-    public void render(MatrixStack matrixStack, double mouseX, double mouseY) {
-        this.render(matrixStack, mouseX, mouseY, false, -1, -1);
+    public void render(PoseStack poseStack, double mouseX, double mouseY) {
+        this.render(poseStack, mouseX, mouseY, false, -1, -1);
     }
 
     /**
@@ -398,10 +392,10 @@ public class OperationButton {
      *
      * @param renderPopup 是否绘制弹出层提示
      */
-    public void render(MatrixStack matrixStack, double mouseX, double mouseY, boolean renderPopup, int keyCode, int modifiers) {
+    public void render(PoseStack poseStack, double mouseX, double mouseY, boolean renderPopup, int keyCode, int modifiers) {
         if (customRenderFunction != null) {
             // 使用自定义渲染逻辑
-            customRenderFunction.accept(new RenderContext(matrixStack, mouseX, mouseY, this));
+            customRenderFunction.accept(new RenderContext(poseStack, mouseX, mouseY, this));
         } else {
             TextureCoordinate textureCoordinate = new TextureCoordinate().setTotalWidth(this.textureWidth).setTotalHeight(this.textureHeight);
             Coordinate coordinate = new Coordinate().setX(this.x).setY(this.y).setWidth(this.width).setHeight(this.height)
@@ -409,56 +403,58 @@ public class OperationButton {
             // 绘制背景颜色
             int bgColor = this.getBackgroundColor();
             if (bgColor != 0) {
-                AbstractGuiUtils.fill(matrixStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), bgColor);
+                AbstractGuiUtils.fill(poseStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), bgColor);
             }
             // 绘制纹理
             if (this.isHovered() && this.getTremblingAmplitude() > 0) {
-                AbstractGuiUtils.renderTremblingTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());
+                AbstractGuiUtils.renderTremblingTexture(poseStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());
             } else {
-                AbstractGuiUtils.renderRotatedTexture(matrixStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
+                AbstractGuiUtils.renderRotatedTexture(poseStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
             }
             // 绘制前景颜色
             int fgColor = this.getForegroundColor();
             if (fgColor != 0) {
-                AbstractGuiUtils.fill(matrixStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), fgColor);
+                AbstractGuiUtils.fill(poseStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), fgColor);
             }
         }
         if (renderPopup) {
-            this.renderPopup(matrixStack, null, mouseX, mouseY, keyCode, modifiers);
+            this.renderPopup(poseStack, null, mouseX, mouseY, keyCode, modifiers);
         }
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY) {
-        this.renderPopup(matrixStack, null, mouseX, mouseY, -1, -1);
+    public void renderPopup(PoseStack poseStack, double mouseX, double mouseY) {
+        this.renderPopup(poseStack, null, mouseX, mouseY, -1, -1);
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(MatrixStack matrixStack, FontRenderer font, double mouseX, double mouseY) {
-        this.renderPopup(matrixStack, font, mouseX, mouseY, -1, -1);
+    public void renderPopup(PoseStack poseStack, Font font, double mouseX, double mouseY) {
+        this.renderPopup(poseStack, font, mouseX, mouseY, -1, -1);
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(MatrixStack matrixStack, double mouseX, double mouseY, int keyCode, int modifiers) {
-        this.renderPopup(matrixStack, null, mouseX, mouseY, keyCode, modifiers);
+    public void renderPopup(PoseStack poseStack, double mouseX, double mouseY, int keyCode, int modifiers) {
+        this.renderPopup(poseStack, null, mouseX, mouseY, keyCode, modifiers);
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(MatrixStack matrixStack, FontRenderer font, double mouseX, double mouseY, int keyCode, int modifiers) {
+    public void renderPopup(PoseStack poseStack, Font font, double mouseX, double mouseY, int keyCode, int modifiers) {
         // 绘制提示
         if (this.keyCode == -1 || (this.keyCode == keyCode && this.modifiers == modifiers)) {
-            if (this.isHovered() && tooltip != null && StringUtils.isNotNullOrEmpty(tooltip.getContent())) {
-                if (Minecraft.getInstance().screen != null) {
+            if (this.isHovered()) {
+                if (customPopupFunction != null) {
+                    customPopupFunction.run();
+                } else if (tooltip != null && StringUtils.isNotNullOrEmpty(tooltip.getContent()) && Minecraft.getInstance().screen != null) {
                     if (font == null) font = Minecraft.getInstance().font;
-                    AbstractGuiUtils.drawPopupMessage(tooltip.setMatrixStack(matrixStack).setFont(font), (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+                    AbstractGuiUtils.drawPopupMessage(tooltip.setPoseStack(poseStack).setFont(font), (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
                 }
             }
         }

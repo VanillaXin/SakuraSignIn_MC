@@ -1,9 +1,9 @@
 package xin.vanilla.mc.network;
 
 import lombok.Getter;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 import xin.vanilla.mc.enums.ESignInType;
 import xin.vanilla.mc.rewards.RewardManager;
 
@@ -22,13 +22,13 @@ public class SignInPacket {
         this.signInType = signInType;
     }
 
-    public SignInPacket(PacketBuffer buf) {
+    public SignInPacket(FriendlyByteBuf buf) {
         this.signInTime = buf.readDate();
         this.autoRewarded = buf.readBoolean();
         this.signInType = ESignInType.valueOf(buf.readInt());
     }
 
-    public void toBytes(PacketBuffer buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         buf.writeDate(signInTime);
         buf.writeBoolean(autoRewarded);
         buf.writeInt(signInType.getCode());
@@ -36,7 +36,7 @@ public class SignInPacket {
 
     public static void handle(SignInPacket packet, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            ServerPlayerEntity player = ctx.get().getSender();
+            ServerPlayer player = ctx.get().getSender();
             if (player != null) {
                 RewardManager.signIn(player, packet);
             }

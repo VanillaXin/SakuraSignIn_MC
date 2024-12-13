@@ -4,12 +4,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import lombok.NonNull;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.registries.ForgeRegistries;
 import xin.vanilla.mc.rewards.RewardParser;
 
@@ -31,7 +31,7 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             // 如果存在NBT数据，则解析
             if (json.has("nbt")) {
                 try {
-                    CompoundNBT nbt = JsonToNBT.parseTag(json.get("nbt").getAsString());
+                    CompoundTag nbt = TagParser.parseTag(json.get("nbt").getAsString());
                     itemStack.setTag(nbt);
                 } catch (CommandSyntaxException e) {
                     throw new JsonParseException("Failed to parse NBT data", e);
@@ -136,7 +136,7 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
         if (id.contains("{") && id.endsWith("}") && !id.endsWith("{}")) {
             try {
                 String nbtString = id.substring(id.indexOf("{"));
-                CompoundNBT nbt = JsonToNBT.parseTag(nbtString);
+                CompoundTag nbt = TagParser.parseTag(nbtString);
                 itemStack.setTag(nbt);
             } catch (Exception e) {
                 if (throwException) throw e;

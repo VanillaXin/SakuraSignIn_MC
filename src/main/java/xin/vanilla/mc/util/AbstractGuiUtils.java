@@ -1,22 +1,22 @@
 package xin.vanilla.mc.util;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import lombok.Getter;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.text.*;
+import net.minecraft.network.chat.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.SakuraSignIn;
@@ -33,7 +33,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
- * AbstractGui工具类
+ * GuiComponent工具类
  */
 @OnlyIn(Dist.CLIENT)
 public class AbstractGuiUtils {
@@ -61,27 +61,27 @@ public class AbstractGuiUtils {
     /**
      * 设置深度
      */
-    public static void setDepth(MatrixStack matrixStack) {
-        AbstractGuiUtils.setDepth(matrixStack, EDepth.FOREGROUND);
+    public static void setDepth(PoseStack poseStack) {
+        AbstractGuiUtils.setDepth(poseStack, EDepth.FOREGROUND);
     }
 
     /**
      * 设置深度
      *
-     * @param matrixStack 用于变换绘制坐标系的矩阵堆栈
-     * @param depth       深度
+     * @param poseStack 用于变换绘制坐标系的矩阵堆栈
+     * @param depth     深度
      */
-    public static void setDepth(MatrixStack matrixStack, EDepth depth) {
+    public static void setDepth(PoseStack poseStack, EDepth depth) {
         RenderSystem.disableDepthTest();
-        matrixStack.pushPose();
-        matrixStack.translate(0, 0, depth.getDepth());
+        poseStack.pushPose();
+        poseStack.translate(0, 0, depth.getDepth());
     }
 
     /**
      * 重置深度
      */
-    public static void resetDepth(MatrixStack matrixStack) {
-        matrixStack.popPose();
+    public static void resetDepth(PoseStack poseStack) {
+        poseStack.popPose();
         RenderSystem.enableDepthTest();
     }
 
@@ -89,18 +89,24 @@ public class AbstractGuiUtils {
 
     // region 绘制纹理
 
-    public static void blit(MatrixStack matrixStack, int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
-        AbstractGui.blit(matrixStack, x0, y0, z, destWidth, destHeight, sprite);
+    public static void bindTexture(ResourceLocation resourceLocation) {
+        // 设置纹理的颜色(RGBA)为白色，表示没有颜色变化，纹理将按原样显示。
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, resourceLocation);
     }
 
-    public static void blit(MatrixStack matrixStack, int x0, int y0, int z, float u0, float v0, int width, int height, int textureHeight, int textureWidth) {
-        AbstractGui.blit(matrixStack, x0, y0, z, u0, v0, width, height, textureHeight, textureWidth);
+    public static void blit(PoseStack poseStack, int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
+        GuiComponent.blit(poseStack, x0, y0, z, destWidth, destHeight, sprite);
+    }
+
+    public static void blit(PoseStack poseStack, int x0, int y0, int z, float u0, float v0, int width, int height, int textureHeight, int textureWidth) {
+        GuiComponent.blit(poseStack, x0, y0, z, u0, v0, width, height, textureHeight, textureWidth);
     }
 
     /**
      * 使用指定的纹理坐标和尺寸信息绘制一个矩形区域。
      *
-     * @param matrixStack   用于变换绘制坐标系的矩阵堆栈。
+     * @param poseStack     用于变换绘制坐标系的矩阵堆栈。
      * @param x0            矩形的左上角x坐标。
      * @param y0            矩形的左上角y坐标。
      * @param destWidth     目标矩形的宽度，决定了图像在屏幕上的宽度。
@@ -112,18 +118,18 @@ public class AbstractGuiUtils {
      * @param textureWidth  整个纹理的宽度，用于计算纹理坐标。
      * @param textureHeight 整个纹理的高度，用于计算纹理坐标。
      */
-    public static void blit(MatrixStack matrixStack, int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
-        AbstractGui.blit(matrixStack, x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
+    public static void blit(PoseStack poseStack, int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
+        GuiComponent.blit(poseStack, x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
     }
 
-    public static void blit(MatrixStack matrixStack, int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
-        AbstractGui.blit(matrixStack, x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
+    public static void blit(PoseStack poseStack, int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
+        GuiComponent.blit(poseStack, x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
     }
 
     /**
      * 绘制旋转的纹理
      *
-     * @param matrixStack       矩阵栈
+     * @param poseStack         矩阵栈
      * @param texture           纹理
      * @param textureCoordinate 纹理坐标
      * @param coordinate        绘制相对坐标
@@ -134,7 +140,7 @@ public class AbstractGuiUtils {
      * @param flipHorizontal    水平翻转
      * @param flipVertical      垂直翻转
      */
-    public static void renderRotatedTexture(MatrixStack matrixStack, ResourceLocation texture, TextureCoordinate textureCoordinate, Coordinate coordinate, double baseX, double baseY, double scale, double angle, boolean flipHorizontal, boolean flipVertical) {
+    public static void renderRotatedTexture(PoseStack poseStack, ResourceLocation texture, TextureCoordinate textureCoordinate, Coordinate coordinate, double baseX, double baseY, double scale, double angle, boolean flipHorizontal, boolean flipVertical) {
         double x = baseX + coordinate.getX() * scale;
         double y = baseY + coordinate.getY() * scale;
         int width = (int) (coordinate.getWidth() * scale);
@@ -144,13 +150,13 @@ public class AbstractGuiUtils {
         int uWidth = (int) coordinate.getUWidth();
         int vHeight = (int) coordinate.getVHeight();
         // 绑定纹理
-        Minecraft.getInstance().getTextureManager().bind(texture);
+        AbstractGuiUtils.bindTexture(texture);
         // 保存当前矩阵状态
-        matrixStack.pushPose();
+        poseStack.pushPose();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
-        matrixStack.translate(x + width / 2.0, y + height / 2.0, 0);
+        poseStack.translate(x + width / 2.0, y + height / 2.0, 0);
         // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
-        matrixStack.mulPose(Vector3f.ZP.rotationDegrees((float) angle));
+        poseStack.mulPose(Vector3f.ZP.rotationDegrees((float) angle));
         // 左右翻转
         if (flipHorizontal) {
             u0 += uWidth;
@@ -162,21 +168,21 @@ public class AbstractGuiUtils {
             vHeight = -vHeight;
         }
         // 平移回原点
-        matrixStack.translate(-width / 2.0, -height / 2.0, 0);
+        poseStack.translate(-width / 2.0, -height / 2.0, 0);
         // 启用混合模式来正确处理透明度
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         // 绘制纹理
-        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        AbstractGuiUtils.blit(poseStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         RenderSystem.disableBlend();
         // 恢复矩阵状态
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 
     /**
      * 绘制 颤抖的 纹理
      *
-     * @param matrixStack        矩阵栈
+     * @param poseStack          矩阵栈
      * @param texture            纹理
      * @param textureCoordinate  纹理坐标
      * @param coordinate         绘制相对坐标
@@ -186,7 +192,7 @@ public class AbstractGuiUtils {
      * @param affectLight        是否受光照影响
      * @param tremblingAmplitude 颤抖幅度
      */
-    public static void renderTremblingTexture(MatrixStack matrixStack, ResourceLocation texture, TextureCoordinate textureCoordinate, Coordinate coordinate, double baseX, double baseY, double scale, boolean affectLight, double tremblingAmplitude) {
+    public static void renderTremblingTexture(PoseStack poseStack, ResourceLocation texture, TextureCoordinate textureCoordinate, Coordinate coordinate, double baseX, double baseY, double scale, boolean affectLight, double tremblingAmplitude) {
         double x = baseX + coordinate.getX() * scale;
         double y = baseY + coordinate.getY() * scale;
         int width = (int) (coordinate.getWidth() * scale);
@@ -197,10 +203,10 @@ public class AbstractGuiUtils {
         int vHeight = (int) coordinate.getVHeight();
         Random random = new Random();
         // 绑定纹理
-        Minecraft.getInstance().getTextureManager().bind(texture);
+        AbstractGuiUtils.bindTexture(texture);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        matrixStack.pushPose();
+        poseStack.pushPose();
         // 添加偏移
         if (tremblingAmplitude > 0) {
             if (!affectLight || WorldUtils.getEnvironmentBrightness(Minecraft.getInstance().player) > 4) {
@@ -208,31 +214,31 @@ public class AbstractGuiUtils {
                 y += (random.nextFloat() - 0.5) * tremblingAmplitude;
             }
         }
-        matrixStack.translate(x, y, 0);
+        poseStack.translate(x, y, 0);
         // 绘制纹理
-        AbstractGuiUtils.blit(matrixStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
-        matrixStack.popPose();
+        AbstractGuiUtils.blit(poseStack, 0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+        poseStack.popPose();
         RenderSystem.disableBlend();
     }
 
     // endregion 绘制纹理
 
     // region 绘制文字
-    public static IFormattableTextComponent setTextComponentColor(IFormattableTextComponent textComponent, int color) {
-        return textComponent.withStyle(style -> style.withColor(Color.fromRgb(color)));
+    public static MutableComponent setTextComponentColor(MutableComponent textComponent, int color) {
+        return textComponent.withStyle(style -> style.withColor(TextColor.fromRgb(color)));
     }
 
-    public static int getTextComponentColor(IFormattableTextComponent textComponent) {
+    public static int getTextComponentColor(MutableComponent textComponent) {
         return AbstractGuiUtils.getTextComponentColor(textComponent, 0xFFFFFFFF);
     }
 
-    public static int getTextComponentColor(IFormattableTextComponent textComponent, int defaultColor) {
+    public static int getTextComponentColor(MutableComponent textComponent, int defaultColor) {
         return textComponent.getStyle().getColor() == null ? defaultColor : textComponent.getStyle().getColor().getValue();
     }
 
-    public static IFormattableTextComponent textToComponent(Text text) {
-        return new StringTextComponent(text.getContent()).setStyle(Style.EMPTY
-                .withColor(Color.fromRgb(text.getColor()))
+    public static MutableComponent textToComponent(Text text) {
+        return new TextComponent(text.getContent()).setStyle(Style.EMPTY
+                .withColor(TextColor.fromRgb(text.getColor()))
                 .withBold(text.isBold())
                 .withItalic(text.isItalic())
                 .withUnderlined(text.isUnderlined())
@@ -241,7 +247,7 @@ public class AbstractGuiUtils {
         );
     }
 
-    public static Text componentToText(IFormattableTextComponent component) {
+    public static Text componentToText(MutableComponent component) {
         return Text.literal(component.getString())
                 .setColor(AbstractGuiUtils.getTextComponentColor(component))
                 .setBold(component.getStyle().isBold())
@@ -251,26 +257,26 @@ public class AbstractGuiUtils {
                 .setObfuscated(component.getStyle().isObfuscated());
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y) {
-        AbstractGuiUtils.drawString(Text.literal(text).setMatrixStack(matrixStack).setFont(font), x, y);
+    public static void drawString(PoseStack poseStack, Font font, String text, float x, float y) {
+        AbstractGuiUtils.drawString(Text.literal(text).setPoseStack(poseStack).setFont(font), x, y);
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color) {
-        AbstractGuiUtils.drawString(Text.literal(text).setColor(color).setMatrixStack(matrixStack).setFont(font), x, y);
+    public static void drawString(PoseStack poseStack, Font font, String text, float x, float y, int color) {
+        AbstractGuiUtils.drawString(Text.literal(text).setColor(color).setPoseStack(poseStack).setFont(font), x, y);
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, boolean shadow) {
-        AbstractGuiUtils.drawString(Text.literal(text).setShadow(shadow).setMatrixStack(matrixStack).setFont(font), x, y);
+    public static void drawString(PoseStack poseStack, Font font, String text, float x, float y, boolean shadow) {
+        AbstractGuiUtils.drawString(Text.literal(text).setShadow(shadow).setPoseStack(poseStack).setFont(font), x, y);
     }
 
-    public static void drawString(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int color, boolean shadow) {
-        AbstractGuiUtils.drawString(Text.literal(text).setColor(color).setShadow(shadow).setMatrixStack(matrixStack).setFont(font), x, y);
+    public static void drawString(PoseStack poseStack, Font font, String text, float x, float y, int color, boolean shadow) {
+        AbstractGuiUtils.drawString(Text.literal(text).setColor(color).setShadow(shadow).setPoseStack(poseStack).setFont(font), x, y);
     }
 
     public static void drawString(Text text, float x, float y, EDepth depth) {
-        if (depth != null) AbstractGuiUtils.setDepth(text.getMatrixStack(), depth);
+        if (depth != null) AbstractGuiUtils.setDepth(text.getPoseStack(), depth);
         AbstractGuiUtils.drawString(text, x, y);
-        if (depth != null) AbstractGuiUtils.resetDepth(text.getMatrixStack());
+        if (depth != null) AbstractGuiUtils.resetDepth(text.getPoseStack());
     }
 
     public static void drawString(Text text, float x, float y) {
@@ -298,11 +304,11 @@ public class AbstractGuiUtils {
      * @param font 字体渲染器
      * @param text 要绘制的文本
      */
-    public static int multilineTextHeight(FontRenderer font, String text) {
+    public static int multilineTextHeight(Font font, String text) {
         return StringUtils.replaceLine(text).split("\n").length * font.lineHeight;
     }
 
-    public static int getStringWidth(FontRenderer font, Collection<String> texts) {
+    public static int getStringWidth(Font font, Collection<String> texts) {
         int width = 0;
         for (String s : texts) {
             width = Math.max(width, font.width(s));
@@ -310,11 +316,11 @@ public class AbstractGuiUtils {
         return width;
     }
 
-    public static int getStringHeight(FontRenderer font, Collection<String> texts) {
+    public static int getStringHeight(Font font, Collection<String> texts) {
         return AbstractGuiUtils.multilineTextHeight(font, String.join("\n", texts));
     }
 
-    public static int getTextWidth(FontRenderer font, Collection<Text> texts) {
+    public static int getTextWidth(Font font, Collection<Text> texts) {
         int width = 0;
         for (Text text : texts) {
             for (String string : StringUtils.replaceLine(text.getContent()).split("\n")) {
@@ -324,7 +330,7 @@ public class AbstractGuiUtils {
         return width;
     }
 
-    public static int getTextHeight(FontRenderer font, Collection<Text> texts) {
+    public static int getTextHeight(Font font, Collection<Text> texts) {
         return AbstractGuiUtils.multilineTextHeight(font, texts.stream().map(Text::getContent).collect(Collectors.joining("\n")));
     }
 
@@ -343,7 +349,7 @@ public class AbstractGuiUtils {
      * @param font 字体渲染器
      * @param text 要绘制的文本
      */
-    public static int multilineTextWidth(FontRenderer font, String text) {
+    public static int multilineTextWidth(Font font, String text) {
         int width = 0;
         if (StringUtils.isNotNullOrEmpty(text)) {
             for (String s : StringUtils.replaceLine(text).split("\n")) {
@@ -356,15 +362,15 @@ public class AbstractGuiUtils {
     /**
      * 绘制多行文本，以\n为换行符
      *
-     * @param matrixStack 渲染矩阵
-     * @param font        字体渲染器
-     * @param text        要绘制的文本
-     * @param x           绘制的X坐标
-     * @param y           绘制的Y坐标
-     * @param colors      文本颜色
+     * @param poseStack 渲染矩阵
+     * @param font      字体渲染器
+     * @param text      要绘制的文本
+     * @param x         绘制的X坐标
+     * @param y         绘制的Y坐标
+     * @param colors    文本颜色
      */
-    public static void drawMultilineText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int... colors) {
-        AbstractGuiUtils.drawMultilineText(Text.literal(text).setMatrixStack(matrixStack).setFont(font), x, y, colors);
+    public static void drawMultilineText(PoseStack poseStack, Font font, String text, float x, float y, int... colors) {
+        AbstractGuiUtils.drawMultilineText(Text.literal(text).setPoseStack(poseStack).setFont(font), x, y, colors);
     }
 
     /**
@@ -395,65 +401,65 @@ public class AbstractGuiUtils {
     /**
      * 绘制限制长度的文本，超出部分末尾以省略号表示
      *
-     * @param matrixStack 渲染矩阵
-     * @param font        字体渲染器
-     * @param text        要绘制的文本
-     * @param x           绘制的X坐标
-     * @param y           绘制的Y坐标
-     * @param maxWidth    文本显示的最大宽度
-     * @param color       文本颜色
+     * @param poseStack 渲染矩阵
+     * @param font      字体渲染器
+     * @param text      要绘制的文本
+     * @param x         绘制的X坐标
+     * @param y         绘制的Y坐标
+     * @param maxWidth  文本显示的最大宽度
+     * @param color     文本颜色
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, int color) {
-        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(true), x, y, maxWidth, 0, EllipsisPosition.END);
+    public static void drawLimitedText(PoseStack poseStack, Font font, String text, float x, float y, int maxWidth, int color) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setPoseStack(poseStack).setFont(font).setColor(color).setShadow(true), x, y, maxWidth, 0, EllipsisPosition.END);
     }
 
     /**
      * 绘制限制长度的文本，超出部分末尾以省略号表示
      *
-     * @param matrixStack 渲染矩阵
-     * @param font        字体渲染器
-     * @param text        要绘制的文本
-     * @param x           绘制的X坐标
-     * @param y           绘制的Y坐标
-     * @param maxWidth    文本显示的最大宽度
-     * @param color       文本颜色
-     * @param shadow      是否显示阴影
+     * @param poseStack 渲染矩阵
+     * @param font      字体渲染器
+     * @param text      要绘制的文本
+     * @param x         绘制的X坐标
+     * @param y         绘制的Y坐标
+     * @param maxWidth  文本显示的最大宽度
+     * @param color     文本颜色
+     * @param shadow    是否显示阴影
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, int color, boolean shadow) {
-        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(shadow), x, y, maxWidth, 0, EllipsisPosition.END);
+    public static void drawLimitedText(PoseStack poseStack, Font font, String text, float x, float y, int maxWidth, int color, boolean shadow) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setPoseStack(poseStack).setFont(font).setColor(color).setShadow(shadow), x, y, maxWidth, 0, EllipsisPosition.END);
     }
 
     /**
      * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
      *
-     * @param matrixStack 渲染矩阵
-     * @param font        字体渲染器
-     * @param text        要绘制的文本
-     * @param x           绘制的X坐标
-     * @param y           绘制的Y坐标
-     * @param maxWidth    文本显示的最大宽度
-     * @param position    省略号位置（开头、中间、结尾）
-     * @param color       文本颜色
+     * @param poseStack 渲染矩阵
+     * @param font      字体渲染器
+     * @param text      要绘制的文本
+     * @param x         绘制的X坐标
+     * @param y         绘制的Y坐标
+     * @param maxWidth  文本显示的最大宽度
+     * @param position  省略号位置（开头、中间、结尾）
+     * @param color     文本颜色
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, EllipsisPosition position, int color) {
-        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(true), x, y, maxWidth, 0, position);
+    public static void drawLimitedText(PoseStack poseStack, Font font, String text, float x, float y, int maxWidth, EllipsisPosition position, int color) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setPoseStack(poseStack).setFont(font).setColor(color).setShadow(true), x, y, maxWidth, 0, position);
     }
 
     /**
      * 绘制限制长度的文本，超出部分以省略号表示，可选择省略号的位置
      *
-     * @param matrixStack 渲染矩阵
-     * @param font        字体渲染器
-     * @param text        要绘制的文本
-     * @param x           绘制的X坐标
-     * @param y           绘制的Y坐标
-     * @param maxWidth    文本显示的最大宽度
-     * @param position    省略号位置（开头、中间、结尾）
-     * @param color       文本颜色
-     * @param shadow      是否显示阴影
+     * @param poseStack 渲染矩阵
+     * @param font      字体渲染器
+     * @param text      要绘制的文本
+     * @param x         绘制的X坐标
+     * @param y         绘制的Y坐标
+     * @param maxWidth  文本显示的最大宽度
+     * @param position  省略号位置（开头、中间、结尾）
+     * @param color     文本颜色
+     * @param shadow    是否显示阴影
      */
-    public static void drawLimitedText(MatrixStack matrixStack, FontRenderer font, String text, float x, float y, int maxWidth, EllipsisPosition position, int color, boolean shadow) {
-        AbstractGuiUtils.drawLimitedText(Text.literal(text).setMatrixStack(matrixStack).setFont(font).setColor(color).setShadow(shadow), x, y, maxWidth, 0, position);
+    public static void drawLimitedText(PoseStack poseStack, Font font, String text, float x, float y, int maxWidth, EllipsisPosition position, int color, boolean shadow) {
+        AbstractGuiUtils.drawLimitedText(Text.literal(text).setPoseStack(poseStack).setFont(font).setColor(color).setShadow(shadow), x, y, maxWidth, 0, position);
     }
 
     /**
@@ -507,7 +513,7 @@ public class AbstractGuiUtils {
     public static void drawLimitedText(Text text, double x, double y, int maxWidth, int maxLine, EllipsisPosition position) {
         if (StringUtils.isNotNullOrEmpty(text.getContent())) {
             String ellipsis = "...";
-            FontRenderer font = text.getFont();
+            Font font = text.getFont();
             int ellipsisWidth = font.width(ellipsis);
             String[] lines = StringUtils.replaceLine(text.getContent()).split("\n");
             int index = -1;
@@ -573,11 +579,11 @@ public class AbstractGuiUtils {
                 }
                 if (skip) continue;
                 else index++;
-                MatrixStack matrixStack = text.getMatrixStack();
+                PoseStack poseStack = text.getPoseStack();
                 if (text.isShadow()) {
-                    font.drawShadow(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), (float) x, (float) y + index * font.lineHeight, text.getColor());
+                    font.drawShadow(poseStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), (float) x, (float) y + index * font.lineHeight, text.getColor());
                 } else {
-                    font.draw(matrixStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), (float) x, (float) y + index * font.lineHeight, text.getColor());
+                    font.draw(poseStack, AbstractGuiUtils.textToComponent(text.copy().setText(line)), (float) x, (float) y + index * font.lineHeight, text.getColor());
                 }
             }
         }
@@ -590,41 +596,41 @@ public class AbstractGuiUtils {
     /**
      * 绘制效果图标
      *
-     * @param matrixStack    用于变换绘制坐标系的矩阵堆栈
-     * @param font           字体渲染器
-     * @param effectInstance 待绘制的效果实例
-     * @param x              矩形的左上角x坐标
-     * @param y              矩形的左上角y坐标
-     * @param width          目标矩形的宽度，决定了图像在屏幕上的宽度
-     * @param height         目标矩形的高度，决定了图像在屏幕上的高度
-     * @param showText       是否显示效果等级和持续时间
+     * @param poseStack         用于变换绘制坐标系的矩阵堆栈
+     * @param font              字体渲染器
+     * @param mobEffectInstance 待绘制的效果实例
+     * @param x                 矩形的左上角x坐标
+     * @param y                 矩形的左上角y坐标
+     * @param width             目标矩形的宽度，决定了图像在屏幕上的宽度
+     * @param height            目标矩形的高度，决定了图像在屏幕上的高度
+     * @param showText          是否显示效果等级和持续时间
      */
-    public static void drawEffectIcon(MatrixStack matrixStack, FontRenderer font, EffectInstance effectInstance, ResourceLocation textureLocation, TextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
-        ResourceLocation effectIcon = TextureUtils.getEffectTexture(effectInstance);
+    public static void drawEffectIcon(PoseStack poseStack, Font font, MobEffectInstance mobEffectInstance, ResourceLocation textureLocation, TextureCoordinate textureCoordinate, int x, int y, int width, int height, boolean showText) {
+        ResourceLocation effectIcon = TextureUtils.getEffectTexture(mobEffectInstance);
         if (effectIcon == null) {
-            Minecraft.getInstance().getTextureManager().bind(textureLocation);
+            AbstractGuiUtils.bindTexture(textureLocation);
             Coordinate buffUV = textureCoordinate.getBuffUV();
-            AbstractGuiUtils.blit(matrixStack, x, y, width, height, (float) buffUV.getU0(), (float) buffUV.getV0(), (int) buffUV.getUWidth(), (int) buffUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
+            AbstractGuiUtils.blit(poseStack, x, y, width, height, (float) buffUV.getU0(), (float) buffUV.getV0(), (int) buffUV.getUWidth(), (int) buffUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         } else {
-            Minecraft.getInstance().getTextureManager().bind(effectIcon);
-            AbstractGuiUtils.blit(matrixStack, x, y, 0, 0, width, height, width, height);
+            AbstractGuiUtils.bindTexture(effectIcon);
+            AbstractGuiUtils.blit(poseStack, x, y, 0, 0, width, height, width, height);
         }
         if (showText) {
             // 效果等级
-            if (effectInstance.getAmplifier() >= 0) {
-                StringTextComponent amplifierString = new StringTextComponent(StringUtils.intToRoman(effectInstance.getAmplifier() + 1));
+            if (mobEffectInstance.getAmplifier() >= 0) {
+                TextComponent amplifierString = new TextComponent(StringUtils.intToRoman(mobEffectInstance.getAmplifier() + 1));
                 int amplifierWidth = font.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
-                font.drawShadow(matrixStack, amplifierString, fontX, fontY, 0xFFFFFF);
+                font.drawShadow(poseStack, amplifierString, fontX, fontY, 0xFFFFFF);
             }
             // 效果持续时间
-            if (effectInstance.getDuration() > 0) {
-                StringTextComponent durationString = new StringTextComponent(DateUtils.toMaxUnitString(effectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
+            if (mobEffectInstance.getDuration() > 0) {
+                TextComponent durationString = new TextComponent(DateUtils.toMaxUnitString(mobEffectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
                 int durationWidth = font.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
-                font.drawShadow(matrixStack, durationString, fontX, fontY, 0xFFFFFF);
+                font.drawShadow(poseStack, durationString, fontX, fontY, 0xFFFFFF);
             }
         }
     }
@@ -632,7 +638,7 @@ public class AbstractGuiUtils {
     /**
      * 绘制自定义图标
      *
-     * @param matrixStack     用于变换绘制坐标系的矩阵堆栈
+     * @param poseStack       用于变换绘制坐标系的矩阵堆栈
      * @param font            字体渲染器
      * @param reward          待绘制的奖励
      * @param textureLocation 纹理位置
@@ -643,22 +649,22 @@ public class AbstractGuiUtils {
      * @param totalHeight     纹理总高度
      * @param showText        是否显示物品数量等信息
      */
-    public static void drawCustomIcon(MatrixStack matrixStack, FontRenderer font, Reward reward, ResourceLocation textureLocation, Coordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
-        Minecraft.getInstance().getTextureManager().bind(textureLocation);
-        AbstractGuiUtils.blit(matrixStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
+    public static void drawCustomIcon(PoseStack poseStack, Font font, Reward reward, ResourceLocation textureLocation, Coordinate textureUV, int x, int y, int totalWidth, int totalHeight, boolean showText) {
+        AbstractGuiUtils.bindTexture(textureLocation);
+        AbstractGuiUtils.blit(poseStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
-            StringTextComponent num = new StringTextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
+            TextComponent num = new TextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
             int numWidth = font.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - font.lineHeight + 2;
-            font.drawShadow(matrixStack, num, fontX, fontY, 0xFFFFFF);
+            font.drawShadow(poseStack, num, fontX, fontY, 0xFFFFFF);
         }
     }
 
     /**
      * 渲染奖励图标
      *
-     * @param matrixStack  用于变换绘制坐标系的矩阵堆栈
+     * @param poseStack    用于变换绘制坐标系的矩阵堆栈
      * @param itemRenderer 物品渲染器
      * @param fontRenderer 字体渲染器
      * @param reward       待绘制的奖励
@@ -666,7 +672,7 @@ public class AbstractGuiUtils {
      * @param y            图标的y坐标
      * @param showText     是否显示物品数量等信息
      */
-    public static void renderCustomReward(MatrixStack matrixStack, ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, TextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
+    public static void renderCustomReward(PoseStack poseStack, ItemRenderer itemRenderer, Font fontRenderer, ResourceLocation textureLocation, TextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
         // 物品
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
@@ -674,25 +680,25 @@ public class AbstractGuiUtils {
         }
         // 效果
         else if (reward.getType().equals(ERewardType.EFFECT)) {
-            EffectInstance effectInstance = RewardManager.deserializeReward(reward);
-            AbstractGuiUtils.drawEffectIcon(matrixStack, fontRenderer, effectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
+            MobEffectInstance mobEffectInstance = RewardManager.deserializeReward(reward);
+            AbstractGuiUtils.drawEffectIcon(poseStack, fontRenderer, mobEffectInstance, textureLocation, textureUV, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, showText);
         }
         // 经验点
         else if (reward.getType().equals(ERewardType.EXP_POINT)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getPointUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(poseStack, fontRenderer, reward, textureLocation, textureUV.getPointUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         }
         // 经验等级
         else if (reward.getType().equals(ERewardType.EXP_LEVEL)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getLevelUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(poseStack, fontRenderer, reward, textureLocation, textureUV.getLevelUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         }
         // 补签卡
         else if (reward.getType().equals(ERewardType.SIGN_IN_CARD)) {
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getCardUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
+            AbstractGuiUtils.drawCustomIcon(poseStack, fontRenderer, reward, textureLocation, textureUV.getCardUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), showText);
         }
         // 消息
         else if (reward.getType().equals(ERewardType.MESSAGE)) {
             // 这玩意不是Integer类型也没有数量, 不能showText
-            AbstractGuiUtils.drawCustomIcon(matrixStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
+            AbstractGuiUtils.drawCustomIcon(poseStack, fontRenderer, reward, textureLocation, textureUV.getMessageUV(), x, y, textureUV.getTotalWidth(), textureUV.getTotalHeight(), false);
         }
         // 进度
         else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
@@ -708,7 +714,7 @@ public class AbstractGuiUtils {
         }
     }
 
-    public static void renderItem(ItemRenderer itemRenderer, FontRenderer fontRenderer, ItemStack itemStack, int x, int y, boolean showText) {
+    public static void renderItem(ItemRenderer itemRenderer, Font fontRenderer, ItemStack itemStack, int x, int y, boolean showText) {
         itemRenderer.renderGuiItem(itemStack, x, y);
         if (showText) {
             itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
@@ -722,44 +728,44 @@ public class AbstractGuiUtils {
     /**
      * 绘制一个“像素”矩形
      *
-     * @param matrixStack 用于变换绘制坐标系的矩阵堆栈
-     * @param x           像素的 X 坐标
-     * @param y           像素的 Y 坐标
-     * @param color       像素的颜色
+     * @param poseStack 用于变换绘制坐标系的矩阵堆栈
+     * @param x         像素的 X 坐标
+     * @param y         像素的 Y 坐标
+     * @param color     像素的颜色
      */
-    public static void drawPixel(MatrixStack matrixStack, int x, int y, int color) {
-        AbstractGui.fill(matrixStack, x, y, x + 1, y + 1, color);
+    public static void drawPixel(PoseStack poseStack, int x, int y, int color) {
+        GuiComponent.fill(poseStack, x, y, x + 1, y + 1, color);
     }
 
     /**
      * 绘制一个正方形
      */
-    public static void fill(MatrixStack matrixStack, int x, int y, int width, int color) {
-        AbstractGuiUtils.fill(matrixStack, x, y, width, width, color);
+    public static void fill(PoseStack poseStack, int x, int y, int width, int color) {
+        AbstractGuiUtils.fill(poseStack, x, y, width, width, color);
     }
 
     /**
      * 绘制一个矩形
      */
-    public static void fill(MatrixStack matrixStack, int x, int y, int width, int height, int color) {
-        AbstractGuiUtils.fill(matrixStack, x, y, width, height, color, 0);
+    public static void fill(PoseStack poseStack, int x, int y, int width, int height, int color) {
+        AbstractGuiUtils.fill(poseStack, x, y, width, height, color, 0);
     }
 
     /**
      * 绘制一个圆角矩形
      *
-     * @param matrixStack 矩阵栈
-     * @param x           矩形的左上角X坐标
-     * @param y           矩形的左上角Y坐标
-     * @param width       矩形的宽度
-     * @param height      矩形的高度
-     * @param color       矩形的颜色
-     * @param radius      圆角半径(0-10)
+     * @param poseStack 矩阵栈
+     * @param x         矩形的左上角X坐标
+     * @param y         矩形的左上角Y坐标
+     * @param width     矩形的宽度
+     * @param height    矩形的高度
+     * @param color     矩形的颜色
+     * @param radius    圆角半径(0-10)
      */
-    public static void fill(MatrixStack matrixStack, int x, int y, int width, int height, int color, int radius) {
+    public static void fill(PoseStack poseStack, int x, int y, int width, int height, int color, int radius) {
         // 如果半径为0，则直接绘制普通矩形
         if (radius <= 0) {
-            AbstractGui.fill(matrixStack, x, y, x + width, y + height, color);
+            GuiComponent.fill(poseStack, x, y, x + width, y + height, color);
             return;
         }
 
@@ -767,60 +773,56 @@ public class AbstractGuiUtils {
         radius = Math.min(radius, 10);
 
         // 1. 绘制中间的矩形部分（去掉圆角占用的区域）
-        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + radius + 1, width - 2 * (radius + 1), height - 2 * (radius + 1), color);
+        AbstractGuiUtils.fill(poseStack, x + radius + 1, y + radius + 1, width - 2 * (radius + 1), height - 2 * (radius + 1), color);
 
         // 2. 绘制四条边（去掉圆角占用的部分）
         // 上边
-        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y, width - 2 * radius - 2, radius, color);
-        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + radius, width - 2 * (radius + 1), 1, color);
+        AbstractGuiUtils.fill(poseStack, x + radius + 1, y, width - 2 * radius - 2, radius, color);
+        AbstractGuiUtils.fill(poseStack, x + radius + 1, y + radius, width - 2 * (radius + 1), 1, color);
         // 下边
-        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + height - radius, width - 2 * radius - 2, radius, color);
-        AbstractGuiUtils.fill(matrixStack, x + radius + 1, y + height - radius - 1, width - 2 * (radius + 1), 1, color);
+        AbstractGuiUtils.fill(poseStack, x + radius + 1, y + height - radius, width - 2 * radius - 2, radius, color);
+        AbstractGuiUtils.fill(poseStack, x + radius + 1, y + height - radius - 1, width - 2 * (radius + 1), 1, color);
         // 左边
-        AbstractGuiUtils.fill(matrixStack, x, y + radius + 1, radius, height - 2 * radius - 2, color);
-        AbstractGuiUtils.fill(matrixStack, x + radius, y + radius + 1, 1, height - 2 * (radius + 1), color);
+        AbstractGuiUtils.fill(poseStack, x, y + radius + 1, radius, height - 2 * radius - 2, color);
+        AbstractGuiUtils.fill(poseStack, x + radius, y + radius + 1, 1, height - 2 * (radius + 1), color);
         // 右边
-        AbstractGuiUtils.fill(matrixStack, x + width - radius, y + radius + 1, radius, height - 2 * radius - 2, color);
-        AbstractGuiUtils.fill(matrixStack, x + width - radius - 1, y + radius + 1, 1, height - 2 * (radius + 1), color);
+        AbstractGuiUtils.fill(poseStack, x + width - radius, y + radius + 1, radius, height - 2 * radius - 2, color);
+        AbstractGuiUtils.fill(poseStack, x + width - radius - 1, y + radius + 1, 1, height - 2 * (radius + 1), color);
 
         // 3. 绘制四个圆角
         // 左上角
-        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + radius, y + radius, radius, color, 1);
+        AbstractGuiUtils.drawCircleQuadrant(poseStack, x + radius, y + radius, radius, color, 1);
         // 右上角
-        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + width - radius - 1, y + radius, radius, color, 2);
+        AbstractGuiUtils.drawCircleQuadrant(poseStack, x + width - radius - 1, y + radius, radius, color, 2);
         // 左下角
-        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + radius, y + height - radius - 1, radius, color, 3);
+        AbstractGuiUtils.drawCircleQuadrant(poseStack, x + radius, y + height - radius - 1, radius, color, 3);
         // 右下角
-        AbstractGuiUtils.drawCircleQuadrant(matrixStack, x + width - radius - 1, y + height - radius - 1, radius, color, 4);
+        AbstractGuiUtils.drawCircleQuadrant(poseStack, x + width - radius - 1, y + height - radius - 1, radius, color, 4);
     }
 
     /**
      * 绘制一个圆的四分之一部分（圆角辅助函数）
      *
-     * @param matrixStack 矩阵栈
-     * @param centerX     圆角中心点X坐标
-     * @param centerY     圆角中心点Y坐标
-     * @param radius      圆角半径
-     * @param color       圆角颜色
-     * @param quadrant    指定绘制的象限（1=左上，2=右上，3=左下，4=右下）
+     * @param poseStack 矩阵栈
+     * @param centerX   圆角中心点X坐标
+     * @param centerY   圆角中心点Y坐标
+     * @param radius    圆角半径
+     * @param color     圆角颜色
+     * @param quadrant  指定绘制的象限（1=左上，2=右上，3=左下，4=右下）
      */
-    private static void drawCircleQuadrant(MatrixStack matrixStack, int centerX, int centerY, int radius, int color, int quadrant) {
+    private static void drawCircleQuadrant(PoseStack poseStack, int centerX, int centerY, int radius, int color, int quadrant) {
         for (int dx = 0; dx <= radius; dx++) {
             for (int dy = 0; dy <= radius; dy++) {
                 if (dx * dx + dy * dy <= radius * radius) {
                     switch (quadrant) {
-                        case 1: // 左上角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY - dy, color);
-                            break;
-                        case 2: // 右上角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY - dy, color);
-                            break;
-                        case 3: // 左下角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY + dy, color);
-                            break;
-                        case 4: // 右下角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY + dy, color);
-                            break;
+                        case 1 -> // 左上角
+                                AbstractGuiUtils.drawPixel(poseStack, centerX - dx, centerY - dy, color);
+                        case 2 -> // 右上角
+                                AbstractGuiUtils.drawPixel(poseStack, centerX + dx, centerY - dy, color);
+                        case 3 -> // 左下角
+                                AbstractGuiUtils.drawPixel(poseStack, centerX - dx, centerY + dy, color);
+                        case 4 -> // 右下角
+                                AbstractGuiUtils.drawPixel(poseStack, centerX + dx, centerY + dy, color);
                     }
                 }
             }
@@ -833,86 +835,87 @@ public class AbstractGuiUtils {
      * @param thickness 边框厚度
      * @param color     边框颜色
      */
-    public static void fillOutLine(MatrixStack matrixStack, int x, int y, int width, int height, int thickness, int color) {
+    public static void fillOutLine(PoseStack poseStack, int x, int y, int width, int height, int thickness, int color) {
         // 上边
-        AbstractGuiUtils.fill(matrixStack, x, y, width, thickness, color);
+        AbstractGuiUtils.fill(poseStack, x, y, width, thickness, color);
         // 下边
-        AbstractGuiUtils.fill(matrixStack, x, y + height - thickness, width, thickness, color);
+        AbstractGuiUtils.fill(poseStack, x, y + height - thickness, width, thickness, color);
         // 左边
-        AbstractGuiUtils.fill(matrixStack, x, y, thickness, height, color);
+        AbstractGuiUtils.fill(poseStack, x, y, thickness, height, color);
         // 右边
-        AbstractGuiUtils.fill(matrixStack, x + width - thickness, y, thickness, height, color);
+        AbstractGuiUtils.fill(poseStack, x + width - thickness, y, thickness, height, color);
     }
 
     /**
      * 绘制一个圆角矩形边框
      *
-     * @param matrixStack 矩阵栈
-     * @param x           矩形左上角X坐标
-     * @param y           矩形左上角Y坐标
-     * @param width       矩形宽度
-     * @param height      矩形高度
-     * @param thickness   边框厚度
-     * @param color       边框颜色
-     * @param radius      圆角半径（0-10）
+     * @param poseStack 矩阵栈
+     * @param x         矩形左上角X坐标
+     * @param y         矩形左上角Y坐标
+     * @param width     矩形宽度
+     * @param height    矩形高度
+     * @param thickness 边框厚度
+     * @param color     边框颜色
+     * @param radius    圆角半径（0-10）
      */
-    public static void fillOutLine(MatrixStack matrixStack, int x, int y, int width, int height, int thickness, int color, int radius) {
+    public static void fillOutLine(PoseStack poseStack, int x, int y, int width, int height, int thickness, int color, int radius) {
         if (radius <= 0) {
             // 如果没有圆角，直接绘制普通边框
-            AbstractGuiUtils.fillOutLine(matrixStack, x, y, width, height, thickness, color);
+            AbstractGuiUtils.fillOutLine(poseStack, x, y, width, height, thickness, color);
         } else {
             // 限制圆角半径的最大值为10
             radius = Math.min(radius, 10);
 
             // 1. 绘制四条边（去掉圆角区域）
             // 上边
-            AbstractGuiUtils.fill(matrixStack, x + radius, y, width - 2 * radius, thickness, color);
+            AbstractGuiUtils.fill(poseStack, x + radius, y, width - 2 * radius, thickness, color);
             // 下边
-            AbstractGuiUtils.fill(matrixStack, x + radius, y + height - thickness, width - 2 * radius, thickness, color);
+            AbstractGuiUtils.fill(poseStack, x + radius, y + height - thickness, width - 2 * radius, thickness, color);
             // 左边
-            AbstractGuiUtils.fill(matrixStack, x, y + radius, thickness, height - 2 * radius, color);
+            AbstractGuiUtils.fill(poseStack, x, y + radius, thickness, height - 2 * radius, color);
             // 右边
-            AbstractGuiUtils.fill(matrixStack, x + width - thickness, y + radius, thickness, height - 2 * radius, color);
+            AbstractGuiUtils.fill(poseStack, x + width - thickness, y + radius, thickness, height - 2 * radius, color);
 
             // 2. 绘制四个圆角
             // 左上角
-            drawCircleBorder(matrixStack, x + radius, y + radius, radius, thickness, color, 1);
+            drawCircleBorder(poseStack, x + radius, y + radius, radius, thickness, color, 1);
             // 右上角
-            drawCircleBorder(matrixStack, x + width - radius - 1, y + radius, radius, thickness, color, 2);
+            drawCircleBorder(poseStack, x + width - radius - 1, y + radius, radius, thickness, color, 2);
             // 左下角
-            drawCircleBorder(matrixStack, x + radius, y + height - radius - 1, radius, thickness, color, 3);
+            drawCircleBorder(poseStack, x + radius, y + height - radius - 1, radius, thickness, color, 3);
             // 右下角
-            drawCircleBorder(matrixStack, x + width - radius - 1, y + height - radius - 1, radius, thickness, color, 4);
+            drawCircleBorder(poseStack, x + width - radius - 1, y + height - radius - 1, radius, thickness, color, 4);
         }
     }
 
     /**
      * 绘制一个圆角的边框区域（辅助函数）
      *
-     * @param matrixStack 矩阵栈
-     * @param centerX     圆角中心点X坐标
-     * @param centerY     圆角中心点Y坐标
-     * @param radius      圆角半径
-     * @param thickness   边框厚度
-     * @param color       边框颜色
-     * @param quadrant    指定绘制的象限（1=左上，2=右上，3=左下，4=右下）
+     * @param poseStack 矩阵栈
+     * @param centerX   圆角中心点X坐标
+     * @param centerY   圆角中心点Y坐标
+     * @param radius    圆角半径
+     * @param thickness 边框厚度
+     * @param color     边框颜色
+     * @param quadrant  指定绘制的象限（1=左上，2=右上，3=左下，4=右下）
      */
-    private static void drawCircleBorder(MatrixStack matrixStack, int centerX, int centerY, int radius, int thickness, int color, int quadrant) {
+    private static void drawCircleBorder(PoseStack poseStack, int centerX, int centerY, int radius, int thickness, int color, int quadrant) {
         for (int dx = 0; dx <= radius; dx++) {
             for (int dy = 0; dy <= radius; dy++) {
-                if (Math.sqrt(dx * dx + dy * dy) <= radius && Math.sqrt(dx * dx + dy * dy) >= radius - thickness) {
+                double sqrt = Math.sqrt(dx * dx + dy * dy);
+                if (sqrt <= radius && sqrt >= radius - thickness) {
                     switch (quadrant) {
                         case 1: // 左上角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY - dy, color);
+                            AbstractGuiUtils.drawPixel(poseStack, centerX - dx, centerY - dy, color);
                             break;
                         case 2: // 右上角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY - dy, color);
+                            AbstractGuiUtils.drawPixel(poseStack, centerX + dx, centerY - dy, color);
                             break;
                         case 3: // 左下角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX - dx, centerY + dy, color);
+                            AbstractGuiUtils.drawPixel(poseStack, centerX - dx, centerY + dy, color);
                             break;
                         case 4: // 右下角
-                            AbstractGuiUtils.drawPixel(matrixStack, centerX + dx, centerY + dy, color);
+                            AbstractGuiUtils.drawPixel(poseStack, centerX + dx, centerY + dy, color);
                             break;
                     }
                 }
@@ -927,7 +930,7 @@ public class AbstractGuiUtils {
     /**
      * 绘制弹出层消息
      *
-     * @param matrixStack  矩阵栈
+     * @param poseStack    矩阵栈
      * @param font         字体渲染器
      * @param message      消息内容
      * @param x            鼠标坐标X
@@ -935,14 +938,14 @@ public class AbstractGuiUtils {
      * @param screenWidth  屏幕宽度
      * @param screenHeight 屏幕高度
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight) {
-        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, 0xFFFFFFFF, 0xAA000000);
+    public static void drawPopupMessage(PoseStack poseStack, Font font, String message, int x, int y, int screenWidth, int screenHeight) {
+        AbstractGuiUtils.drawPopupMessage(poseStack, font, message, x, y, screenWidth, screenHeight, 0xFFFFFFFF, 0xAA000000);
     }
 
     /**
      * 绘制弹出层消息
      *
-     * @param matrixStack  矩阵栈
+     * @param poseStack    矩阵栈
      * @param font         字体渲染器
      * @param message      消息内容
      * @param x            鼠标坐标X
@@ -952,14 +955,14 @@ public class AbstractGuiUtils {
      * @param bgColor      背景颜色
      * @param textColor    文本颜色
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int textColor, int bgColor) {
-        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, 2, textColor, bgColor);
+    public static void drawPopupMessage(PoseStack poseStack, Font font, String message, int x, int y, int screenWidth, int screenHeight, int textColor, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(poseStack, font, message, x, y, screenWidth, screenHeight, 2, textColor, bgColor);
     }
 
     /**
      * 绘制弹出层消息
      *
-     * @param matrixStack  矩阵栈
+     * @param poseStack    矩阵栈
      * @param font         字体渲染器
      * @param message      消息内容
      * @param x            鼠标坐标X
@@ -970,14 +973,14 @@ public class AbstractGuiUtils {
      * @param bgColor      背景颜色
      * @param textColor    文本颜色
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int textColor, int bgColor) {
-        AbstractGuiUtils.drawPopupMessage(matrixStack, font, message, x, y, screenWidth, screenHeight, margin, margin, textColor, bgColor);
+    public static void drawPopupMessage(PoseStack poseStack, Font font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int textColor, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(poseStack, font, message, x, y, screenWidth, screenHeight, margin, margin, textColor, bgColor);
     }
 
     /**
      * 绘制弹出层消息
      *
-     * @param matrixStack  矩阵栈
+     * @param poseStack    矩阵栈
      * @param font         字体渲染器
      * @param message      消息内容
      * @param x            鼠标坐标X
@@ -989,8 +992,8 @@ public class AbstractGuiUtils {
      * @param bgColor      背景颜色
      * @param textColor    文本颜色
      */
-    public static void drawPopupMessage(MatrixStack matrixStack, FontRenderer font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int padding, int textColor, int bgColor) {
-        AbstractGuiUtils.drawPopupMessage(Text.literal(message).setMatrixStack(matrixStack).setFont(font).setColor(textColor), x, y, screenWidth, screenHeight, margin, padding, bgColor);
+    public static void drawPopupMessage(PoseStack poseStack, Font font, String message, int x, int y, int screenWidth, int screenHeight, int margin, int padding, int textColor, int bgColor) {
+        AbstractGuiUtils.drawPopupMessage(Text.literal(message).setPoseStack(poseStack).setFont(font).setColor(textColor), x, y, screenWidth, screenHeight, margin, padding, bgColor);
     }
 
     /**
@@ -1067,23 +1070,23 @@ public class AbstractGuiUtils {
         // 如果调整后仍然超出屏幕范围，强制限制在屏幕内
         adjustedX = Math.max(margin, Math.min(adjustedX, screenWidth - msgWidth - margin));
         adjustedY = Math.max(margin, Math.min(adjustedY, screenHeight - msgHeight - margin));
-        AbstractGuiUtils.setDepth(text.getMatrixStack(), EDepth.POPUP_TIPS);
+        AbstractGuiUtils.setDepth(text.getPoseStack(), EDepth.POPUP_TIPS);
         // 在计算完的坐标位置绘制消息框背景
-        AbstractGui.fill(text.getMatrixStack(), adjustedX, adjustedY, adjustedX + msgWidth, adjustedY + msgHeight, bgColor);
+        GuiComponent.fill(text.getPoseStack(), adjustedX, adjustedY, adjustedX + msgWidth, adjustedY + msgHeight, bgColor);
         // 绘制消息文字
         AbstractGuiUtils.drawMultilineText(text, adjustedX + (float) padding / 2, adjustedY + (float) padding / 2);
-        AbstractGuiUtils.resetDepth(text.getMatrixStack());
+        AbstractGuiUtils.resetDepth(text.getPoseStack());
     }
 
     //  endregion 绘制弹出层提示
 
     // region 重写方法签名
 
-    public static TextFieldWidget newTextFieldWidget(FontRenderer font, int x, int y, int width, int height, ITextComponent content) {
-        return new TextFieldWidget(font, x, y, width, height, content);
+    public static EditBox newTextFieldWidget(Font font, int x, int y, int width, int height, Component content) {
+        return new EditBox(font, x, y, width, height, content);
     }
 
-    public static Button newButton(int x, int y, int width, int height, ITextComponent content, Button.IPressable onPress) {
+    public static Button newButton(int x, int y, int width, int height, Component content, Button.OnPress onPress) {
         return new Button(x, y, width, height, content, onPress);
     }
 

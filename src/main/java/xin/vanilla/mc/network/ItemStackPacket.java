@@ -1,11 +1,11 @@
 package xin.vanilla.mc.network;
 
 import lombok.Getter;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -28,20 +28,20 @@ public class ItemStackPacket {
     }
 
     /**
-     * 构造函数，用于从PacketBuffer中读取数据并重构ItemStackPacket
+     * 构造函数，用于从FriendlyByteBuf中读取数据并重构ItemStackPacket
      *
-     * @param buf 包含ItemStack数据的PacketBuffer
+     * @param buf 包含ItemStack数据的FriendlyByteBuf
      */
-    public ItemStackPacket(PacketBuffer buf) {
+    public ItemStackPacket(FriendlyByteBuf buf) {
         this.itemStack = buf.readItem();
     }
 
     /**
-     * 将ItemStack数据写入PacketBuffer，准备进行网络传输
+     * 将ItemStack数据写入FriendlyByteBuf，准备进行网络传输
      *
-     * @param buf 用于存储ItemStack数据的PacketBuffer
+     * @param buf 用于存储ItemStack数据的FriendlyByteBuf
      */
-    public void toBytes(PacketBuffer buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         buf.writeItemStack(itemStack, false);
     }
 
@@ -56,10 +56,10 @@ public class ItemStackPacket {
         // 获取网络事件上下文并排队执行工作
         ctx.get().enqueueWork(() -> {
             // 获取发送数据包的玩家实体
-            ServerPlayerEntity player = ctx.get().getSender();
+            ServerPlayer player = ctx.get().getSender();
             if (player != null) {
                 // 尝试将物品堆添加到玩家的库存中
-                boolean added = player.inventory.add(packet.itemStack);
+                boolean added = player.getInventory().add(packet.itemStack);
                 // 如果物品堆无法添加到库存，则以物品实体的形式生成在世界上
                 if (!added) {
                     ItemEntity itemEntity = new ItemEntity(player.level, player.getX(), player.getY(), player.getZ(), packet.itemStack);

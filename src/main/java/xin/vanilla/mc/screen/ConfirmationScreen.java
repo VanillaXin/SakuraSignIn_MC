@@ -1,11 +1,11 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.screen.component.Text;
 import xin.vanilla.mc.util.AbstractGuiUtils;
@@ -38,7 +38,7 @@ public class ConfirmationScreen extends Screen {
 
 
     public ConfirmationScreen(Screen callbackScreen, Text titleText, @NonNull Runnable onConfirm) {
-        super(new StringTextComponent("ConfirmationScreen"));
+        super(new TextComponent("ConfirmationScreen"));
         this.previousScreen = callbackScreen;
         this.onConfirm = onConfirm;
         this.titleText = titleText;
@@ -46,7 +46,7 @@ public class ConfirmationScreen extends Screen {
     }
 
     public ConfirmationScreen(Screen callbackScreen, Text titleText, @NonNull Runnable onConfirm, Supplier<Boolean> shouldClose) {
-        super(new StringTextComponent("ConfirmationScreen"));
+        super(new TextComponent("ConfirmationScreen"));
         this.previousScreen = callbackScreen;
         this.onConfirm = onConfirm;
         this.titleText = titleText;
@@ -58,13 +58,13 @@ public class ConfirmationScreen extends Screen {
         if (this.shouldClose != null && Boolean.TRUE.equals(this.shouldClose.get()))
             Minecraft.getInstance().setScreen(previousScreen);
         // 创建提交按钮
-        Button submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("确认")), button -> {
+        Button submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new TextComponent(I18nUtils.getByZh("确认")), button -> {
             onConfirm.run();
             Minecraft.getInstance().setScreen(previousScreen);
         });
-        this.addButton(submitButton);
+        this.addRenderableWidget(submitButton);
         // 创建取消按钮
-        this.addButton(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new StringTextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.addRenderableWidget(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new TextComponent(I18nUtils.getByZh("取消")), button -> {
             // 关闭当前屏幕并返回到调用者的 Screen
             Minecraft.getInstance().setScreen(previousScreen);
         }));
@@ -72,10 +72,10 @@ public class ConfirmationScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrixStack);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
+        this.renderBackground(poseStack);
         // 绘制背景
-        super.render(matrixStack, mouseX, mouseY, delta);
+        super.render(poseStack, mouseX, mouseY, delta);
         // 绘制标题
         AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 33);
     }

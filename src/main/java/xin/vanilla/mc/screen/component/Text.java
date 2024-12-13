@@ -1,10 +1,10 @@
 package xin.vanilla.mc.screen.component;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Font;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.I18nUtils;
@@ -16,11 +16,11 @@ public class Text {
     /**
      * 矩阵栈
      */
-    private MatrixStack matrixStack;
+    private PoseStack poseStack;
     /**
      * 字体渲染器
      */
-    private FontRenderer font;
+    private Font font;
     /**
      * 是否悬浮(需手动设置状态)
      */
@@ -139,16 +139,16 @@ public class Text {
                 .setHoverUnderlined(this.hoverUnderlined)
                 .setHoverStrikethrough(this.hoverStrikethrough)
                 .setHoverObfuscated(this.hoverObfuscated)
-                .setMatrixStack(this.matrixStack)
+                .setPoseStack(this.poseStack)
                 .setFont(this.font);
     }
 
-    public MatrixStack getMatrixStack() {
-        return matrixStack == null ? new MatrixStack() : this.matrixStack;
+    public PoseStack getPoseStack() {
+        return poseStack == null ? new PoseStack() : this.poseStack;
     }
 
-    public FontRenderer getFont() {
-        return font == null ? Minecraft.getInstance().getSelf().font : this.font;
+    public Font getFont() {
+        return font == null ? Minecraft.getInstance().gui.getFont() : this.font;
     }
 
     public int getColor() {

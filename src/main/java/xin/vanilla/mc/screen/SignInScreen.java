@@ -1,14 +1,13 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -143,7 +142,7 @@ public class SignInScreen extends Screen {
     }
 
     public SignInScreen() {
-        super(new TranslationTextComponent("screen.sakura_sign_in.sign_in_title"));
+        super(new TranslatableComponent("screen.sakura_sign_in.sign_in_title"));
     }
 
     @Override
@@ -369,36 +368,36 @@ public class SignInScreen extends Screen {
     /**
      * 绘制背景纹理
      */
-    private void renderBackgroundTexture(MatrixStack matrixStack) {
+    private void renderBackgroundTexture(PoseStack poseStack) {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         // 绘制背景纹理，使用缩放后的宽度和高度
-        Minecraft.getInstance().getTextureManager().bind(SakuraSignIn.getThemeTexture());
-        AbstractGuiUtils.blit(matrixStack, bgX, bgY, bgW, bgH, (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getU0(), (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getV0(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight(), SakuraSignIn.getThemeTextureCoordinate().getTotalWidth(), SakuraSignIn.getThemeTextureCoordinate().getTotalHeight());
+        AbstractGuiUtils.bindTexture(SakuraSignIn.getThemeTexture());
+        AbstractGuiUtils.blit(poseStack, bgX, bgY, bgW, bgH, (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getU0(), (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getV0(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight(), SakuraSignIn.getThemeTextureCoordinate().getTotalWidth(), SakuraSignIn.getThemeTextureCoordinate().getTotalHeight());
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();
     }
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(matrixStack);
+        this.renderBackground(poseStack);
         // 绘制缩放背景纹理
-        this.renderBackgroundTexture(matrixStack);
+        this.renderBackgroundTexture(poseStack);
 
         // 渲染年份
         double yearX = bgX + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getX() * this.scale;
         double yearY = bgY + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(matrixStack, yearTitle, (float) yearX, (float) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
+        super.font.draw(poseStack, yearTitle, (float) yearX, (float) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(matrixStack, monthTitle, (float) monthX, (float) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
+        super.font.draw(poseStack, monthTitle, (float) monthX, (float) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -465,28 +464,28 @@ public class SignInScreen extends Screen {
             button.setBaseX(bgX);
             button.setBaseY(bgY);
             button.setScale(this.scale);
-            button.render(matrixStack, mouseX, mouseY);
+            button.render(poseStack, mouseX, mouseY);
         }
 
         // 渲染所有格子
         for (SignInCell cell : signInCells) {
-            cell.render(matrixStack, super.font, this.itemRenderer, mouseX, mouseY);
+            cell.render(poseStack, super.font, this.itemRenderer, mouseX, mouseY);
         }
 
         // 渲染格子弹出层
         for (SignInCell cell : signInCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
-                cell.renderTooltip(matrixStack, super.font, this.itemRenderer, mouseX, mouseY);
+                cell.renderTooltip(poseStack, super.font, this.itemRenderer, mouseX, mouseY);
             }
         }
 
         // 绘制弹出选项
-        popupOption.render(matrixStack, mouseX, mouseY);
+        popupOption.render(poseStack, mouseX, mouseY);
 
         // 渲染操作按钮的弹出提示
         for (Integer op : BUTTONS.keySet()) {
             OperationButton button = BUTTONS.get(op);
-            button.renderPopup(matrixStack, mouseX, mouseY, this.keyCode, this.modifiers);
+            button.renderPopup(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
         }
     }
 
@@ -520,16 +519,13 @@ public class SignInScreen extends Screen {
         if (popupOption.isHovered()) {
             LOGGER.debug("选择了弹出选项:\tIndex: {}\tContent: {}", popupOption.getSelectedIndex(), popupOption.getSelectedString());
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && !CollectionUtils.isNullOrEmpty(themeFileList)) {
-                ClientPlayerEntity player = Minecraft.getInstance().player;
+                LocalPlayer player = Minecraft.getInstance().player;
                 String selectedFile = themeFileList.get(popupOption.getSelectedIndex()).getPath();
                 if (player != null) {
-                    player.sendMessage(new TranslationTextComponent(getI18nKey("已选择主题文件: %s"), selectedFile), player.getUUID());
-                    ResourceLocation resourceLocation = TextureUtils.loadCustomTexture(selectedFile);
-                    if (TextureUtils.isTextureAvailable(resourceLocation)) {
-                        ClientConfig.THEME.set(selectedFile);
-                        updateTextureAndCoordinate.set(true);
-                        updateLayout.set(true);
-                    }
+                    player.sendMessage(new TranslatableComponent(getI18nKey("已选择主题文件: %s"), selectedFile), player.getUUID());
+                    ClientConfig.THEME.set(selectedFile);
+                    updateTextureAndCoordinate.set(true);
+                    updateLayout.set(true);
                 }
             } else {
                 SakuraSignIn.openFileInFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignIn.MODID).toFile(), "themes").toPath());
@@ -538,7 +534,7 @@ public class SignInScreen extends Screen {
         }
         // 左键签到, 右键补签(如果服务器允许且有补签卡), 右键领取奖励(如果是已签到未领取状态)
         else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            ClientPlayerEntity player = Minecraft.getInstance().player;
+            LocalPlayer player = Minecraft.getInstance().player;
             // 控制按钮
             BUTTONS.forEach((key, value) -> {
                 if (value.isHovered() && value.isPressed()) {
@@ -656,7 +652,7 @@ public class SignInScreen extends Screen {
                 popupOption.clear();
                 // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
                 if (CollectionUtils.isNullOrEmpty(themeFileList)) {
-                    TranslationTextComponent textComponent = new TranslationTextComponent("screen.sakura_sign_in.theme_selector.empty");
+                    TranslatableComponent textComponent = new TranslatableComponent("screen.sakura_sign_in.theme_selector.empty");
                     popupOption.addOption(StringUtils.replaceLine(textComponent.getString()).split("\n"));
                 } else {
                     popupOption.addOption(themeFileList.stream().map(file -> {
@@ -672,12 +668,12 @@ public class SignInScreen extends Screen {
         }
     }
 
-    private void handleSignIn(int button, SignInCell cell, ClientPlayerEntity player) {
+    private void handleSignIn(int button, SignInCell cell, LocalPlayer player) {
         Date cellDate = DateUtils.getDate(cell.year, cell.month, cell.day);
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
-                    player.sendMessage(new TranslationTextComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
+                    player.sendMessage(new TranslatableComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
                 } else {
                     cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
@@ -685,10 +681,10 @@ public class SignInScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new TranslationTextComponent(getI18nKey("已经签过到了哦。")), player.getUUID());
+                player.sendMessage(new TranslatableComponent(getI18nKey("已经签过到了哦。")), player.getUUID());
             } else {
                 if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
-                    player.sendMessage(new TranslationTextComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
+                    player.sendMessage(new TranslatableComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
@@ -697,10 +693,10 @@ public class SignInScreen extends Screen {
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!ServerConfig.SIGN_IN_CARD.get()) {
-                    player.sendMessage(new TranslationTextComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
+                    player.sendMessage(new TranslatableComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                        player.sendMessage(new TranslationTextComponent(getI18nKey("补签卡不足了哦。")), player.getUUID());
+                        player.sendMessage(new TranslatableComponent(getI18nKey("补签卡不足了哦。")), player.getUUID());
                     } else {
                         cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                         ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
@@ -709,15 +705,15 @@ public class SignInScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
             if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
-                player.sendMessage(new TranslationTextComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
+                player.sendMessage(new TranslatableComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
             } else {
-                player.sendMessage(new TranslationTextComponent(getI18nKey("过去的的日期怎么想也回不去了吧。")), player.getUUID());
+                player.sendMessage(new TranslatableComponent(getI18nKey("过去的的日期怎么想也回不去了吧。")), player.getUUID());
             }
         } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
-            player.sendMessage(new TranslationTextComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
+            player.sendMessage(new TranslatableComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
         } else {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new StringTextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());
+                player.sendMessage(new TextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());
             }
         }
     }

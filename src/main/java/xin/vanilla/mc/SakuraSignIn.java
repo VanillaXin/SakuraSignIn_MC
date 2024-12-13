@@ -1,10 +1,11 @@
 package xin.vanilla.mc;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
@@ -16,9 +17,9 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStoppingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.command.SignInCommand;
@@ -72,7 +73,6 @@ public class SakuraSignIn {
     /**
      * 背景材质坐标
      */
-    @Getter
     @Setter
     public static TextureCoordinate themeTextureCoordinate = null;
     /**
@@ -126,20 +126,27 @@ public class SakuraSignIn {
         // RewardOptionDataManager.saveRewardOption();
     }
 
+    public static TextureCoordinate getThemeTextureCoordinate(boolean nonNull) {
+        if (nonNull && (themeTextureCoordinate == null || themeTexture == null)) ClientEventHandler.loadThemeTexture();
+        return themeTextureCoordinate;
+    }
+
+    @NonNull
+    public static TextureCoordinate getThemeTextureCoordinate() {
+        return getThemeTextureCoordinate(true);
+    }
+
     /**
      * 在客户端设置阶段触发的事件处理方法
      * 此方法主要用于接收 FML 客户端设置事件，并执行相应的初始化操作
      */
     @SubscribeEvent
     public void onClientSetup(final FMLClientSetupEvent event) {
-        LOGGER.debug("Got game settings {}", event.getMinecraftSupplier().get().options);
         // 注册键绑定
         LOGGER.debug("Registering key bindings");
         ClientEventHandler.registerKeyBindings();
         // 创建配置文件目录
         ClientEventHandler.createConfigPath();
-        // 加载主题纹理
-        ClientEventHandler.loadThemeTexture();
     }
 
     /**
@@ -165,7 +172,7 @@ public class SakuraSignIn {
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LOGGER.debug("Player has logged out.");
         // 获取退出的玩家对象
-        PlayerEntity player = event.getPlayer();
+        Player player = event.getPlayer();
         // 判断是否在客户端并且退出的玩家是客户端的当前玩家
         if (player.getCommandSenderWorld().isClientSide) {
             if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {

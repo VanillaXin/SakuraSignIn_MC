@@ -1,9 +1,9 @@
 package xin.vanilla.mc.capability;
 
 import lombok.NonNull;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.INBTSerializable;
 
 import java.util.Date;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * 玩家签到数据
  */
-public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
+public interface IPlayerSignInData extends INBTSerializable<CompoundTag> {
     // TIPS 加完属性记得去 PlayerSignInDataStorage 里注册
 
     /**
@@ -111,11 +111,11 @@ public interface IPlayerSignInData extends INBTSerializable<CompoundNBT> {
      */
     void setSignInRecords(List<SignInRecord> records);
 
-    void writeToBuffer(PacketBuffer buffer);
+    void writeToBuffer(FriendlyByteBuf buffer);
 
-    void readFromBuffer(PacketBuffer buffer);
+    void readFromBuffer(FriendlyByteBuf buffer);
 
     void copyFrom(IPlayerSignInData capability);
 
-    void save(ServerPlayerEntity player);
+    void save(ServerPlayer player);
 }

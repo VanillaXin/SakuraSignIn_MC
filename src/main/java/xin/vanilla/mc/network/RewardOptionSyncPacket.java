@@ -1,10 +1,10 @@
 package xin.vanilla.mc.network;
 
 import lombok.Getter;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
 
@@ -22,11 +22,11 @@ public class RewardOptionSyncPacket {
         this.rewardOptionData = rewardOptionData;
     }
 
-    public RewardOptionSyncPacket(PacketBuffer buf) {
+    public RewardOptionSyncPacket(FriendlyByteBuf buf) {
         this.rewardOptionData = RewardOptionDataManager.deserializeRewardOption(new String(buf.readByteArray(), StandardCharsets.UTF_8));
     }
 
-    public void toBytes(PacketBuffer buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         buf.writeByteArray(RewardOptionDataManager.serializeRewardOption(rewardOptionData).getBytes(StandardCharsets.UTF_8));
     }
 
@@ -40,7 +40,7 @@ public class RewardOptionSyncPacket {
                 RewardOptionDataManager.setRewardOptionDataChanged(true);
                 RewardOptionDataManager.saveRewardOption();
             } else if (ctx.get().getDirection().getReceptionSide().isServer()) {
-                ServerPlayerEntity sender = ctx.get().getSender();
+                ServerPlayer sender = ctx.get().getSender();
                 if (sender != null) {
                     // 判断是否为管理员
                     if (sender.hasPermissions(3)) {
@@ -49,7 +49,7 @@ public class RewardOptionSyncPacket {
                         // 更新 RewardOption
                         RewardOptionDataManager.setRewardOptionData(packet.getRewardOptionData());
                         RewardOptionDataManager.saveRewardOption();
-                        for (ServerPlayerEntity player : sender.server.getPlayerList().getPlayers()) {
+                        for (ServerPlayer player : sender.server.getPlayerList().getPlayers()) {
                             // 排除发送者
                             if (player.getStringUUID().equalsIgnoreCase(sender.getStringUUID())) continue;
                             // 同步 RewardOption 至所有在线玩家

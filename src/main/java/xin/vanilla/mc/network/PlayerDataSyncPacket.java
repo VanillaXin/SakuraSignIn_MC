@@ -1,10 +1,10 @@
 package xin.vanilla.mc.network;
 
 import lombok.Getter;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInData;
 
@@ -21,13 +21,13 @@ public class PlayerDataSyncPacket {
         this.data = data;
     }
 
-    public PlayerDataSyncPacket(PacketBuffer buffer) {
+    public PlayerDataSyncPacket(FriendlyByteBuf buffer) {
         playerUUID = buffer.readUUID();
         data = new PlayerSignInData();
         data.readFromBuffer(buffer);
     }
 
-    public void toBytes(PacketBuffer buffer) {
+    public void toBytes(FriendlyByteBuf buffer) {
         buffer.writeUUID(playerUUID);
         data.writeToBuffer(buffer);
     }
