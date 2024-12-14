@@ -2,7 +2,7 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -48,8 +48,8 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
         return getId(advancementData.getId());
     }
 
-    public static String getId(Advancement advancement) {
-        return getId(advancement.getId());
+    public static String getId(AdvancementHolder advancement) {
+        return getId(advancement.id());
     }
 
     public static String getId(ResourceLocation resourceLocation) {
@@ -70,9 +70,9 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
         return advancementData.getTitle();
     }
 
-    public static String getDisplayName(Advancement advancement) {
+    public static String getDisplayName(AdvancementHolder advancement) {
         String result = "";
-        DisplayInfo display = advancement.getDisplay();
+        DisplayInfo display = advancement.value().display().orElse(null);
         if (display != null)
             result = display.getTitle().getString();
         return result;
@@ -82,11 +82,11 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
         return advancementData.getDescription();
     }
 
-    public static String getDescription(Advancement advancement) {
+    public static String getDescription(AdvancementHolder advancement) {
         String result = "";
-        DisplayInfo display = advancement.getDisplay();
+        DisplayInfo display = advancement.value().display().orElse(null);
         if (display != null)
-            result = advancement.getDisplay().getDescription().getString();
+            result = display.getDescription().getString();
         return result;
     }
 }

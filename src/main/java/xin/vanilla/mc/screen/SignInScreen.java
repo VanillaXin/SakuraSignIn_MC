@@ -11,6 +11,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -382,7 +383,7 @@ public class SignInScreen extends Screen {
     @ParametersAreNonnullByDefault
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         // 绘制缩放背景纹理
         this.renderBackgroundTexture(graphics);
 
@@ -675,7 +676,7 @@ public class SignInScreen extends Screen {
                     player.sendSystemMessage(Component.translatable(getI18nKey("前面的的日期以后再来探索吧。")));
                 } else {
                     cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
                 }
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
@@ -686,7 +687,7 @@ public class SignInScreen extends Screen {
                     player.sendSystemMessage(Component.translatable(getI18nKey("不论怎么点也不会获取俩次奖励吧。")));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD), PacketDistributor.SERVER.noArg());
                 }
             }
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
@@ -698,7 +699,7 @@ public class SignInScreen extends Screen {
                         player.sendSystemMessage(Component.translatable(getI18nKey("补签卡不足了哦。")));
                     } else {
                         cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                        ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
+                        ModNetworkHandler.INSTANCE.send(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN), PacketDistributor.SERVER.noArg());
                     }
                 }
             }
@@ -724,14 +725,14 @@ public class SignInScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (!popupOption.addScrollOffset(delta)) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollH, double scrollV) {
+        if (!popupOption.addScrollOffset(scrollV)) {
             // 奖励悬浮层
             for (SignInCell cell : signInCells) {
                 if (cell.isShowIcon() && cell.isShowHover() && cell.isMouseOver((int) mouseX, (int) mouseY)) {
-                    if (delta > 0) {
+                    if (scrollV > 0) {
                         cell.setTooltipScrollOffset(Math.max(cell.getTooltipScrollOffset() - 1, 0));
-                    } else if (delta < 0) {
+                    } else if (scrollV < 0) {
                         cell.setTooltipScrollOffset(Math.min(cell.getTooltipScrollOffset() + 1, cell.getRewardList().size() - SignInCell.TOOLTIP_MAX_VISIBLE_ITEMS));
                     }
                 }

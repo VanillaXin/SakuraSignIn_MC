@@ -232,12 +232,12 @@ public class AdvancementSelectScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(graphics);
+        // this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         AbstractGuiUtils.fill(graphics, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (112 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
         AbstractGuiUtils.fillOutLine(graphics, (int) (this.effectBgX - this.margin), (int) (this.effectBgY - this.margin), 104, (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
-        super.render(graphics, mouseX, mouseY, delta);
+        super.render(graphics, mouseX, mouseY, partialTicks);
         // 保存输入框的文本, 防止窗口重绘时输入框内容丢失
         this.inputFieldText = this.inputField.getValue();
 
@@ -245,8 +245,8 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        this.setScrollOffset(this.getScrollOffset() - delta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollH, double scrollV) {
+        this.setScrollOffset(this.getScrollOffset() - scrollV);
         return true;
     }
 

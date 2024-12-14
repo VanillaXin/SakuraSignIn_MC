@@ -3,7 +3,7 @@ package xin.vanilla.mc.network;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -39,18 +39,18 @@ public class AdvancementData {
         buffer.writeItemStack(icon, false);
     }
 
-    public static AdvancementData fromAdvancement(Advancement advancement) {
-        DisplayInfo displayInfo = advancement.getDisplay();
+    public static AdvancementData fromAdvancement(AdvancementHolder advancement) {
+        DisplayInfo displayInfo = advancement.value().display().orElse(null);
         if (displayInfo == null) {
             return new AdvancementData(
-                    advancement.getId(),
-                    advancement.getId().toString(),
+                    advancement.id(),
+                    advancement.id().toString(),
                     "",
                     new ItemStack(Items.AIR)
             );
         }
         return new AdvancementData(
-                advancement.getId(),
+                advancement.id(),
                 displayInfo.getTitle().getString(),
                 displayInfo.getDescription().getString(),
                 displayInfo.getIcon()

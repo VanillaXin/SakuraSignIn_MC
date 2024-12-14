@@ -186,10 +186,10 @@ public class StringInputScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        this.renderBackground(graphics);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        // this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         // 绘制背景
-        super.render(graphics, mouseX, mouseY, delta);
+        super.render(graphics, mouseX, mouseY, partialTicks);
         // 绘制标题
         AbstractGuiUtils.drawString(titleText.setGraphics(graphics), this.width / 2.0f - 100, this.height / 2.0f - 33);
         // 绘制错误提示

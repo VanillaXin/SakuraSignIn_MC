@@ -45,7 +45,7 @@ public class ForgeEventHandler {
         LOGGER.debug("Client: Player logged in.");
         isPlayerLoggedIn = true;
         // 同步客户端配置到服务器
-        ModNetworkHandler.INSTANCE.sendToServer(new ClientConfigSyncPacket());
+        ModNetworkHandler.INSTANCE.send(new ClientConfigSyncPacket(), PacketDistributor.SERVER.noArg());
     }
 
     @SubscribeEvent
@@ -60,7 +60,7 @@ public class ForgeEventHandler {
                 IPlayerSignInData data = PlayerSignInDataCapability.getData(mc.player);
                 // 服务器是否启用自动签到, 且玩家未签到
                 if (ServerConfig.AUTO_SIGN_IN.get() && !RewardManager.isSignedIn(data, new Date(), true)) {
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
+                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
                 }
             }
         }
@@ -105,9 +105,9 @@ public class ForgeEventHandler {
             // 同步玩家签到数据到客户端
             PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getEntity());
             // 同步签到奖励配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+            ModNetworkHandler.INSTANCE.send(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()), PacketDistributor.PLAYER.with((ServerPlayer) event.getEntity()));
             // 同步进度列表到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new AdvancementPacket(((ServerPlayer) event.getEntity()).server.getAdvancements().getAllAdvancements()));
+            ModNetworkHandler.INSTANCE.send(new AdvancementPacket(((ServerPlayer) event.getEntity()).server.getAdvancements().getAllAdvancements()), PacketDistributor.PLAYER.with((ServerPlayer) event.getEntity()));
         }
     }
 }

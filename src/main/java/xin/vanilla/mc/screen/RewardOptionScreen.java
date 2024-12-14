@@ -21,6 +21,7 @@ import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -532,7 +533,7 @@ public class RewardOptionScreen extends Screen {
             if (!Minecraft.getInstance().isLocalServer()) {
                 if (Minecraft.getInstance().player != null) {
                     if (Minecraft.getInstance().player.hasPermissions(3)) {
-                        ModNetworkHandler.INSTANCE.sendToServer(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                        ModNetworkHandler.INSTANCE.send(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()), PacketDistributor.SERVER.noArg());
                         flag.set(true);
                     }
                 }
@@ -545,7 +546,7 @@ public class RewardOptionScreen extends Screen {
                     // 备份签到奖励配置
                     RewardOptionDataManager.backupRewardOption();
                     // 同步签到奖励配置到客户端
-                    ModNetworkHandler.INSTANCE.sendToServer(new DownloadRewardOptionNotice());
+                    ModNetworkHandler.INSTANCE.send(new DownloadRewardOptionNotice(), PacketDistributor.SERVER.noArg());
                     flag.set(true);
                 }
             }
@@ -1273,7 +1274,7 @@ public class RewardOptionScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.gg = graphics;
         // 绘制背景
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         // 绘制缩放背景纹理
         this.renderBackgroundTexture(graphics);
 
@@ -1480,15 +1481,15 @@ public class RewardOptionScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        cursor.mouseScrolled(mouseX, mouseY, delta);
-        if (!popupOption.addScrollOffset(delta)) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollH, double scrollV) {
+        cursor.mouseScrolled(mouseX, mouseY, scrollV);
+        if (!popupOption.addScrollOffset(scrollV)) {
             // y坐标往上(-)不应该超过奖励高度+屏幕高度, 往下(+)不应该超过屏幕高度
             if (OP_BUTTONS.get(OperationButtonType.REWARD_PANEL.getCode()).isHovered()) {
-                this.setYOffset(yOffset + delta);
+                this.setYOffset(yOffset + scrollV);
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollH, scrollV);
     }
 
     /**

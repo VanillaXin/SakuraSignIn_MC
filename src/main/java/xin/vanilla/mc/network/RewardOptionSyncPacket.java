@@ -3,13 +3,12 @@ package xin.vanilla.mc.network;
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.network.PacketDistributor;
 import xin.vanilla.mc.config.RewardOptionData;
 import xin.vanilla.mc.config.RewardOptionDataManager;
 
 import java.nio.charset.StandardCharsets;
-import java.util.function.Supplier;
 
 @Getter
 public class RewardOptionSyncPacket {
@@ -30,17 +29,17 @@ public class RewardOptionSyncPacket {
         buf.writeByteArray(RewardOptionDataManager.serializeRewardOption(rewardOptionData).getBytes(StandardCharsets.UTF_8));
     }
 
-    public static void handle(RewardOptionSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            if (ctx.get().getDirection().getReceptionSide().isClient()) {
+    public static void handle(RewardOptionSyncPacket packet, CustomPayloadEvent.Context ctx) {
+        ctx.enqueueWork(() -> {
+            if (ctx.getDirection().getReceptionSide().isClient()) {
                 // 备份 RewardOption
                 RewardOptionDataManager.backupRewardOption();
                 // 更新 RewardOption
                 RewardOptionDataManager.setRewardOptionData(packet.getRewardOptionData());
                 RewardOptionDataManager.setRewardOptionDataChanged(true);
                 RewardOptionDataManager.saveRewardOption();
-            } else if (ctx.get().getDirection().getReceptionSide().isServer()) {
-                ServerPlayer sender = ctx.get().getSender();
+            } else if (ctx.getDirection().getReceptionSide().isServer()) {
+                ServerPlayer sender = ctx.getSender();
                 if (sender != null) {
                     // 判断是否为管理员
                     if (sender.hasPermissions(3)) {
@@ -53,12 +52,12 @@ public class RewardOptionSyncPacket {
                             // 排除发送者
                             if (player.getStringUUID().equalsIgnoreCase(sender.getStringUUID())) continue;
                             // 同步 RewardOption 至所有在线玩家
-                            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                            ModNetworkHandler.INSTANCE.send(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()), PacketDistributor.PLAYER.with(player));
                         }
                     }
                 }
             }
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

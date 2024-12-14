@@ -3,7 +3,7 @@ package xin.vanilla.mc.rewards;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.NonNull;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -554,7 +554,7 @@ public class RewardManager {
                 player.giveExperiencePoints((Integer) object);
                 break;
             case ADVANCEMENT:
-                Advancement advancement = player.server.getAdvancements().getAdvancement((ResourceLocation) object);
+                AdvancementHolder advancement = player.server.getAdvancements().get((ResourceLocation) object);
                 if (advancement != null) {
                     AdvancementProgress progress = player.getAdvancements().getOrStartProgress(advancement);
                     progress.getRemainingCriteria().forEach(criterion -> player.getAdvancements().award(advancement, criterion));
