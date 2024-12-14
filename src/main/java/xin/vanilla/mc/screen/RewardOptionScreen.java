@@ -178,7 +178,6 @@ public class RewardOptionScreen extends Screen {
         // 启用混合模式以支持透明度
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.enableTexture();
         RenderSystem.disableDepthTest();
 
         // 绑定背景纹理

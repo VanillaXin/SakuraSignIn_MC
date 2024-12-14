@@ -680,7 +680,7 @@ public class AbstractGuiUtils {
         // 物品
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
-            renderItem(itemRenderer, fontRenderer, itemStack, x, y, showText);
+            renderItem(poseStack, itemRenderer, fontRenderer, itemStack, x, y, showText);
         }
         // 效果
         else if (reward.getType().equals(ERewardType.EFFECT)) {
@@ -710,18 +710,18 @@ public class AbstractGuiUtils {
             AdvancementData advancementData = SakuraSignIn.getAdvancementData().stream()
                     .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
                     .findFirst().orElse(new AdvancementData(resourceLocation, "", "", new ItemStack(Items.AIR)));
-            itemRenderer.renderGuiItem(advancementData.getIcon(), x, y);
+            itemRenderer.renderGuiItem(poseStack, advancementData.getIcon(), x, y);
         }
         // 指令
         else if (reward.getType().equals(ERewardType.COMMAND)) {
-            renderItem(itemRenderer, fontRenderer, new ItemStack(Items.REPEATING_COMMAND_BLOCK), x, y, false);
+            renderItem(poseStack, itemRenderer, fontRenderer, new ItemStack(Items.REPEATING_COMMAND_BLOCK), x, y, false);
         }
     }
 
-    public static void renderItem(ItemRenderer itemRenderer, Font fontRenderer, ItemStack itemStack, int x, int y, boolean showText) {
-        itemRenderer.renderGuiItem(itemStack, x, y);
+    public static void renderItem(PoseStack poseStack, ItemRenderer itemRenderer, Font fontRenderer, ItemStack itemStack, int x, int y, boolean showText) {
+        itemRenderer.renderGuiItem(poseStack, itemStack, x, y);
         if (showText) {
-            itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
+            itemRenderer.renderGuiItemDecorations(poseStack, fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
         }
     }
 

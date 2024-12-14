@@ -368,8 +368,9 @@ public class ItemSelectScreen extends Screen {
 
     private NonNullList<ItemStack> getAllItemList() {
         NonNullList<ItemStack> list = NonNullList.create();
-        if (Minecraft.getInstance().player != null) {
-            CreativeModeTabs.tryRebuildTabContents(Minecraft.getInstance().player.connection.enabledFeatures(), true);
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null) {
+            CreativeModeTabs.tryRebuildTabContents(player.connection.enabledFeatures(), true, player.level.registryAccess());
         }
         list.addAll(CreativeModeTabs.SEARCH.getDisplayItems());
         return list;
@@ -400,7 +401,7 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.inventoryMode ? Items.CHEST : Items.COMPASS);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = this.inventoryMode ? Text.i18n("列出模式\n物品栏 (%s)", playerItemList.size()) : Text.i18n("列出模式\n所有物品 (%s)", allItemList.size());
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -409,7 +410,7 @@ public class ItemSelectScreen extends Screen {
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
-            this.itemRenderer.renderGuiItem(this.currentItem, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), this.currentItem, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             context.button().setTooltip(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.COUNT.getCode(), new OperationButton(OperationButtonType.COUNT.getCode(), context -> {
@@ -418,7 +419,7 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.WRITABLE_BOOK);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("设置数量\n当前 %s", this.currentItem.getCount());
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 2).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -428,7 +429,7 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.NAME_TAG);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("编辑NBT");
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -487,7 +488,7 @@ public class ItemSelectScreen extends Screen {
                                 .setId(ItemRewardParser.getId(itemStack));
 
                         AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), bgColor);
-                        this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 1, (int) context.button().getY() + 1);
+                        this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 1, (int) context.button().getY() + 1);
                         // 绘制物品详情悬浮窗
                         context.button().setCustomPopupFunction(() -> {
                             if (context.button().isHovered()) {
@@ -548,9 +549,7 @@ public class ItemSelectScreen extends Screen {
             String s1 = string.substring(i + 1).trim();
             predicate = (resourceLocation) -> resourceLocation.getNamespace().contains(s) && resourceLocation.getPath().contains(s1);
         }
-        BuiltInRegistries.ITEM.getTagNames().filter((tagKey) -> {
-            return predicate.test(tagKey.location());
-        }).forEach(this.visibleTags::add);
+        BuiltInRegistries.ITEM.getTagNames().filter((tagKey) -> predicate.test(tagKey.location())).forEach(this.visibleTags::add);
     }
 
     private void setScrollOffset(double offset) {

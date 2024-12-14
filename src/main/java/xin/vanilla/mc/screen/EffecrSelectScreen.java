@@ -367,7 +367,7 @@ public class EffecrSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.playerMode ? Items.CHEST : Items.COMPASS);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = this.playerMode ? Text.i18n("列出模式\n玩家拥有 (%s)", playerMobEffectList.size()) : Text.i18n("列出模式\n所有效果 (%s)", allMobEffectList.size());
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -385,7 +385,7 @@ public class EffecrSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.CLOCK);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("设置持续时间\n当前 %s", this.currentMobEffect.getDuration());
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 2).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -395,7 +395,7 @@ public class EffecrSelectScreen extends Screen {
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.ANVIL);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("设置效果等级\n当前 %s", StringUtils.intToRoman(this.currentMobEffect.getAmplifier() + 1));
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
