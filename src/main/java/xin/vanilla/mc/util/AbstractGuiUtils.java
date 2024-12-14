@@ -2,7 +2,6 @@ package xin.vanilla.mc.util;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
 import lombok.Getter;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
@@ -22,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.joml.Quaternionf;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.network.AdvancementData;
@@ -159,8 +159,8 @@ public class AbstractGuiUtils {
         poseStack.pushPose();
         // 平移到旋转中心 (x + width / 2, y + height / 2)
         poseStack.translate(x + width / 2.0, y + height / 2.0, 0);
-        // 进行旋转，angle 是旋转角度，单位是度数，绕 Z 轴旋转
-        poseStack.mulPose(Vector3f.ZP.rotationDegrees((float) angle));
+        // 创建一个 Quaternion 用来表示绕 Z 轴旋转, 将角度转换为弧度
+        poseStack.mulPose(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
         // 左右翻转
         if (flipHorizontal) {
             u0 += uWidth;
@@ -1091,7 +1091,7 @@ public class AbstractGuiUtils {
     }
 
     public static Button newButton(int x, int y, int width, int height, Component content, Button.OnPress onPress) {
-        return new Button(x, y, width, height, content, onPress);
+        return Button.builder(content, onPress).pos(x, y).size(width, height).build();
     }
 
     // endregion 重写方法签名

@@ -13,13 +13,11 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.searchtree.SearchRegistry;
 import net.minecraft.client.searchtree.SearchTree;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -370,9 +368,10 @@ public class ItemSelectScreen extends Screen {
 
     private NonNullList<ItemStack> getAllItemList() {
         NonNullList<ItemStack> list = NonNullList.create();
-        for (Item item : Registry.ITEM) {
-            item.fillItemCategory(CreativeModeTab.TAB_SEARCH, list);
+        if (Minecraft.getInstance().player != null) {
+            CreativeModeTabs.tryRebuildTabContents(Minecraft.getInstance().player.connection.enabledFeatures(), true);
         }
+        list.addAll(CreativeModeTabs.SEARCH.getDisplayItems());
         return list;
     }
 
@@ -495,27 +494,15 @@ public class ItemSelectScreen extends Screen {
                                 List<Component> list = itemStack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
                                 List<Component> list1 = Lists.newArrayList(list);
                                 Item item = itemStack.getItem();
-                                CreativeModeTab itemgroup = item.getItemCategory();
-                                if (itemgroup == null && item == Items.ENCHANTED_BOOK) {
-                                    Map<Enchantment, Integer> map = EnchantmentHelper.getEnchantments(itemStack);
-                                    if (map.size() == 1) {
-                                        Enchantment enchantment = map.keySet().iterator().next();
-                                        for (CreativeModeTab itemGroup1 : CreativeModeTab.TABS) {
-                                            if (itemGroup1.hasEnchantmentCategory(enchantment.category)) {
-                                                itemgroup = itemGroup1;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
                                 this.visibleTags.forEach((itemITag) -> {
                                     if (itemStack.is(itemITag)) {
                                         list1.add(1, (Component.literal("#" + itemITag.location())).withStyle(ChatFormatting.DARK_PURPLE));
                                     }
-
                                 });
-                                if (itemgroup != null) {
-                                    list1.add(1, itemgroup.getDisplayName().copy().withStyle(ChatFormatting.BLUE));
+                                for (CreativeModeTab modeTab : CreativeModeTabs.allTabs()) {
+                                    if (modeTab.contains(itemStack)) {
+                                        list1.add(1, modeTab.getDisplayName().copy().withStyle(ChatFormatting.BLUE));
+                                    }
                                 }
                                 this.renderTooltip(context.poseStack(), list1, itemStack.getTooltipImage(), (int) context.mouseX(), (int) context.mouseY(), itemStack);
                             }
@@ -561,8 +548,9 @@ public class ItemSelectScreen extends Screen {
             String s1 = string.substring(i + 1).trim();
             predicate = (resourceLocation) -> resourceLocation.getNamespace().contains(s) && resourceLocation.getPath().contains(s1);
         }
-
-        Registry.ITEM.getTagNames().filter((p_205410_) -> predicate.test(p_205410_.location())).forEach(this.visibleTags::add);
+        BuiltInRegistries.ITEM.getTagNames().filter((tagKey) -> {
+            return predicate.test(tagKey.location());
+        }).forEach(this.visibleTags::add);
     }
 
     private void setScrollOffset(double offset) {
