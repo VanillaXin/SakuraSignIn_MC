@@ -1,12 +1,12 @@
 package xin.vanilla.mc.screen.component;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.AbstractGuiUtils;
@@ -285,11 +285,11 @@ public class PopupOption {
         return result;
     }
 
-    public void render(PoseStack poseStack, double mouseX, double mouseY) {
-        this.render(poseStack, mouseX, mouseY, -1, -1);
+    public void render(GuiGraphics graphics, double mouseX, double mouseY) {
+        this.render(graphics, mouseX, mouseY, -1, -1);
     }
 
-    public void render(PoseStack poseStack, double mouseX, double mouseY, int keyCode, int modifiers) {
+    public void render(GuiGraphics graphics, double mouseX, double mouseY, int keyCode, int modifiers) {
         if (CollectionUtils.isNullOrEmpty(optionList)) return;
         if (Minecraft.getInstance().screen == null) return;
 
@@ -316,26 +316,26 @@ public class PopupOption {
             }
         }
 
-        AbstractGuiUtils.setDepth(poseStack, AbstractGuiUtils.EDepth.TOOLTIP);
-        AbstractGuiUtils.fill(poseStack, adjustedX, adjustedY, width, height, 0x88000000, radius);
-        AbstractGuiUtils.fillOutLine(poseStack, adjustedX, adjustedY, width, height, 1, 0xFF000000, radius);
+        AbstractGuiUtils.setDepth(graphics, AbstractGuiUtils.EDepth.TOOLTIP);
+        AbstractGuiUtils.fill(graphics, adjustedX, adjustedY, width, height, 0x88000000, radius);
+        AbstractGuiUtils.fillOutLine(graphics, adjustedX, adjustedY, width, height, 1, 0xFF000000, radius);
         int lineOffset = 0;
         for (int i = 0; i < this.maxLines; i++) {
             int index = i + scrollOffset;
             if (index >= 0 && index < renderList.size()) {
                 Text text = renderList.get(index);
                 if (selectedIndex == index) {
-                    AbstractGuiUtils.fill(poseStack, adjustedX + 1, adjustedY + topPadding + (lineOffset * (this.font.lineHeight + 1)), width - 2, this.font.lineHeight * StringUtils.getLineCount(text.getContent()), 0x88ACACAC);
+                    AbstractGuiUtils.fill(graphics, adjustedX + 1, adjustedY + topPadding + (lineOffset * (this.font.lineHeight + 1)), width - 2, this.font.lineHeight * StringUtils.getLineCount(text.getContent()), 0x88ACACAC);
                 }
                 if (maxWidth > 0) {
-                    AbstractGuiUtils.drawLimitedText(text.setPoseStack(poseStack).setFont(this.font), adjustedX + leftPadding, adjustedY + topPadding + (i * (this.font.lineHeight + 1)), maxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+                    AbstractGuiUtils.drawLimitedText(text.setGraphics(graphics).setFont(this.font), adjustedX + leftPadding, adjustedY + topPadding + (i * (this.font.lineHeight + 1)), maxWidth, AbstractGuiUtils.EllipsisPosition.MIDDLE);
                 } else {
-                    AbstractGuiUtils.drawString(text.setPoseStack(poseStack).setFont(this.font), adjustedX + leftPadding, adjustedY + topPadding + (i * (this.font.lineHeight + 1)));
+                    AbstractGuiUtils.drawString(text.setGraphics(graphics).setFont(this.font), adjustedX + leftPadding, adjustedY + topPadding + (i * (this.font.lineHeight + 1)));
                 }
                 lineOffset += StringUtils.getLineCount(text.getContent());
             }
         }
-        AbstractGuiUtils.resetDepth(poseStack);
+        AbstractGuiUtils.resetDepth(graphics);
         // 绘制提示
         if (this.tipsKeyCode == -1 || (this.tipsKeyCode == keyCode && this.tipsModifiers == modifiers)) {
             if (this.getSelectedIndex() >= 0 && !tipsMap.isEmpty()) {
@@ -344,7 +344,7 @@ public class PopupOption {
                     text = tipsMap.getOrDefault(this.getSelectedIndex() - renderList.size(), Text.literal(""));
                 }
                 if (StringUtils.isNotNullOrEmpty(text.getContent())) {
-                    AbstractGuiUtils.drawPopupMessage(text.setPoseStack(poseStack).setFont(this.font), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight);
+                    AbstractGuiUtils.drawPopupMessage(text.setGraphics(graphics).setFont(this.font), (int) mouseX, (int) mouseY, this.screenWidth, this.screenHeight);
                 }
             }
         }

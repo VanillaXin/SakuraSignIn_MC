@@ -16,7 +16,7 @@ public class WorldUtils {
     public static int getEnvironmentBrightness(Player player) {
         int result = 0;
         if (player != null) {
-            Level world = player.level;
+            Level world = player.level();
             BlockPos pos = player.blockPosition();
             // 获取基础的天空光亮度和方块光亮度
             int skyLight = world.getBrightness(LightLayer.SKY, pos);

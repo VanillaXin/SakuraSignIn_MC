@@ -2,11 +2,11 @@ package xin.vanilla.mc.screen;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
-import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import lombok.NonNull;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
@@ -255,16 +255,16 @@ public class ItemSelectScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         // 绘制背景
-        this.renderBackground(poseStack);
-        AbstractGuiUtils.fill(poseStack, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
-        AbstractGuiUtils.fillOutLine(poseStack, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
-        super.render(poseStack, mouseX, mouseY, delta);
+        this.renderBackground(graphics);
+        AbstractGuiUtils.fill(graphics, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
+        AbstractGuiUtils.fillOutLine(graphics, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
+        super.render(graphics, mouseX, mouseY, delta);
         // 保存输入框的文本, 防止窗口重绘时输入框内容丢失
         this.inputFieldText = this.inputField.getValue();
 
-        this.renderButton(poseStack, mouseX, mouseY);
+        this.renderButton(graphics, mouseX, mouseY);
     }
 
     @Override
@@ -370,9 +370,9 @@ public class ItemSelectScreen extends Screen {
         NonNullList<ItemStack> list = NonNullList.create();
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
-            CreativeModeTabs.tryRebuildTabContents(player.connection.enabledFeatures(), true, player.level.registryAccess());
+            CreativeModeTabs.tryRebuildTabContents(player.connection.enabledFeatures(), true, player.level().registryAccess());
         }
-        list.addAll(CreativeModeTabs.SEARCH.getDisplayItems());
+        list.addAll(CreativeModeTabs.searchTab().getDisplayItems());
         return list;
     }
 
@@ -398,38 +398,38 @@ public class ItemSelectScreen extends Screen {
         this.OP_BUTTONS.put(OperationButtonType.TYPE.getCode(), new OperationButton(OperationButtonType.TYPE.getCode(), context -> {
             // 绘制背景
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
+            AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.inventoryMode ? Items.CHEST : Items.COMPASS);
-            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            context.graphics().renderItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = this.inventoryMode ? Text.i18n("列出模式\n物品栏 (%s)", playerItemList.size()) : Text.i18n("列出模式\n所有物品 (%s)", allItemList.size());
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.ITEM.getCode(), new OperationButton(OperationButtonType.ITEM.getCode(), context -> {
             // 绘制背景
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
-            this.itemRenderer.renderGuiItem(context.poseStack(), this.currentItem, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
+            context.graphics().renderItem(this.currentItem, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             context.button().setTooltip(AbstractGuiUtils.componentToText(this.currentItem.getHoverName().copy()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.COUNT.getCode(), new OperationButton(OperationButtonType.COUNT.getCode(), context -> {
             // 绘制背景
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
+            AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.WRITABLE_BOOK);
-            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            context.graphics().renderItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("设置数量\n当前 %s", this.currentItem.getCount());
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 2).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.NBT.getCode(), new OperationButton(OperationButtonType.NBT.getCode(), context -> {
             // 绘制背景
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
+            AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.NAME_TAG);
-            this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            context.graphics().renderItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
             Text text = Text.i18n("编辑NBT");
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -456,10 +456,10 @@ public class ItemSelectScreen extends Screen {
             this.inScrollHeight = Math.max(2, (outScrollHeight - 2) * inScrollWidthScale);
             this.inScrollY = outScrollY + inScrollTopHeight + 1;
             // 绘制滚动条外层背景
-            AbstractGuiUtils.fill(context.poseStack(), (int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
+            AbstractGuiUtils.fill(context.graphics(), (int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
             // 绘制滚动条滑块
             int color = context.button().isHovered() ? 0xCCFFFFFF : 0xCC8B8B8B;
-            AbstractGuiUtils.fill(context.poseStack(), (int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
+            AbstractGuiUtils.fill(context.graphics(), (int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
             context.button().setX(this.outScrollX).setY(this.outScrollY).setWidth(this.outScrollWidth).setHeight(this.outScrollHeight);
         }));
 
@@ -487,8 +487,8 @@ public class ItemSelectScreen extends Screen {
                         context.button().setX(itemX - 1).setY(itemY - 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 2).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 2)
                                 .setId(ItemRewardParser.getId(itemStack));
 
-                        AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), bgColor);
-                        this.itemRenderer.renderGuiItem(context.poseStack(), itemStack, (int) context.button().getX() + 1, (int) context.button().getY() + 1);
+                        AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), bgColor);
+                        context.graphics().renderItem(itemStack, (int) context.button().getX() + 1, (int) context.button().getY() + 1);
                         // 绘制物品详情悬浮窗
                         context.button().setCustomPopupFunction(() -> {
                             if (context.button().isHovered()) {
@@ -505,7 +505,7 @@ public class ItemSelectScreen extends Screen {
                                         list1.add(1, modeTab.getDisplayName().copy().withStyle(ChatFormatting.BLUE));
                                     }
                                 }
-                                this.renderTooltip(context.poseStack(), list1, itemStack.getTooltipImage(), (int) context.mouseX(), (int) context.mouseY(), itemStack);
+                                context.graphics().renderTooltip(font, list1, itemStack.getTooltipImage(), itemStack, (int) context.mouseX(), (int) context.mouseY());
                             }
                         });
                     } else {
@@ -559,13 +559,13 @@ public class ItemSelectScreen extends Screen {
     /**
      * 绘制按钮
      */
-    private void renderButton(PoseStack poseStack, int mouseX, int mouseY) {
-        for (OperationButton button : OP_BUTTONS.values()) button.render(poseStack, mouseX, mouseY);
-        for (OperationButton button : ITEM_BUTTONS) button.render(poseStack, mouseX, mouseY);
+    private void renderButton(GuiGraphics graphics, int mouseX, int mouseY) {
+        for (OperationButton button : OP_BUTTONS.values()) button.render(graphics, mouseX, mouseY);
+        for (OperationButton button : ITEM_BUTTONS) button.render(graphics, mouseX, mouseY);
         for (OperationButton button : OP_BUTTONS.values())
-            button.renderPopup(poseStack, this.font, mouseX, mouseY);
+            button.renderPopup(graphics, this.font, mouseX, mouseY);
         for (OperationButton button : ITEM_BUTTONS)
-            button.renderPopup(poseStack, this.font, mouseX, mouseY);
+            button.renderPopup(graphics, this.font, mouseX, mouseY);
     }
 
     private void handleItem(OperationButton bt, int button, AtomicBoolean flag) {

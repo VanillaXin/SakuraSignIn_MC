@@ -1,10 +1,11 @@
 package xin.vanilla.mc.screen.component;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xin.vanilla.mc.util.I18nUtils;
@@ -16,7 +17,8 @@ public class Text {
     /**
      * 矩阵栈
      */
-    private PoseStack poseStack;
+    @Getter
+    private GuiGraphics graphics;
     /**
      * 字体渲染器
      */
@@ -139,12 +141,8 @@ public class Text {
                 .setHoverUnderlined(this.hoverUnderlined)
                 .setHoverStrikethrough(this.hoverStrikethrough)
                 .setHoverObfuscated(this.hoverObfuscated)
-                .setPoseStack(this.poseStack)
+                .setGraphics(this.graphics)
                 .setFont(this.font);
-    }
-
-    public PoseStack getPoseStack() {
-        return poseStack == null ? new PoseStack() : this.poseStack;
     }
 
     public Font getFont() {

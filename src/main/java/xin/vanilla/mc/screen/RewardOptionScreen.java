@@ -1,10 +1,13 @@
 package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -105,7 +108,7 @@ public class RewardOptionScreen extends Screen {
      */
     private int lineCount;
     // 矩阵栈
-    private PoseStack ms;
+    private GuiGraphics gg;
     /**
      * 奖励列表索引(用于计算渲染Y坐标)
      */
@@ -174,7 +177,7 @@ public class RewardOptionScreen extends Screen {
     /**
      * 绘制背景纹理
      */
-    private void renderBackgroundTexture(PoseStack poseStack) {
+    private void renderBackgroundTexture(GuiGraphics graphics) {
         // 启用混合模式以支持透明度
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -212,10 +215,10 @@ public class RewardOptionScreen extends Screen {
         for (int x = 0; x <= screenWidth - regionWidth; x += (int) regionWidth) {
             for (int y = 0; y <= screenHeight - regionHeight; y += (int) regionHeight) {
                 buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-                buffer.vertex(poseStack.last().pose(), x, y + regionHeight, 0).uv(uMin, vMax).endVertex();
-                buffer.vertex(poseStack.last().pose(), x + regionWidth, y + regionHeight, 0).uv(uMax, vMax).endVertex();
-                buffer.vertex(poseStack.last().pose(), x + regionWidth, y, 0).uv(uMax, vMin).endVertex();
-                buffer.vertex(poseStack.last().pose(), x, y, 0).uv(uMin, vMin).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x, y + regionHeight, 0).uv(uMin, vMax).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x + regionWidth, y + regionHeight, 0).uv(uMax, vMax).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x + regionWidth, y, 0).uv(uMax, vMin).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x, y, 0).uv(uMin, vMin).endVertex();
                 tesselator.end();
             }
         }
@@ -226,10 +229,10 @@ public class RewardOptionScreen extends Screen {
         if (leftoverWidth > 0) {
             for (int y = 0; y <= screenHeight - regionHeight; y += (int) regionHeight) {
                 buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-                buffer.vertex(poseStack.last().pose(), screenWidth - leftoverWidth, y + regionHeight, 0).uv(uMin, vMax).endVertex();
-                buffer.vertex(poseStack.last().pose(), screenWidth, y + regionHeight, 0).uv(u, vMax).endVertex();
-                buffer.vertex(poseStack.last().pose(), screenWidth, y, 0).uv(u, vMin).endVertex();
-                buffer.vertex(poseStack.last().pose(), screenWidth - leftoverWidth, y, 0).uv(uMin, vMin).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), screenWidth - leftoverWidth, y + regionHeight, 0).uv(uMin, vMax).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), screenWidth, y + regionHeight, 0).uv(u, vMax).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), screenWidth, y, 0).uv(u, vMin).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), screenWidth - leftoverWidth, y, 0).uv(uMin, vMin).endVertex();
                 tesselator.end();
             }
         }
@@ -240,10 +243,10 @@ public class RewardOptionScreen extends Screen {
         if (leftoverHeight > 0) {
             for (int x = 0; x <= screenWidth - regionWidth; x += (int) regionWidth) {
                 buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-                buffer.vertex(poseStack.last().pose(), x, screenHeight, 0).uv(uMin, v).endVertex();
-                buffer.vertex(poseStack.last().pose(), x + regionWidth, screenHeight, 0).uv(uMax, v).endVertex();
-                buffer.vertex(poseStack.last().pose(), x + regionWidth, screenHeight - leftoverHeight, 0).uv(uMax, vMin).endVertex();
-                buffer.vertex(poseStack.last().pose(), x, screenHeight - leftoverHeight, 0).uv(uMin, vMin).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x, screenHeight, 0).uv(uMin, v).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x + regionWidth, screenHeight, 0).uv(uMax, v).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x + regionWidth, screenHeight - leftoverHeight, 0).uv(uMax, vMin).endVertex();
+                buffer.vertex(graphics.pose().last().pose(), x, screenHeight - leftoverHeight, 0).uv(uMin, vMin).endVertex();
                 tesselator.end();
             }
         }
@@ -251,10 +254,10 @@ public class RewardOptionScreen extends Screen {
         // 绘制右下角的剩余区域
         if (leftoverWidth > 0 && leftoverHeight > 0) {
             buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-            buffer.vertex(poseStack.last().pose(), screenWidth - leftoverWidth, screenHeight, 0).uv(uMin, v).endVertex();
-            buffer.vertex(poseStack.last().pose(), screenWidth, screenHeight, 0).uv(u, v).endVertex();
-            buffer.vertex(poseStack.last().pose(), screenWidth, screenHeight - leftoverHeight, 0).uv(u, vMin).endVertex();
-            buffer.vertex(poseStack.last().pose(), screenWidth - leftoverWidth, screenHeight - leftoverHeight, 0).uv(uMin, vMin).endVertex();
+            buffer.vertex(graphics.pose().last().pose(), screenWidth - leftoverWidth, screenHeight, 0).uv(uMin, v).endVertex();
+            buffer.vertex(graphics.pose().last().pose(), screenWidth, screenHeight, 0).uv(u, v).endVertex();
+            buffer.vertex(graphics.pose().last().pose(), screenWidth, screenHeight - leftoverHeight, 0).uv(u, vMin).endVertex();
+            buffer.vertex(graphics.pose().last().pose(), screenWidth - leftoverWidth, screenHeight - leftoverHeight, 0).uv(uMin, vMin).endVertex();
             tesselator.end();
         }
 
@@ -274,9 +277,9 @@ public class RewardOptionScreen extends Screen {
     private void addRewardTitleButton(String title, String key, int titleIndex, int index) {
         REWARD_BUTTONS.put(String.format("标题,%s", key), new OperationButton(titleIndex, context -> {
             if (context.button().getRealY() < super.height && context.button().getRealY() + context.button().getRealHeight() >= 0) {
-                GuiComponent.fill(this.ms, (int) context.button().getRealX(), (int) (context.button().getRealY()), (int) (context.button().getRealX() + context.button().getRealWidth()), (int) (context.button().getRealY() + 1), 0xAC000000);
-                AbstractGuiUtils.drawLimitedText(this.ms, super.font, title, (int) context.button().getRealX(), (int) (context.button().getRealY() + (context.button().getRealHeight() - super.font.lineHeight) / 2), (int) context.button().getRealWidth(), 0xAC000000, false);
-                GuiComponent.fill(this.ms, (int) context.button().getRealX(), (int) (context.button().getRealY() + context.button().getRealHeight()), (int) (context.button().getRealX() + super.font.width(title)), (int) (context.button().getRealY() + context.button().getRealHeight() - 1), 0xAC000000);
+                context.graphics().fill((int) context.button().getRealX(), (int) (context.button().getRealY()), (int) (context.button().getRealX() + context.button().getRealWidth()), (int) (context.button().getRealY() + 1), 0xAC000000);
+                AbstractGuiUtils.drawLimitedText(this.gg, super.font, title, (int) context.button().getRealX(), (int) (context.button().getRealY() + (context.button().getRealHeight() - super.font.lineHeight) / 2), (int) context.button().getRealWidth(), 0xAC000000, false);
+                context.graphics().fill((int) context.button().getRealX(), (int) (context.button().getRealY() + context.button().getRealHeight()), (int) (context.button().getRealX() + super.font.width(title)), (int) (context.button().getRealY() + context.button().getRealHeight() - 1), 0xAC000000);
             }
         })
                 .setX(leftMargin)
@@ -298,7 +301,7 @@ public class RewardOptionScreen extends Screen {
             REWARD_BUTTONS.put(String.format("%s,%s", key, j), new OperationButton(j, context -> {
                 if (context.button().getRealY() < super.height && context.button().getRealY() + context.button().getRealHeight() >= 0) {
                     Reward reward = rewardMap.get(key).get(context.button().getOperation());
-                    AbstractGuiUtils.renderCustomReward(this.ms, this.itemRenderer, super.font, SakuraSignIn.getThemeTexture(), SakuraSignIn.getThemeTextureCoordinate(), reward, (int) context.button().getRealX(), (int) context.button().getRealY(), true);
+                    AbstractGuiUtils.renderCustomReward(this.gg, super.font, SakuraSignIn.getThemeTexture(), SakuraSignIn.getThemeTextureCoordinate(), reward, (int) context.button().getRealX(), (int) context.button().getRealY(), true);
                 }
             })
                     .setX(leftMargin + (j % lineItemCount) * (itemIconSize + itemRightMargin))
@@ -433,20 +436,20 @@ public class RewardOptionScreen extends Screen {
     /**
      * 渲染奖励列表
      */
-    private void renderRewardList(PoseStack poseStack, double mouseX, double mouseY) {
+    private void renderRewardList(GuiGraphics graphics, double mouseX, double mouseY) {
         if (REWARD_BUTTONS.isEmpty()) return;
 
         // 直接渲染奖励列表 REWARD_BUTTONS
         for (String key : REWARD_BUTTONS.keySet()) {
             OperationButton operationButton = REWARD_BUTTONS.get(key);
             // 渲染物品图标
-            operationButton.setBaseY(yOffset).render(poseStack, mouseX, mouseY);
+            operationButton.setBaseY(yOffset).render(graphics, mouseX, mouseY);
         }
         // 渲染Tips
         for (String key : REWARD_BUTTONS.keySet()) {
             OperationButton operationButton = REWARD_BUTTONS.get(key);
             // 渲染物品图标
-            operationButton.setBaseY(yOffset).renderPopup(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
+            operationButton.setBaseY(yOffset).renderPopup(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
         }
     }
 
@@ -1135,12 +1138,12 @@ public class RewardOptionScreen extends Screen {
             int realX2 = (int) (context.button().getRealX() + realWidth);
             int realY2 = (int) (context.button().getRealY() + realHeight);
             if (this.currOpButton == context.button().getOperation()) {
-                GuiComponent.fill(context.poseStack(), realX + 1, realY, realX2 - 1, realY2, 0x44ACACAC);
+                context.graphics().fill(realX + 1, realY, realX2 - 1, realY2, 0x44ACACAC);
             }
             if (context.button().isHovered()) {
-                GuiComponent.fill(context.poseStack(), realX, realY, realX2, realY2, 0x99ACACAC);
+                context.graphics().fill(realX, realY, realX2, realY2, 0x99ACACAC);
             }
-            AbstractGuiUtils.drawLimitedText(context.poseStack(), super.font, getByZh(content), realX + 4, (int) (realY + (realHeight - super.font.lineHeight) / 2), (int) (realWidth - 22), 0xFFEBD4B1);
+            AbstractGuiUtils.drawLimitedText(context.graphics(), super.font, getByZh(content), realX + 4, (int) (realY + (realHeight - super.font.lineHeight) / 2), (int) (realWidth - 22), 0xFFEBD4B1);
         };
     }
 
@@ -1214,8 +1217,8 @@ public class RewardOptionScreen extends Screen {
                 , new OperationButton(OperationButtonType.CUMULATIVE_REWARD.getCode(), this.generateCustomRenderFunction("累计签到奖励"))
                         .setX(0).setY(this.leftBarTitleHeight + (this.leftBarTitleHeight - 1) * 7).setWidth(100).setHeight(this.leftBarTitleHeight - 2));
         OP_BUTTONS.put(OperationButtonType.OFFSET_Y.getCode(), new OperationButton(OperationButtonType.OFFSET_Y.getCode(), context -> {
-            AbstractGuiUtils.drawString(context.poseStack(), super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
-            AbstractGuiUtils.drawLimitedText(context.poseStack(), super.font, String.valueOf((int) yOffset), super.width - rightBarWidth + 1, super.height - font.lineHeight - 2, rightBarWidth, 0xFFACACAC);
+            AbstractGuiUtils.drawString(context.graphics(), super.font, "OY:", super.width - rightBarWidth + 1, super.height - font.lineHeight * 2 - 2, 0xFFACACAC);
+            AbstractGuiUtils.drawLimitedText(context.graphics(), super.font, String.valueOf((int) yOffset), super.width - rightBarWidth + 1, super.height - font.lineHeight - 2, rightBarWidth, 0xFFACACAC);
         })
                 .setX(super.width - rightBarWidth).setY(super.height - font.lineHeight * 2 - 2).setWidth(rightBarWidth).setHeight(font.lineHeight * 2 + 2)
                 .setTransparentCheck(false));
@@ -1267,30 +1270,30 @@ public class RewardOptionScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        this.ms = poseStack;
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        this.gg = graphics;
         // 绘制背景
-        this.renderBackground(poseStack);
+        this.renderBackground(graphics);
         // 绘制缩放背景纹理
-        this.renderBackgroundTexture(poseStack);
+        this.renderBackgroundTexture(graphics);
 
         // 刷新数据
         if (RewardOptionDataManager.isRewardOptionDataChanged()) this.updateLayout();
 
         // 绘制奖励项目
-        this.renderRewardList(poseStack, mouseX, mouseY);
+        this.renderRewardList(graphics, mouseX, mouseY);
 
         // 绘制左侧边栏列表背景
-        GuiComponent.fill(poseStack, 0, 0, leftBarWidth, super.height, 0xAA000000);
-        AbstractGuiUtils.fillOutLine(poseStack, 0, 0, leftBarWidth, super.height, 1, 0xFF000000);
+        graphics.fill(0, 0, leftBarWidth, super.height, 0xAA000000);
+        AbstractGuiUtils.fillOutLine(graphics, 0, 0, leftBarWidth, super.height, 1, 0xFF000000);
         // 绘制左侧边栏列表标题
         if (SakuraSignIn.isRewardOptionBarOpened()) {
-            GuiComponent.drawString(poseStack, super.font, getByZh("奖励规则类型"), 4, 5, 0xFFACACAC);
-            GuiComponent.fill(poseStack, 0, leftBarTitleHeight, leftBarWidth, leftBarTitleHeight - 1, 0xAA000000);
+            graphics.drawString(super.font, getByZh("奖励规则类型"), 4, 5, 0xFFACACAC);
+            graphics.fill(0, leftBarTitleHeight, leftBarWidth, leftBarTitleHeight - 1, 0xAA000000);
         }
         // 绘制右侧边栏列表背景
-        GuiComponent.fill(poseStack, super.width - rightBarWidth, 0, super.width, super.height, 0xAA000000);
-        AbstractGuiUtils.fillOutLine(poseStack, super.width - rightBarWidth, 0, rightBarWidth, super.height, 1, 0xFF000000);
+        graphics.fill(super.width - rightBarWidth, 0, super.width, super.height, 0xAA000000);
+        AbstractGuiUtils.fillOutLine(graphics, super.width - rightBarWidth, 0, rightBarWidth, super.height, 1, 0xFF000000);
 
         // 渲染操作按钮
         for (Integer op : OP_BUTTONS.keySet()) {
@@ -1298,13 +1301,13 @@ public class RewardOptionScreen extends Screen {
             // 展开类按钮仅在关闭时绘制
             if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.OPEN.getCode()))) {
                 if (!SakuraSignIn.isRewardOptionBarOpened()) {
-                    button.render(poseStack, mouseX, mouseY);
+                    button.render(graphics, mouseX, mouseY);
                 }
             }
             // 收起类按钮仅在展开时绘制
             else if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.CLOSE.getCode()))) {
                 if (SakuraSignIn.isRewardOptionBarOpened()) {
-                    button.render(poseStack, mouseX, mouseY);
+                    button.render(graphics, mouseX, mouseY);
                 }
             }
             // 绘制其他按钮
@@ -1312,7 +1315,7 @@ public class RewardOptionScreen extends Screen {
                 if (op == OperationButtonType.OFFSET_Y.getCode()) {
                     button.setTooltip(getByZh("Y轴偏移:\n%.1f\n点击重置", this.yOffset));
                 }
-                button.render(poseStack, mouseX, mouseY);
+                button.render(graphics, mouseX, mouseY);
             }
         }
         // 渲染操作按钮 提示
@@ -1321,13 +1324,13 @@ public class RewardOptionScreen extends Screen {
             // 展开类按钮仅在关闭时绘制
             if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.OPEN.getCode()))) {
                 if (!SakuraSignIn.isRewardOptionBarOpened()) {
-                    button.renderPopup(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
+                    button.renderPopup(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
                 }
             }
             // 收起类按钮仅在展开时绘制
             else if (String.valueOf(op).startsWith(String.valueOf(OperationButtonType.CLOSE.getCode()))) {
                 if (SakuraSignIn.isRewardOptionBarOpened()) {
-                    button.renderPopup(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
+                    button.renderPopup(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
                 }
             }
             // 绘制其他按钮
@@ -1352,14 +1355,14 @@ public class RewardOptionScreen extends Screen {
                                 .setHoverFgColor(0xAA808080).setTapFgColor(0xAA808080);
                     }
                 }
-                button.renderPopup(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
+                button.renderPopup(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
             }
         }
 
         // 绘制弹出选项
-        popupOption.render(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
+        popupOption.render(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
         // 绘制鼠标光标
-        cursor.draw(poseStack, mouseX, mouseY);
+        cursor.draw(graphics, mouseX, mouseY);
     }
 
     /**

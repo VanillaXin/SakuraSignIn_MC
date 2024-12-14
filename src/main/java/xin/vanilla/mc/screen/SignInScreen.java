@@ -1,9 +1,9 @@
 package xin.vanilla.mc.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -368,36 +368,35 @@ public class SignInScreen extends Screen {
     /**
      * 绘制背景纹理
      */
-    private void renderBackgroundTexture(PoseStack poseStack) {
+    private void renderBackgroundTexture(GuiGraphics graphics) {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         // 绘制背景纹理，使用缩放后的宽度和高度
-        AbstractGuiUtils.bindTexture(SakuraSignIn.getThemeTexture());
-        AbstractGuiUtils.blit(poseStack, bgX, bgY, bgW, bgH, (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getU0(), (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getV0(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight(), SakuraSignIn.getThemeTextureCoordinate().getTotalWidth(), SakuraSignIn.getThemeTextureCoordinate().getTotalHeight());
+        AbstractGuiUtils.blit(graphics, SakuraSignIn.getThemeTexture(), bgX, bgY, bgW, bgH, (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getU0(), (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getV0(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight(), SakuraSignIn.getThemeTextureCoordinate().getTotalWidth(), SakuraSignIn.getThemeTextureCoordinate().getTotalHeight());
         // 关闭 OpenGL 的混合模式
         RenderSystem.disableBlend();
     }
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        this.renderBackground(poseStack);
+        this.renderBackground(graphics);
         // 绘制缩放背景纹理
-        this.renderBackgroundTexture(poseStack);
+        this.renderBackgroundTexture(graphics);
 
         // 渲染年份
         double yearX = bgX + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getX() * this.scale;
         double yearY = bgY + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(poseStack, yearTitle, (float) yearX, (float) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
+        graphics.drawString(super.font, yearTitle, (int) yearX, (int) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate(), false);
 
         // 渲染月份
         double monthX = bgX + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(poseStack, monthTitle, (float) monthX, (float) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
+        graphics.drawString(super.font, monthTitle, (int) monthX, (int) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate(), false);
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -464,28 +463,28 @@ public class SignInScreen extends Screen {
             button.setBaseX(bgX);
             button.setBaseY(bgY);
             button.setScale(this.scale);
-            button.render(poseStack, mouseX, mouseY);
+            button.render(graphics, mouseX, mouseY);
         }
 
         // 渲染所有格子
         for (SignInCell cell : signInCells) {
-            cell.render(poseStack, super.font, this.itemRenderer, mouseX, mouseY);
+            cell.render(graphics, super.font, mouseX, mouseY);
         }
 
         // 渲染格子弹出层
         for (SignInCell cell : signInCells) {
             if (cell.isShowHover() && cell.isMouseOver(mouseX, mouseY)) {
-                cell.renderTooltip(poseStack, super.font, this.itemRenderer, mouseX, mouseY);
+                cell.renderTooltip(graphics, super.font, mouseX, mouseY);
             }
         }
 
         // 绘制弹出选项
-        popupOption.render(poseStack, mouseX, mouseY);
+        popupOption.render(graphics, mouseX, mouseY);
 
         // 渲染操作按钮的弹出提示
         for (Integer op : BUTTONS.keySet()) {
             OperationButton button = BUTTONS.get(op);
-            button.renderPopup(poseStack, mouseX, mouseY, this.keyCode, this.modifiers);
+            button.renderPopup(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
         }
     }
 

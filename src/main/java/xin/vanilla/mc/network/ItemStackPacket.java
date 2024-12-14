@@ -5,8 +5,11 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
+import xin.vanilla.mc.SakuraSignIn;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
 /**
@@ -62,8 +65,12 @@ public class ItemStackPacket {
                 boolean added = player.getInventory().add(packet.itemStack);
                 // 如果物品堆无法添加到库存，则以物品实体的形式生成在世界上
                 if (!added) {
-                    ItemEntity itemEntity = new ItemEntity(player.level, player.getX(), player.getY(), player.getZ(), packet.itemStack);
-                    player.level.addFreshEntity(itemEntity);
+                    ItemEntity itemEntity = new ItemEntity(player.level(), player.getX(), player.getY(), player.getZ(), packet.itemStack);
+                    try (Level level = player.level()) {
+                        level.addFreshEntity(itemEntity);
+                    } catch (IOException e) {
+                        SakuraSignIn.LOGGER.error("Failed to add item entity to world", e);
+                    }
                 }
             }
         });

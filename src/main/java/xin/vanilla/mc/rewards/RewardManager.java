@@ -12,7 +12,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
+import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.SignInRecord;
@@ -28,6 +30,7 @@ import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.DateUtils;
 import xin.vanilla.mc.util.StringUtils;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -584,8 +587,12 @@ public class RewardManager {
         boolean added = player.getInventory().add(itemStack);
         // 如果物品堆无法添加到库存，则以物品实体的形式生成在世界上
         if (!added && drop) {
-            ItemEntity itemEntity = new ItemEntity(player.level, player.getX(), player.getY(), player.getZ(), itemStack);
-            added = player.level.addFreshEntity(itemEntity);
+            ItemEntity itemEntity = new ItemEntity(player.level(), player.getX(), player.getY(), player.getZ(), itemStack);
+            try (Level level = player.level()) {
+                added = level.addFreshEntity(itemEntity);
+            } catch (IOException e) {
+                SakuraSignIn.LOGGER.error("Failed to add item entity to world", e);
+            }
         }
         return added;
     }

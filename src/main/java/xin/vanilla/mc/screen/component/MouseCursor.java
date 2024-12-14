@@ -1,8 +1,7 @@
 package xin.vanilla.mc.screen.component;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.util.AbstractGuiUtils;
 
@@ -42,7 +41,7 @@ public class MouseCursor {
     /**
      * 绘制鼠标光标
      */
-    public void draw(PoseStack poseStack, int mouseX, int mouseY) {
+    public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
         int color1 = 0xFF000000;
         int color2 = 0xFF000000;
         int color3 = 0xFF000000;
@@ -57,19 +56,19 @@ public class MouseCursor {
             color3 = 0xFF777777;
         }
 
-        AbstractGuiUtils.setDepth(poseStack, AbstractGuiUtils.EDepth.MOUSE);
-        GuiComponent.fill(poseStack, mouseX, mouseY + this.scroll, mouseX + 1, mouseY + this.scroll + 1, color3);
+        AbstractGuiUtils.setDepth(graphics, AbstractGuiUtils.EDepth.MOUSE);
+        graphics.fill(mouseX, mouseY + this.scroll, mouseX + 1, mouseY + this.scroll + 1, color3);
 
-        GuiComponent.fill(poseStack, mouseX - 1, mouseY + 2, mouseX - 1 - 3, mouseY + 2 + 1, color1);
-        GuiComponent.fill(poseStack, mouseX - 1, mouseY + 2, mouseX - 1 - 1, mouseY + 2 + 3, color1);
-        GuiComponent.fill(poseStack, mouseX - 1, mouseY - 1, mouseX - 1 - 3, mouseY - 1 - 1, color1);
-        GuiComponent.fill(poseStack, mouseX - 1, mouseY - 1, mouseX - 1 - 1, mouseY - 1 - 3, color1);
+        graphics.fill(mouseX - 1, mouseY + 2, mouseX - 1 - 3, mouseY + 2 + 1, color1);
+        graphics.fill(mouseX - 1, mouseY + 2, mouseX - 1 - 1, mouseY + 2 + 3, color1);
+        graphics.fill(mouseX - 1, mouseY - 1, mouseX - 1 - 3, mouseY - 1 - 1, color1);
+        graphics.fill(mouseX - 1, mouseY - 1, mouseX - 1 - 1, mouseY - 1 - 3, color1);
 
-        GuiComponent.fill(poseStack, mouseX + 2, mouseY + 2, mouseX + 2 + 3, mouseY + 2 + 1, color2);
-        GuiComponent.fill(poseStack, mouseX + 2, mouseY + 2, mouseX + 2 + 1, mouseY + 2 + 3, color2);
-        GuiComponent.fill(poseStack, mouseX + 2, mouseY - 1, mouseX + 2 + 3, mouseY - 1 - 1, color2);
-        GuiComponent.fill(poseStack, mouseX + 2, mouseY - 1, mouseX + 2 + 1, mouseY - 1 - 3, color2);
-        AbstractGuiUtils.resetDepth(poseStack);
+        graphics.fill(mouseX + 2, mouseY + 2, mouseX + 2 + 3, mouseY + 2 + 1, color2);
+        graphics.fill(mouseX + 2, mouseY + 2, mouseX + 2 + 1, mouseY + 2 + 3, color2);
+        graphics.fill(mouseX + 2, mouseY - 1, mouseX + 2 + 3, mouseY - 1 - 1, color2);
+        graphics.fill(mouseX + 2, mouseY - 1, mouseX + 2 + 1, mouseY - 1 - 3, color2);
+        AbstractGuiUtils.resetDepth(graphics);
         // 恢复鼠标滚动偏移
         this.scroll = 0;
     }

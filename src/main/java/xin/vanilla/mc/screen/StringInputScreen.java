@@ -1,7 +1,7 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -186,15 +186,15 @@ public class StringInputScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
-        this.renderBackground(poseStack);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        this.renderBackground(graphics);
         // 绘制背景
-        super.render(poseStack, mouseX, mouseY, delta);
+        super.render(graphics, mouseX, mouseY, delta);
         // 绘制标题
-        AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 33);
+        AbstractGuiUtils.drawString(titleText.setGraphics(graphics), this.width / 2.0f - 100, this.height / 2.0f - 33);
         // 绘制错误提示
         if (this.errorText != null) {
-            AbstractGuiUtils.drawLimitedText(errorText, this.width / 2.0f - 100, this.height / 2.0f + 2, 200, AbstractGuiUtils.EllipsisPosition.MIDDLE);
+            AbstractGuiUtils.drawLimitedText(errorText.setGraphics(graphics), this.width / 2.0f - 100, this.height / 2.0f + 2, 200, AbstractGuiUtils.EllipsisPosition.MIDDLE);
         }
         if (StringUtils.isNotNullOrEmpty(this.inputField.getValue())) {
             this.submitButton.setMessage(Component.literal(I18nUtils.getByZh("提交")));

@@ -1,11 +1,11 @@
 package xin.vanilla.mc.screen.component;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -27,7 +27,7 @@ public class OperationButton {
     /**
      * 渲染辅助类：用于向自定义渲染函数传递上下文
      */
-    public record RenderContext(PoseStack poseStack, double mouseX, double mouseY, OperationButton button) {
+    public record RenderContext(GuiGraphics graphics, double mouseX, double mouseY, OperationButton button) {
     }
 
     /**
@@ -383,8 +383,8 @@ public class OperationButton {
     /**
      * 绘制按钮
      */
-    public void render(PoseStack poseStack, double mouseX, double mouseY) {
-        this.render(poseStack, mouseX, mouseY, false, -1, -1);
+    public void render(GuiGraphics graphics, double mouseX, double mouseY) {
+        this.render(graphics, mouseX, mouseY, false, -1, -1);
     }
 
     /**
@@ -392,10 +392,10 @@ public class OperationButton {
      *
      * @param renderPopup 是否绘制弹出层提示
      */
-    public void render(PoseStack poseStack, double mouseX, double mouseY, boolean renderPopup, int keyCode, int modifiers) {
+    public void render(GuiGraphics graphics, double mouseX, double mouseY, boolean renderPopup, int keyCode, int modifiers) {
         if (customRenderFunction != null) {
             // 使用自定义渲染逻辑
-            customRenderFunction.accept(new RenderContext(poseStack, mouseX, mouseY, this));
+            customRenderFunction.accept(new RenderContext(graphics, mouseX, mouseY, this));
         } else {
             TextureCoordinate textureCoordinate = new TextureCoordinate().setTotalWidth(this.textureWidth).setTotalHeight(this.textureHeight);
             Coordinate coordinate = new Coordinate().setX(this.x).setY(this.y).setWidth(this.width).setHeight(this.height)
@@ -403,50 +403,50 @@ public class OperationButton {
             // 绘制背景颜色
             int bgColor = this.getBackgroundColor();
             if (bgColor != 0) {
-                AbstractGuiUtils.fill(poseStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), bgColor);
+                AbstractGuiUtils.fill(graphics, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), bgColor);
             }
             // 绘制纹理
             if (this.isHovered() && this.getTremblingAmplitude() > 0) {
-                AbstractGuiUtils.renderTremblingTexture(poseStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());
+                AbstractGuiUtils.renderTremblingTexture(graphics, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, true, this.getTremblingAmplitude());
             } else {
-                AbstractGuiUtils.renderRotatedTexture(poseStack, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
+                AbstractGuiUtils.renderRotatedTexture(graphics, this.texture, textureCoordinate, coordinate, this.baseX, this.baseY, this.scale, this.rotatedAngle, this.flipHorizontal, this.flipVertical);
             }
             // 绘制前景颜色
             int fgColor = this.getForegroundColor();
             if (fgColor != 0) {
-                AbstractGuiUtils.fill(poseStack, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), fgColor);
+                AbstractGuiUtils.fill(graphics, (int) (baseX + coordinate.getX() * scale), (int) (baseY + coordinate.getY() * scale), (int) (coordinate.getWidth() * scale), (int) (coordinate.getHeight() * scale), fgColor);
             }
         }
         if (renderPopup) {
-            this.renderPopup(poseStack, null, mouseX, mouseY, keyCode, modifiers);
+            this.renderPopup(graphics, null, mouseX, mouseY, keyCode, modifiers);
         }
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(PoseStack poseStack, double mouseX, double mouseY) {
-        this.renderPopup(poseStack, null, mouseX, mouseY, -1, -1);
+    public void renderPopup(GuiGraphics graphics, double mouseX, double mouseY) {
+        this.renderPopup(graphics, null, mouseX, mouseY, -1, -1);
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(PoseStack poseStack, Font font, double mouseX, double mouseY) {
-        this.renderPopup(poseStack, font, mouseX, mouseY, -1, -1);
+    public void renderPopup(GuiGraphics graphics, Font font, double mouseX, double mouseY) {
+        this.renderPopup(graphics, font, mouseX, mouseY, -1, -1);
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(PoseStack poseStack, double mouseX, double mouseY, int keyCode, int modifiers) {
-        this.renderPopup(poseStack, null, mouseX, mouseY, keyCode, modifiers);
+    public void renderPopup(GuiGraphics graphics, double mouseX, double mouseY, int keyCode, int modifiers) {
+        this.renderPopup(graphics, null, mouseX, mouseY, keyCode, modifiers);
     }
 
     /**
      * 绘制弹出层
      */
-    public void renderPopup(PoseStack poseStack, Font font, double mouseX, double mouseY, int keyCode, int modifiers) {
+    public void renderPopup(GuiGraphics graphics, Font font, double mouseX, double mouseY, int keyCode, int modifiers) {
         // 绘制提示
         if (this.keyCode == -1 || (this.keyCode == keyCode && this.modifiers == modifiers)) {
             if (this.isHovered()) {
@@ -454,7 +454,7 @@ public class OperationButton {
                     customPopupFunction.run();
                 } else if (tooltip != null && StringUtils.isNotNullOrEmpty(tooltip.getContent()) && Minecraft.getInstance().screen != null) {
                     if (font == null) font = Minecraft.getInstance().font;
-                    AbstractGuiUtils.drawPopupMessage(tooltip.setPoseStack(poseStack).setFont(font), (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+                    AbstractGuiUtils.drawPopupMessage(tooltip.setGraphics(graphics).setFont(font), (int) mouseX, (int) mouseY, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
                 }
             }
         }
