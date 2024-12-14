@@ -88,7 +88,7 @@
   "tips.sakura_sign_in.set_count_s": "设置数量\n当前 %s",
   "tips.sakura_sign_in.set_duration_s": "设置持续时间\n当前 %ss",
   "tips.sakura_sign_in.set_amplifier_s": "设置效果等级\n当前 %s",
-  "tips.sakura_sign_in.edit_nbt": "编辑NBT",
+  "tips.sakura_sign_in.edit_nbt": "NBT编辑已禁用\n绝对不是因为不会解析(急忙否定)",
   "tips.sakura_sign_in.help_button": "页面上部分元素\n按住Shift键可查看帮助信息",
   "tips.sakura_sign_in.help_button_shift": "比如红色字体按钮, 按住Shift时会给予帮助信息:\n按住Ctrl键 并且 鼠标右键点击以确认\n直接点击是取消哦",
   "tips.sakura_sign_in.download_reward_config": "从服务器同步配置文件",

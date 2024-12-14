@@ -187,7 +187,6 @@ public class StringInputScreen extends Screen {
     @Override
     @ParametersAreNonnullByDefault
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         // 绘制背景
         super.render(graphics, mouseX, mouseY, partialTicks);
         // 绘制标题

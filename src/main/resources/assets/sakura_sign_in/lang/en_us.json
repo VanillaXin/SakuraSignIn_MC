@@ -88,7 +88,7 @@
   "tips.sakura_sign_in.set_count_s": "Set Quantity\nCurrently %s",
   "tips.sakura_sign_in.set_duration_s": "Set Duration\nCurrently %ss",
   "tips.sakura_sign_in.set_amplifier_s": "Set Amplifier\nCurrently %s",
-  "tips.sakura_sign_in.edit_nbt": "Edit NBT",
+  "tips.sakura_sign_in.edit_nbt": "NBT editing is disabled",
   "tips.sakura_sign_in.help_button": "Hold down the Shift key on some elements\non the page to view help information",
   "tips.sakura_sign_in.help_button_shift": "For example, for the red font button,\npressing and holding Shift will provide help information:\nHold down the Ctrl key and right-click with the mouse to confirm.\nClicking directly cancels the operation",
   "tips.sakura_sign_in.download_reward_config": "Synchronize the configuration file from the server",

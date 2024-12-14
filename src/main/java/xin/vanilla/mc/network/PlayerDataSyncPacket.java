@@ -33,7 +33,7 @@ public class PlayerDataSyncPacket {
 
     public static void handle(PlayerDataSyncPacket packet, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            if (ctx.getDirection().getReceptionSide().isClient()) {
+            if (ctx.isClientSide()) {
                 // 在客户端更新 PlayerSignInDataCapability
                 // 获取玩家并更新 Capability 数据
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleSynPlayerData(packet));

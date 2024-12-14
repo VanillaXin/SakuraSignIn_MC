@@ -1,16 +1,12 @@
 package xin.vanilla.mc.event;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -21,50 +17,16 @@ import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.capability.IPlayerSignInData;
 import xin.vanilla.mc.capability.PlayerSignInDataCapability;
 import xin.vanilla.mc.capability.PlayerSignInDataProvider;
-import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.config.RewardOptionDataManager;
-import xin.vanilla.mc.config.ServerConfig;
-import xin.vanilla.mc.enums.ESignInType;
-import xin.vanilla.mc.network.*;
-import xin.vanilla.mc.rewards.RewardManager;
-
-import java.util.Date;
+import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.RewardOptionSyncPacket;
 
 /**
  * Forge 事件处理
  */
-@Mod.EventBusSubscriber(modid = SakuraSignIn.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class ForgeEventHandler {
+@Mod.EventBusSubscriber(modid = SakuraSignIn.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.DEDICATED_SERVER)
+public class ServerForgeEventHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static boolean isPlayerLoggedIn = false;
-    private static boolean hasTriggeredLoadComplete = false;
-
-    @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
-        LOGGER.debug("Client: Player logged in.");
-        isPlayerLoggedIn = true;
-        // 同步客户端配置到服务器
-        ModNetworkHandler.INSTANCE.send(new ClientConfigSyncPacket(), PacketDistributor.SERVER.noArg());
-    }
-
-    @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && isPlayerLoggedIn) {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player != null && mc.level != null && mc.screen == null && !hasTriggeredLoadComplete) {
-                LOGGER.debug("Client: Player load complete.");
-                hasTriggeredLoadComplete = true;
-                // 获取玩家的自定义数据
-                IPlayerSignInData data = PlayerSignInDataCapability.getData(mc.player);
-                // 服务器是否启用自动签到, 且玩家未签到
-                if (ServerConfig.AUTO_SIGN_IN.get() && !RewardManager.isSignedIn(data, new Date(), true)) {
-                    ModNetworkHandler.INSTANCE.send(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN), PacketDistributor.SERVER.noArg());
-                }
-            }
-        }
-    }
 
     /**
      * 当 AttachCapabilitiesEvent 事件发生时，此方法会为玩家实体附加自定义的能力
@@ -106,8 +68,6 @@ public class ForgeEventHandler {
             PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getEntity());
             // 同步签到奖励配置到客户端
             ModNetworkHandler.INSTANCE.send(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()), PacketDistributor.PLAYER.with((ServerPlayer) event.getEntity()));
-            // 同步进度列表到客户端
-            ModNetworkHandler.INSTANCE.send(new AdvancementPacket(((ServerPlayer) event.getEntity()).server.getAdvancements().getAllAdvancements()), PacketDistributor.PLAYER.with((ServerPlayer) event.getEntity()));
         }
     }
 }

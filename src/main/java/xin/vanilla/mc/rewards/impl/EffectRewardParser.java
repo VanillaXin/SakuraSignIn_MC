@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import lombok.NonNull;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -12,6 +13,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
 import xin.vanilla.mc.util.I18nUtils;
+
+import java.util.Optional;
 
 public class EffectRewardParser implements RewardParser<MobEffectInstance> {
 
@@ -23,11 +26,11 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
             int duration = json.get("duration").getAsInt();
             int amplifier = json.get("amplifier").getAsInt();
 
-            MobEffect effect = ForgeRegistries.MOB_EFFECTS.getValue(new ResourceLocation(effectId));
-            if (effect == null) {
+            Optional<Holder<MobEffect>> effect = ForgeRegistries.MOB_EFFECTS.getHolder(new ResourceLocation(effectId));
+            if (effect.isEmpty()) {
                 throw new JsonParseException("Unknown potion effect ID: " + effectId);
             }
-            MobEffectInstance = new MobEffectInstance(effect, duration, amplifier);
+            MobEffectInstance = new MobEffectInstance(effect.get(), duration, amplifier);
         } catch (Exception e) {
             LOGGER.error("Failed to parse effect reward", e);
             MobEffectInstance = new MobEffectInstance(MobEffects.LUCK, 0, 0);
@@ -38,7 +41,7 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
     @Override
     public JsonObject serialize(MobEffectInstance reward) {
         JsonObject json = new JsonObject();
-        json.addProperty("effect", ForgeRegistries.MOB_EFFECTS.getKey(reward.getEffect()).toString());
+        json.addProperty("effect", ForgeRegistries.MOB_EFFECTS.getKey(reward.getEffect().value()).toString());
         json.addProperty("duration", reward.getDuration());
         json.addProperty("amplifier", reward.getAmplifier());
         return json;
@@ -47,11 +50,11 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
     @Override
     public String getDisplayName(JsonObject json) {
         return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.EFFECT.getCode()))
-                , this.deserialize(json).getEffect().getDisplayName().getString());
+                , this.deserialize(json).getEffect().value().getDisplayName().getString());
     }
 
     public static String getDisplayName(MobEffectInstance instance) {
-        return getDisplayName(instance.getEffect());
+        return getDisplayName(instance.getEffect().value());
     }
 
     public static String getDisplayName(MobEffect effect) {
@@ -59,7 +62,7 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
     }
 
     public static String getId(MobEffectInstance instance) {
-        return getId(instance.getEffect()) + " " + instance.getDuration() + " " + instance.getAmplifier();
+        return getId(instance.getEffect().value()) + " " + instance.getDuration() + " " + instance.getAmplifier();
     }
 
     public static String getId(MobEffect effect) {
@@ -105,6 +108,6 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
                 LOGGER.error("Failed to parse Effect data", e);
             }
         }
-        return new MobEffectInstance(effect, duration, amplifier);
+        return new MobEffectInstance(Holder.direct(effect), duration, amplifier);
     }
 }

@@ -8,6 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.searchtree.SearchRegistry;
@@ -257,10 +258,13 @@ public class ItemSelectScreen extends Screen {
     @ParametersAreNonnullByDefault
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         // 绘制背景
-        // this.renderBackground(graphics, mouseX, mouseY, partialTicks);
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         AbstractGuiUtils.fill(graphics, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (180 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
         AbstractGuiUtils.fillOutLine(graphics, (int) (this.itemBgX - this.margin), (int) (this.itemBgY - this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.itemPerLine + this.margin), (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
-        super.render(graphics, mouseX, mouseY, partialTicks);
+        // 绘制按钮
+        for (Renderable renderable : this.renderables) {
+            renderable.render(graphics, mouseX, mouseY, partialTicks);
+        }
         // 保存输入框的文本, 防止窗口重绘时输入框内容丢失
         this.inputFieldText = this.inputField.getValue();
 
@@ -430,7 +434,7 @@ public class ItemSelectScreen extends Screen {
             AbstractGuiUtils.fillOutLine(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(Items.NAME_TAG);
             context.graphics().renderItem(itemStack, (int) context.button().getX() + 2, (int) context.button().getY() + 2);
-            Text text = Text.i18n("编辑NBT");
+            Text text = Text.i18n("编辑NBT").setColor(0xFFFF0000);
             context.button().setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1) * 3).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
@@ -492,7 +496,7 @@ public class ItemSelectScreen extends Screen {
                         // 绘制物品详情悬浮窗
                         context.button().setCustomPopupFunction(() -> {
                             if (context.button().isHovered()) {
-                                List<Component> list = itemStack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
+                                List<Component> list = itemStack.getTooltipLines(Item.TooltipContext.of(Minecraft.getInstance().level), Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
                                 List<Component> list1 = Lists.newArrayList(list);
                                 Item item = itemStack.getItem();
                                 this.visibleTags.forEach((itemITag) -> {
@@ -622,27 +626,28 @@ public class ItemSelectScreen extends Screen {
                 return result;
             }));
         } else if (bt.getOperation() == OperationButtonType.NBT.getCode()) {
-            String itemNbtJsonString = ItemRewardParser.getNbtString(this.currentItem);
-            Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入物品NBT").setShadow(true), Text.i18n("请输入"), "", itemNbtJsonString, input -> {
-                String result = "";
-                if (StringUtils.isNotNullOrEmpty(input)) {
-                    ItemStack itemStack;
-                    try {
-                        itemStack = ItemRewardParser.getItemStack(ItemRewardParser.getId(this.currentItem.getItem()) + input, true);
-                        itemStack.setCount(this.currentItem.getCount());
-                    } catch (Exception e) {
-                        LOGGER.error("Invalid NBT: {}", input);
-                        itemStack = null;
-                    }
-                    if (itemStack != null && itemStack.hasTag()) {
-                        this.currentItem = itemStack;
-                        this.selectedItemId = ItemRewardParser.getId(this.currentItem);
-                    } else {
-                        result = getByZh("物品NBT[%s]输入有误", input);
-                    }
-                }
-                return result;
-            }));
+            // TODO 设置NBT
+            // String itemNbtJsonString = ItemRewardParser.getNbtString(this.currentItem);
+            // Minecraft.getInstance().setScreen(new StringInputScreen(this, Text.i18n("请输入物品NBT").setShadow(true), Text.i18n("请输入"), "", itemNbtJsonString, input -> {
+            //     String result = "";
+            //     if (StringUtils.isNotNullOrEmpty(input)) {
+            //         ItemStack itemStack;
+            //         try {
+            //             itemStack = ItemRewardParser.getItemStack(ItemRewardParser.getId(this.currentItem.getItem()) + input, true);
+            //             itemStack.setCount(this.currentItem.getCount());
+            //         } catch (Exception e) {
+            //             LOGGER.error("Invalid NBT: {}", input);
+            //             itemStack = null;
+            //         }
+            //         if (itemStack != null && itemStack.hasTag()) {
+            //             this.currentItem = itemStack;
+            //             this.selectedItemId = ItemRewardParser.getId(this.currentItem);
+            //         } else {
+            //             result = getByZh("物品NBT[%s]输入有误", input);
+            //         }
+            //     }
+            //     return result;
+            // }));
         }
     }
 }

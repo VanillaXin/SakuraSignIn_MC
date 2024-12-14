@@ -31,14 +31,14 @@ public class RewardOptionSyncPacket {
 
     public static void handle(RewardOptionSyncPacket packet, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            if (ctx.getDirection().getReceptionSide().isClient()) {
+            if (ctx.isClientSide()) {
                 // 备份 RewardOption
                 RewardOptionDataManager.backupRewardOption();
                 // 更新 RewardOption
                 RewardOptionDataManager.setRewardOptionData(packet.getRewardOptionData());
                 RewardOptionDataManager.setRewardOptionDataChanged(true);
                 RewardOptionDataManager.saveRewardOption();
-            } else if (ctx.getDirection().getReceptionSide().isServer()) {
+            } else if (ctx.isServerSide()) {
                 ServerPlayer sender = ctx.getSender();
                 if (sender != null) {
                     // 判断是否为管理员

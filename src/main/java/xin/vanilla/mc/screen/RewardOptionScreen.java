@@ -1273,8 +1273,6 @@ public class RewardOptionScreen extends Screen {
     @ParametersAreNonnullByDefault
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.gg = graphics;
-        // 绘制背景
-        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         // 绘制缩放背景纹理
         this.renderBackgroundTexture(graphics);
 

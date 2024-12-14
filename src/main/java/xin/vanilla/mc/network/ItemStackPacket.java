@@ -2,6 +2,7 @@ package xin.vanilla.mc.network;
 
 import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -35,7 +36,7 @@ public class ItemStackPacket {
      * @param buf 包含ItemStack数据的FriendlyByteBuf
      */
     public ItemStackPacket(FriendlyByteBuf buf) {
-        this.itemStack = buf.readItem();
+        this.itemStack = ItemStack.OPTIONAL_STREAM_CODEC.decode((RegistryFriendlyByteBuf) buf);
     }
 
     /**
@@ -44,7 +45,7 @@ public class ItemStackPacket {
      * @param buf 用于存储ItemStack数据的FriendlyByteBuf
      */
     public void toBytes(FriendlyByteBuf buf) {
-        buf.writeItemStack(itemStack, false);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode((RegistryFriendlyByteBuf) buf, itemStack);
     }
 
     /**

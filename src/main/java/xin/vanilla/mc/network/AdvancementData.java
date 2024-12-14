@@ -6,6 +6,7 @@ import lombok.experimental.Accessors;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -36,7 +37,7 @@ public class AdvancementData {
         buffer.writeResourceLocation(id);
         buffer.writeUtf(title);
         buffer.writeUtf(description);
-        buffer.writeItemStack(icon, false);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode((RegistryFriendlyByteBuf) buffer, icon);
     }
 
     public static AdvancementData fromAdvancement(AdvancementHolder advancement) {
@@ -61,7 +62,7 @@ public class AdvancementData {
         ResourceLocation id = buffer.readResourceLocation();
         String title = buffer.readUtf(32767);
         String description = buffer.readUtf(32767);
-        ItemStack icon = buffer.readItem();
+        ItemStack icon = ItemStack.OPTIONAL_STREAM_CODEC.decode((RegistryFriendlyByteBuf) buffer);
         return new AdvancementData(id, title, description, icon);
     }
 }

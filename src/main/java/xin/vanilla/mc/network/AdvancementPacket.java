@@ -43,7 +43,7 @@ public class AdvancementPacket {
     public static void handle(AdvancementPacket packet, CustomPayloadEvent.Context ctx) {
         // 获取网络事件上下文并排队执行工作
         ctx.enqueueWork(() -> {
-            if (ctx.getDirection().getReceptionSide().isClient()) {
+            if (ctx.isClientSide()) {
                 // 在客户端更新 List<AdvancementData>
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleAdvancement(packet));
             }

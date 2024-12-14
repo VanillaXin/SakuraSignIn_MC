@@ -4,6 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import lombok.NonNull;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
@@ -29,14 +32,14 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             itemStack = new ItemStack(item, count);
 
             // 如果存在NBT数据，则解析
-            if (json.has("nbt")) {
-                try {
-                    CompoundTag nbt = TagParser.parseTag(json.get("nbt").getAsString());
-                    itemStack.setTag(nbt);
-                } catch (CommandSyntaxException e) {
-                    throw new JsonParseException("Failed to parse NBT data", e);
-                }
-            }
+            // if (json.has("nbt")) {
+            //     try {
+            //         CompoundTag nbt = TagParser.parseTag(json.get("nbt").getAsString());
+            //         itemStack.applyComponents(nbt.);
+            //     } catch (CommandSyntaxException e) {
+            //         throw new JsonParseException("Failed to parse NBT data", e);
+            //     }
+            // }
         } catch (Exception e) {
             LOGGER.error("Failed to deserialize item reward", e);
             itemStack = new ItemStack(Items.AIR);
@@ -52,10 +55,8 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             json.addProperty("count", reward.getCount());
 
             // 如果物品有NBT数据，则序列化
-            if (reward.hasTag()) {
-                if (reward.getTag() != null) {
-                    json.addProperty("nbt", getNbtString(reward));
-                }
+            if (!reward.getComponents().isEmpty()) {
+                json.addProperty("nbt", getNbtString(reward));
             }
         } catch (Exception e) {
             LOGGER.error("Failed to serialize item reward", e);
@@ -79,27 +80,17 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     }
 
     public static String getNbtString(ItemStack itemStack) {
-        // Map<String, INBT> nbtMap = new HashMap<>();
-        // try {
-        //     if (itemStack.hasTag()) {
-        //         if (itemStack.getTag() != null) {
-        //             for (String key : itemStack.getTag().getAllKeys()) {
-        //                 INBT inbt = itemStack.getTag().get(key);
-        //                 if (inbt != null) {
-        //                     nbtMap.put(key, inbt);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // } catch (Exception e) {
-        //     LOGGER.error("Failed to get nbt string", e);
-        // }
-        // return GSON.toJson(nbtMap);
-        String json = "";
-        if (itemStack.hasTag() && itemStack.getTag() != null) {
-            json = itemStack.getTag().toString();
+        JsonObject json = new JsonObject();
+        if (!itemStack.getComponents().isEmpty()) {
+            // TODO 获取NBT
+            DataComponentMap components = itemStack.getComponents();
+            for (DataComponentType<?> dataComponentType : BuiltInRegistries.DATA_COMPONENT_TYPE) {
+                if (components.has(dataComponentType)) {
+                    json.addProperty(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType).toString(), components.get(dataComponentType).toString());
+                }
+            }
         }
-        return json;
+        return json.toString();
     }
 
     public static String getId(Item item) {
@@ -137,7 +128,8 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
             try {
                 String nbtString = id.substring(id.indexOf("{"));
                 CompoundTag nbt = TagParser.parseTag(nbtString);
-                itemStack.setTag(nbt);
+                // TODO 设置NBT
+
             } catch (Exception e) {
                 if (throwException) throw e;
                 LOGGER.error("Failed to parse NBT data", e);
