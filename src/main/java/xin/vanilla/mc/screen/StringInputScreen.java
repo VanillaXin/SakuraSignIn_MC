@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import xin.vanilla.mc.screen.component.Text;
 import xin.vanilla.mc.util.AbstractGuiUtils;
@@ -69,7 +69,7 @@ public class StringInputScreen extends Screen {
 
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, Consumer<String> onDataReceived) {
-        super(new TextComponent("StringInputScreen"));
+        super(Component.literal("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -81,7 +81,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Consumer<String> onDataReceived) {
-        super(new TextComponent("StringInputScreen"));
+        super(Component.literal("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -93,7 +93,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Consumer<String> onDataReceived, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("StringInputScreen"));
+        super(Component.literal("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -105,7 +105,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, Function<String, String> onDataReceived) {
-        super(new TextComponent("StringInputScreen"));
+        super(Component.literal("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -117,7 +117,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Function<String, String> onDataReceived) {
-        super(new TextComponent("StringInputScreen"));
+        super(Component.literal("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -129,7 +129,7 @@ public class StringInputScreen extends Screen {
     }
 
     public StringInputScreen(Screen callbackScreen, Text titleText, Text messageText, String validator, String defaultValue, Function<String, String> onDataReceived, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("StringInputScreen"));
+        super(Component.literal("StringInputScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -154,7 +154,7 @@ public class StringInputScreen extends Screen {
         this.inputField.setValue(defaultValue);
         this.addRenderableWidget(this.inputField);
         // 创建提交按钮
-        this.submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, new TextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.submitButton = AbstractGuiUtils.newButton(this.width / 2 + 5, this.height / 2 + 10, 95, 20, Component.literal(I18nUtils.getByZh("取消")), button -> {
             String value = this.inputField.getValue();
             if (StringUtils.isNullOrEmpty(value)) {
                 // 关闭当前屏幕并返回到调用者的 Screen
@@ -178,7 +178,7 @@ public class StringInputScreen extends Screen {
         });
         this.addRenderableWidget(this.submitButton);
         // 创建取消按钮
-        this.addRenderableWidget(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, new TextComponent(I18nUtils.getByZh("取消")), button -> {
+        this.addRenderableWidget(AbstractGuiUtils.newButton(this.width / 2 - 100, this.height / 2 + 10, 95, 20, Component.literal(I18nUtils.getByZh("取消")), button -> {
             // 关闭当前屏幕并返回到调用者的 Screen
             Minecraft.getInstance().setScreen(previousScreen);
         }));
@@ -197,9 +197,9 @@ public class StringInputScreen extends Screen {
             AbstractGuiUtils.drawLimitedText(errorText, this.width / 2.0f - 100, this.height / 2.0f + 2, 200, AbstractGuiUtils.EllipsisPosition.MIDDLE);
         }
         if (StringUtils.isNotNullOrEmpty(this.inputField.getValue())) {
-            this.submitButton.setMessage(new TextComponent(I18nUtils.getByZh("提交")));
+            this.submitButton.setMessage(Component.literal(I18nUtils.getByZh("提交")));
         } else {
-            this.submitButton.setMessage(new TextComponent(I18nUtils.getByZh("取消")));
+            this.submitButton.setMessage(Component.literal(I18nUtils.getByZh("取消")));
         }
     }
 

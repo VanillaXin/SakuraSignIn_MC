@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.SakuraSignIn;
@@ -107,7 +108,7 @@ public class TextureUtils {
      */
     public static ResourceLocation getEffectTexture(MobEffectInstance mobEffectInstance) {
         ResourceLocation effectIcon;
-        ResourceLocation registryName = mobEffectInstance.getEffect().getRegistryName();
+        ResourceLocation registryName = ForgeRegistries.MOB_EFFECTS.getKey(mobEffectInstance.getEffect());
         if (registryName != null) {
             effectIcon = new ResourceLocation(registryName.getNamespace(), DEFAULT_EFFECT_DIR + registryName.getPath() + ".png");
         } else {
@@ -131,9 +132,9 @@ public class TextureUtils {
         }
         try {
             // 获取资源管理器
-            Resource resource = Minecraft.getInstance().getResourceManager().getResource(texture);
+            Resource resource = Minecraft.getInstance().getResourceManager().getResourceOrThrow(texture);
             // 打开资源输入流并加载为 NativeImage
-            try (InputStream inputStream = resource.getInputStream()) {
+            try (InputStream inputStream = resource.open()) {
                 NativeImage nativeImage = NativeImage.read(inputStream);
                 CACHE.put(texture, nativeImage);
                 return nativeImage;

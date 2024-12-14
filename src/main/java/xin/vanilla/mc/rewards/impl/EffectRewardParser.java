@@ -38,7 +38,7 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
     @Override
     public JsonObject serialize(MobEffectInstance reward) {
         JsonObject json = new JsonObject();
-        json.addProperty("effect", reward.getEffect().getRegistryName().toString());
+        json.addProperty("effect", ForgeRegistries.MOB_EFFECTS.getKey(reward.getEffect()).toString());
         json.addProperty("duration", reward.getDuration());
         json.addProperty("amplifier", reward.getAmplifier());
         return json;
@@ -63,7 +63,7 @@ public class EffectRewardParser implements RewardParser<MobEffectInstance> {
     }
 
     public static String getId(MobEffect effect) {
-        ResourceLocation resource = effect.getRegistryName();
+        ResourceLocation resource = ForgeRegistries.MOB_EFFECTS.getKey(effect);
         if (resource == null) return "minecraft:luck";
         else return resource.toString();
     }

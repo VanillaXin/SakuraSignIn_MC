@@ -12,7 +12,10 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
@@ -35,6 +38,7 @@ import java.util.stream.Collectors;
 /**
  * GuiComponent工具类
  */
+@SuppressWarnings("unused")
 @OnlyIn(Dist.CLIENT)
 public class AbstractGuiUtils {
 
@@ -237,7 +241,7 @@ public class AbstractGuiUtils {
     }
 
     public static MutableComponent textToComponent(Text text) {
-        return new TextComponent(text.getContent()).setStyle(Style.EMPTY
+        return Component.literal(text.getContent()).setStyle(Style.EMPTY
                 .withColor(TextColor.fromRgb(text.getColor()))
                 .withBold(text.isBold())
                 .withItalic(text.isItalic())
@@ -618,7 +622,7 @@ public class AbstractGuiUtils {
         if (showText) {
             // 效果等级
             if (mobEffectInstance.getAmplifier() >= 0) {
-                TextComponent amplifierString = new TextComponent(StringUtils.intToRoman(mobEffectInstance.getAmplifier() + 1));
+                Component amplifierString = Component.literal(StringUtils.intToRoman(mobEffectInstance.getAmplifier() + 1));
                 int amplifierWidth = font.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
@@ -626,7 +630,7 @@ public class AbstractGuiUtils {
             }
             // 效果持续时间
             if (mobEffectInstance.getDuration() > 0) {
-                TextComponent durationString = new TextComponent(DateUtils.toMaxUnitString(mobEffectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
+                MutableComponent durationString = Component.literal(DateUtils.toMaxUnitString(mobEffectInstance.getDuration(), DateUtils.DateUnit.SECOND, 0, 1));
                 int durationWidth = font.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
@@ -653,7 +657,7 @@ public class AbstractGuiUtils {
         AbstractGuiUtils.bindTexture(textureLocation);
         AbstractGuiUtils.blit(poseStack, x, y, ITEM_ICON_SIZE, ITEM_ICON_SIZE, (float) textureUV.getU0(), (float) textureUV.getV0(), (int) textureUV.getUWidth(), (int) textureUV.getVHeight(), totalWidth, totalHeight);
         if (showText) {
-            TextComponent num = new TextComponent(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
+            MutableComponent num = Component.literal(String.valueOf((Integer) RewardManager.deserializeReward(reward)));
             int numWidth = font.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - font.lineHeight + 2;

@@ -103,7 +103,7 @@ public class ItemRewardParser implements RewardParser<ItemStack> {
     }
 
     public static String getId(Item item) {
-        ResourceLocation resource = item.getRegistryName();
+        ResourceLocation resource = ForgeRegistries.ITEMS.getKey(item);
         if (resource == null) return "minecraft:air";
         else return resource.toString();
     }

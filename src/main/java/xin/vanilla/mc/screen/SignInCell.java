@@ -9,7 +9,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import xin.vanilla.mc.config.ClientConfig;
 import xin.vanilla.mc.enums.ESignInStatus;
@@ -127,7 +128,7 @@ public class SignInCell {
             // 绘制日期
             Date date = new Date();
             int color = textureCoordinate.getTextColorDefault();
-            TextComponent dayStr = new TextComponent(String.valueOf(day));
+            MutableComponent dayStr = Component.literal(String.valueOf(day));
             if (year == DateUtils.getYearPart(date) && month == DateUtils.getMonthOfDate(date)) {
                 if (day == DateUtils.getDayOfMonth(date)) {
                     color = textureCoordinate.getTextColorToday();
@@ -211,7 +212,7 @@ public class SignInCell {
         // 绘制文字
         String monthTitle = DateUtils.toLocalStringMonth(DateUtils.getDate(year, month, day), Minecraft.getInstance().options.languageCode);
         String dayTitle = DateUtils.toLocalStringDay(DateUtils.getDate(year, month, day), Minecraft.getInstance().options.languageCode);
-        TextComponent title = new TextComponent(String.format("%s %s", monthTitle, dayTitle));
+        MutableComponent title = Component.literal(String.format("%s %s", monthTitle, dayTitle));
         double fontWidth = font.width(title);
         Coordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
         double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;

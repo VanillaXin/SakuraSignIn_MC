@@ -41,7 +41,7 @@ public class ForgeEventHandler {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggedInEvent event) {
+    public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
         LOGGER.debug("Client: Player logged in.");
         isPlayerLoggedIn = true;
         // 同步客户端配置到服务器
@@ -90,7 +90,7 @@ public class ForgeEventHandler {
     public static void onPlayerCloned(PlayerEvent.Clone event) {
         if (!event.isWasDeath()) {
             LazyOptional<IPlayerSignInData> oldSpeedCap = event.getOriginal().getCapability(PlayerSignInDataCapability.PLAYER_DATA);
-            LazyOptional<IPlayerSignInData> newSpeedCap = event.getPlayer().getCapability(PlayerSignInDataCapability.PLAYER_DATA);
+            LazyOptional<IPlayerSignInData> newSpeedCap = event.getEntity().getCapability(PlayerSignInDataCapability.PLAYER_DATA);
             if (oldSpeedCap.isPresent() && newSpeedCap.isPresent()) {
                 newSpeedCap.ifPresent((newCap) -> oldSpeedCap.ifPresent((oldCap) -> newCap.deserializeNBT(oldCap.serializeNBT())));
             }
@@ -100,14 +100,14 @@ public class ForgeEventHandler {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         // 服务器端逻辑
-        if (event.getPlayer() instanceof ServerPlayer) {
+        if (event.getEntity() instanceof ServerPlayer) {
             LOGGER.debug("Server: Player logged in.");
             // 同步玩家签到数据到客户端
-            PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getPlayer());
+            PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getEntity());
             // 同步签到奖励配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
             // 同步进度列表到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new AdvancementPacket(((ServerPlayer) event.getPlayer()).server.getAdvancements().getAllAdvancements()));
+            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new AdvancementPacket(((ServerPlayer) event.getEntity()).server.getAdvancements().getAllAdvancements()));
         }
     }
 }

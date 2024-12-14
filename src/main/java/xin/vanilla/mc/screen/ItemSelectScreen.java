@@ -15,7 +15,6 @@ import net.minecraft.client.searchtree.SearchTree;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
@@ -162,7 +161,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived, @NonNull ItemStack defaultItem, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -172,7 +171,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived, @NonNull ItemStack defaultItem, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -182,7 +181,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived, @NonNull ItemStack defaultItem) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -192,7 +191,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived, @NonNull ItemStack defaultItem) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -202,7 +201,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ItemStack> onDataReceived) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -210,7 +209,7 @@ public class ItemSelectScreen extends Screen {
     }
 
     public ItemSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ItemStack, String> onDataReceived) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -224,7 +223,7 @@ public class ItemSelectScreen extends Screen {
         this.updateSearchResults();
         this.updateLayout();
         // 创建文本输入框
-        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 180, 15, new TextComponent(""));
+        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 180, 15, Component.literal(""));
         this.inputField.setValue(this.inputFieldText);
         this.addRenderableWidget(this.inputField);
         // 创建提交按钮
@@ -511,7 +510,7 @@ public class ItemSelectScreen extends Screen {
                                 }
                                 this.visibleTags.forEach((itemITag) -> {
                                     if (itemStack.is(itemITag)) {
-                                        list1.add(1, (new TextComponent("#" + itemITag.location())).withStyle(ChatFormatting.DARK_PURPLE));
+                                        list1.add(1, (Component.literal("#" + itemITag.location())).withStyle(ChatFormatting.DARK_PURPLE));
                                     }
 
                                 });

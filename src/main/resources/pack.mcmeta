@@ -1,6 +1,8 @@
 {
   "pack": {
     "description": "sakura_sign_in resources",
-    "pack_format": 8
+    "pack_format": 10,
+    "forge:resource_pack_format": 8,
+    "forge:data_pack_format": 9
   }
 }

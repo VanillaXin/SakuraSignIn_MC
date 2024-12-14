@@ -8,8 +8,8 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -339,7 +339,7 @@ public class RewardOptionScreen extends Screen {
             case BASE_REWARD: {
                 this.addRewardTitleButton(getByZh("基础奖励"), "base", titleIndex, rewardListIndex.get());
                 rewardListIndex.addAndGet(lineItemCount);
-                this.addRewardButton(new HashMap<String, RewardList>() {{
+                this.addRewardButton(new HashMap<>() {{
                     put("base", rewardOptionData.getBaseRewards());
                 }}, "base", rewardListIndex);
             }
@@ -1161,7 +1161,7 @@ public class RewardOptionScreen extends Screen {
     }
 
     public RewardOptionScreen() {
-        super(new TranslatableComponent("screen.sakura_sign_in.reward_option_title"));
+        super(Component.translatable("screen.sakura_sign_in.reward_option_title"));
     }
 
     @Override

@@ -11,15 +11,14 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.command.SignInCommand;
@@ -107,22 +106,23 @@ public class SakuraSignIn {
         MinecraftForge.EVENT_BUS.register(this);
 
         // 注册服务器和客户端配置
-        // MinecraftForge.EVENT_BUS.addListener(this::onLoadConfig);
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.SERVER_CONFIG);
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
 
         // 注册客户端设置事件到MOD事件总线
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+        // FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
     }
 
-    // 服务器启动时加载数据
-    private void onServerStarting(ServerStartingEvent event) {
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
+        // 服务器启动时加载数据
         RewardOptionDataManager.loadRewardOption();
         LOGGER.debug("SignIn data loaded.");
     }
 
-    // 服务器关闭时保存数据
-    private void onServerStopping(ServerStoppingEvent event) {
+    @SubscribeEvent
+    public void onServerStopping(ServerStoppingEvent event) {
+        // 服务器关闭时保存数据
         // RewardOptionDataManager.saveRewardOption();
     }
 
@@ -142,9 +142,6 @@ public class SakuraSignIn {
      */
     @SubscribeEvent
     public void onClientSetup(final FMLClientSetupEvent event) {
-        // 注册键绑定
-        LOGGER.debug("Registering key bindings");
-        ClientEventHandler.registerKeyBindings();
         // 创建配置文件目录
         ClientEventHandler.createConfigPath();
     }
@@ -172,7 +169,7 @@ public class SakuraSignIn {
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LOGGER.debug("Player has logged out.");
         // 获取退出的玩家对象
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         // 判断是否在客户端并且退出的玩家是客户端的当前玩家
         if (player.getCommandSenderWorld().isClientSide) {
             if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
@@ -190,7 +187,7 @@ public class SakuraSignIn {
      */
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onWorldUnload(WorldEvent.Unload event) {
+    public void onWorldUnload(LevelEvent.Unload event) {
         LOGGER.debug("World has unloaded.");
         // 当玩家离开世界时
         enabled = false;

@@ -6,8 +6,8 @@ import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -142,7 +142,7 @@ public class SignInScreen extends Screen {
     }
 
     public SignInScreen() {
-        super(new TranslatableComponent("screen.sakura_sign_in.sign_in_title"));
+        super(Component.translatable("screen.sakura_sign_in.sign_in_title"));
     }
 
     @Override
@@ -522,7 +522,7 @@ public class SignInScreen extends Screen {
                 LocalPlayer player = Minecraft.getInstance().player;
                 String selectedFile = themeFileList.get(popupOption.getSelectedIndex()).getPath();
                 if (player != null) {
-                    player.sendMessage(new TranslatableComponent(getI18nKey("已选择主题文件: %s"), selectedFile), player.getUUID());
+                    player.sendSystemMessage(Component.translatable(getI18nKey("已选择主题文件: %s"), selectedFile));
                     ClientConfig.THEME.set(selectedFile);
                     updateTextureAndCoordinate.set(true);
                     updateLayout.set(true);
@@ -652,7 +652,7 @@ public class SignInScreen extends Screen {
                 popupOption.clear();
                 // 若文件夹为空, 绘制提示, 并在点击时打开主题文件夹
                 if (CollectionUtils.isNullOrEmpty(themeFileList)) {
-                    TranslatableComponent textComponent = new TranslatableComponent("screen.sakura_sign_in.theme_selector.empty");
+                    MutableComponent textComponent = Component.translatable("screen.sakura_sign_in.theme_selector.empty");
                     popupOption.addOption(StringUtils.replaceLine(textComponent.getString()).split("\n"));
                 } else {
                     popupOption.addOption(themeFileList.stream().map(file -> {
@@ -673,7 +673,7 @@ public class SignInScreen extends Screen {
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
-                    player.sendMessage(new TranslatableComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
+                    player.sendSystemMessage(Component.translatable(getI18nKey("前面的的日期以后再来探索吧。")));
                 } else {
                     cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
@@ -681,10 +681,10 @@ public class SignInScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new TranslatableComponent(getI18nKey("已经签过到了哦。")), player.getUUID());
+                player.sendSystemMessage(Component.translatable(getI18nKey("已经签过到了哦。")));
             } else {
                 if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
-                    player.sendMessage(new TranslatableComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
+                    player.sendSystemMessage(Component.translatable(getI18nKey("不论怎么点也不会获取俩次奖励吧。")));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
                     ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
@@ -693,10 +693,10 @@ public class SignInScreen extends Screen {
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!ServerConfig.SIGN_IN_CARD.get()) {
-                    player.sendMessage(new TranslatableComponent(getI18nKey("服务器未开启补签功能哦。")), player.getUUID());
+                    player.sendSystemMessage(Component.translatable(getI18nKey("服务器未开启补签功能哦。")));
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                        player.sendMessage(new TranslatableComponent(getI18nKey("补签卡不足了哦。")), player.getUUID());
+                        player.sendSystemMessage(Component.translatable(getI18nKey("补签卡不足了哦。")));
                     } else {
                         cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
                         ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
@@ -705,15 +705,15 @@ public class SignInScreen extends Screen {
             }
         } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
             if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
-                player.sendMessage(new TranslatableComponent(getI18nKey("前面的的日期以后再来探索吧。")), player.getUUID());
+                player.sendSystemMessage(Component.translatable(getI18nKey("前面的的日期以后再来探索吧。")));
             } else {
-                player.sendMessage(new TranslatableComponent(getI18nKey("过去的的日期怎么想也回不去了吧。")), player.getUUID());
+                player.sendSystemMessage(Component.translatable(getI18nKey("过去的的日期怎么想也回不去了吧。")));
             }
         } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
-            player.sendMessage(new TranslatableComponent(getI18nKey("不论怎么点也不会获取俩次奖励吧。")), player.getUUID());
+            player.sendSystemMessage(Component.translatable(getI18nKey("不论怎么点也不会获取俩次奖励吧。")));
         } else {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(new TextComponent(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)), player.getUUID());
+                player.sendSystemMessage(Component.literal(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)));
             }
         }
     }

@@ -7,7 +7,7 @@ import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -140,7 +140,7 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     public AdvancementSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ResourceLocation> onDataReceived, @NonNull ResourceLocation defaultAdvancement, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("AdvancementSelectScreen"));
+        super(Component.literal("AdvancementSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -149,7 +149,7 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     public AdvancementSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ResourceLocation, String> onDataReceived, @NonNull ResourceLocation defaultAdvancement, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("AdvancementSelectScreen"));
+        super(Component.literal("AdvancementSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -158,7 +158,7 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     public AdvancementSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ResourceLocation> onDataReceived, @NonNull ResourceLocation defaultAdvancement) {
-        super(new TextComponent("AdvancementSelectScreen"));
+        super(Component.literal("AdvancementSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -167,7 +167,7 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     public AdvancementSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ResourceLocation, String> onDataReceived, @NonNull ResourceLocation defaultAdvancement) {
-        super(new TextComponent("AdvancementSelectScreen"));
+        super(Component.literal("AdvancementSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -176,7 +176,7 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     public AdvancementSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<ResourceLocation> onDataReceived) {
-        super(new TextComponent("AdvancementSelectScreen"));
+        super(Component.literal("AdvancementSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -184,7 +184,7 @@ public class AdvancementSelectScreen extends Screen {
     }
 
     public AdvancementSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<ResourceLocation, String> onDataReceived) {
-        super(new TextComponent("AdvancementSelectScreen"));
+        super(Component.literal("AdvancementSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -198,7 +198,7 @@ public class AdvancementSelectScreen extends Screen {
         this.updateSearchResults();
         this.updateLayout();
         // 创建文本输入框
-        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 112, 15, new TextComponent(""));
+        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 112, 15, Component.literal(""));
         this.inputField.setValue(this.inputFieldText);
         this.addRenderableWidget(this.inputField);
         // 创建提交按钮

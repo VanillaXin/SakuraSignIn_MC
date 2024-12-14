@@ -3,9 +3,9 @@ package xin.vanilla.mc.event;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -48,9 +48,11 @@ public class ClientEventHandler {
     /**
      * 注册键绑定
      */
-    public static void registerKeyBindings() {
-        ClientRegistry.registerKeyBinding(SIGN_IN_SCREEN_KEY);
-        ClientRegistry.registerKeyBinding(REWARD_OPTION_SCREEN_KEY);
+    @SubscribeEvent
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        LOGGER.debug("Registering key bindings");
+        event.register(SIGN_IN_SCREEN_KEY);
+        event.register(REWARD_OPTION_SCREEN_KEY);
     }
 
     /**
@@ -70,7 +72,7 @@ public class ClientEventHandler {
         try {
             SakuraSignIn.setThemeTexture(TextureUtils.loadCustomTexture(ClientConfig.THEME.get()));
             SakuraSignIn.setSpecialVersionTheme(Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get()));
-            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(SakuraSignIn.getThemeTexture()).getInputStream();
+            InputStream inputStream = Minecraft.getInstance().getResourceManager().getResourceOrThrow(SakuraSignIn.getThemeTexture()).open();
             SakuraSignIn.setThemeTextureCoordinate(PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME));
         } catch (IOException | ClassNotFoundException ignored) {
         }
@@ -104,7 +106,7 @@ public class ClientEventHandler {
             } else {
                 LocalPlayer player = Minecraft.getInstance().player;
                 if (player != null) {
-                    player.sendMessage(new TranslatableComponent(getI18nKey("SakuraSignIn server is offline!")), player.getUUID());
+                    player.sendSystemMessage(Component.translatable(getI18nKey("SakuraSignIn server is offline!")));
                 }
             }
         } else if (REWARD_OPTION_SCREEN_KEY.consumeClick()) {

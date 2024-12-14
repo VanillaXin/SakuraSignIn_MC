@@ -14,7 +14,6 @@ import xin.vanilla.mc.util.CollectionUtils;
 import xin.vanilla.mc.util.StringUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 弹出层选项框
@@ -122,7 +121,7 @@ public class PopupOption {
     public PopupOption addOption(@NonNull Text text) {
         if (this.x >= 0 || this.y >= 0)
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
-        List<Text> renderList = Arrays.stream(StringUtils.replaceLine(text.getContent()).split("\n")).map(s -> text.copy().setText(s).setHoverText(s)).collect(Collectors.toList());
+        List<Text> renderList = Arrays.stream(StringUtils.replaceLine(text.getContent()).split("\n")).map(s -> text.copy().setText(s).setHoverText(s)).toList();
         for (int i = 0; i < renderList.size(); i++) {
             this.relationMap.put(this.renderList.size() + i, optionList.size());
         }
@@ -136,7 +135,7 @@ public class PopupOption {
             throw new RuntimeException("The addOption method must be called after the clear/init method and before the resize method.");
         for (String s : text) {
             Text literal = Text.literal(s);
-            List<Text> renderList = Arrays.stream(StringUtils.replaceLine(s).split("\n")).map(Text::literal).collect(Collectors.toList());
+            List<Text> renderList = Arrays.stream(StringUtils.replaceLine(s).split("\n")).map(Text::literal).toList();
             for (int i = 0; i < renderList.size(); i++) {
                 this.relationMap.put(this.renderList.size() + i, optionList.size());
             }

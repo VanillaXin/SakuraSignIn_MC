@@ -2,10 +2,10 @@ package xin.vanilla.mc.rewards.impl;
 
 import com.google.gson.JsonObject;
 import lombok.NonNull;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.rewards.RewardParser;
@@ -19,7 +19,7 @@ public class MessageRewardParser implements RewardParser<MutableComponent> {
     public @NonNull MutableComponent deserialize(JsonObject json) {
         MutableComponent message;
         try {
-            message = new TextComponent(json.get("contents").getAsString());
+            message = Component.literal(json.get("contents").getAsString());
             JsonObject styleJson = json.getAsJsonObject("style");
             Style style = Style.EMPTY;
             if (styleJson.has("color"))
@@ -52,7 +52,7 @@ public class MessageRewardParser implements RewardParser<MutableComponent> {
         styleJson.addProperty("strikethrough", style.isStrikethrough());
         styleJson.addProperty("obfuscated", style.isObfuscated());
         styleJson.addProperty("font", style.getFont().toString());
-        result.addProperty("contents", reward.getContents());
+        result.addProperty("contents", reward.getString());
         result.add("style", styleJson);
         return result;
     }

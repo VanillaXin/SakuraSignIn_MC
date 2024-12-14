@@ -9,7 +9,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Registry;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static xin.vanilla.mc.config.RewardOptionDataManager.GSON;
 import static xin.vanilla.mc.util.I18nUtils.getByZh;
@@ -145,7 +144,7 @@ public class EffecrSelectScreen extends Screen {
     }
 
     public EffecrSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<MobEffectInstance> onDataReceived, @NonNull MobEffectInstance defaultMobEffect, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -154,7 +153,7 @@ public class EffecrSelectScreen extends Screen {
     }
 
     public EffecrSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<MobEffectInstance, String> onDataReceived, @NonNull MobEffectInstance defaultMobEffect, Supplier<Boolean> shouldClose) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -163,7 +162,7 @@ public class EffecrSelectScreen extends Screen {
     }
 
     public EffecrSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<MobEffectInstance> onDataReceived, @NonNull MobEffectInstance defaultMobEffect) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -172,7 +171,7 @@ public class EffecrSelectScreen extends Screen {
     }
 
     public EffecrSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<MobEffectInstance, String> onDataReceived, @NonNull MobEffectInstance defaultMobEffect) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -181,7 +180,7 @@ public class EffecrSelectScreen extends Screen {
     }
 
     public EffecrSelectScreen(@NonNull Screen callbackScreen, @NonNull Consumer<MobEffectInstance> onDataReceived) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = onDataReceived;
         this.onDataReceived2 = null;
@@ -189,7 +188,7 @@ public class EffecrSelectScreen extends Screen {
     }
 
     public EffecrSelectScreen(@NonNull Screen callbackScreen, @NonNull Function<MobEffectInstance, String> onDataReceived) {
-        super(new TextComponent("ItemSelectScreen"));
+        super(Component.literal("ItemSelectScreen"));
         this.previousScreen = callbackScreen;
         this.onDataReceived1 = null;
         this.onDataReceived2 = onDataReceived;
@@ -203,7 +202,7 @@ public class EffecrSelectScreen extends Screen {
         this.updateSearchResults();
         this.updateLayout();
         // 创建文本输入框
-        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 112, 15, new TextComponent(""));
+        this.inputField = AbstractGuiUtils.newTextFieldWidget(this.font, bgX, bgY, 112, 15, Component.literal(""));
         this.inputField.setValue(this.inputFieldText);
         this.addRenderableWidget(this.inputField);
         // 创建提交按钮
@@ -469,7 +468,7 @@ public class EffecrSelectScreen extends Screen {
         String s = this.inputField == null ? null : this.inputField.getValue();
         this.mobEffectList.clear();
         if (StringUtils.isNotNullOrEmpty(s)) {
-            this.mobEffectList.addAll(this.allMobEffectList.stream().filter(mobEffect -> EffectRewardParser.getDisplayName(mobEffect).contains(s)).collect(Collectors.toList()));
+            this.mobEffectList.addAll(this.allMobEffectList.stream().filter(mobEffect -> EffectRewardParser.getDisplayName(mobEffect).contains(s)).toList());
         } else {
             this.mobEffectList.addAll(new ArrayList<>(this.playerMode ? this.playerMobEffectList : this.allMobEffectList));
         }
