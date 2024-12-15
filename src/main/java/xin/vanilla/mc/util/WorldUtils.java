@@ -4,6 +4,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 
 public class WorldUtils {
     /**
@@ -16,7 +17,7 @@ public class WorldUtils {
         int result = 0;
         if (player != null) {
             World world = player.level;
-            BlockPos pos = player.blockPosition();
+            BlockPos pos = player.getCommandSenderBlockPosition();
             // 获取基础的天空光亮度和方块光亮度
             int skyLight = world.getBrightness(LightType.SKY, pos);
             int blockLight = world.getBrightness(LightType.BLOCK, pos);
@@ -26,7 +27,7 @@ public class WorldUtils {
             boolean isThundering = world.isThundering();
             boolean isUnderground = !world.canSeeSky(pos);
             // 判断世界维度（地表、下界、末地）
-            if (world.dimension() == World.OVERWORLD) {
+            if (world.dimension.getType() == DimensionType.OVERWORLD) {
                 // 如果在地表
                 if (!isUnderground) {
                     if (isDay) {
@@ -43,11 +44,11 @@ public class WorldUtils {
                     // 没有光源时最黑，有光源则受距离影响
                     result = Math.max(Math.min(blockLight, 12), 0);
                 }
-            } else if (world.dimension() == World.NETHER) {
+            } else if (world.dimension.getType() == DimensionType.NETHER) {
                 // 下界亮度较暗，但部分地方有熔岩光源
                 // 近光源则亮度提升，但不会超过10
                 result = Math.min(7 + blockLight / 2, 10);
-            } else if (world.dimension() == World.END) {
+            } else if (world.dimension.getType() == DimensionType.THE_END) {
                 // 末地亮度通常较暗
                 // 即使贴近光源，末地的亮度上限设为10
                 result = Math.min(6 + blockLight / 2, 10);

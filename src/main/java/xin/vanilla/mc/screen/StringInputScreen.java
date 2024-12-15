@@ -1,6 +1,5 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -186,10 +185,10 @@ public class StringInputScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrixStack);
+    public void render(int mouseX, int mouseY, float delta) {
+        this.renderBackground();
         // 绘制背景
-        super.render(matrixStack, mouseX, mouseY, delta);
+        super.render(mouseX, mouseY, delta);
         // 绘制标题
         AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 33);
         // 绘制错误提示
@@ -197,9 +196,9 @@ public class StringInputScreen extends Screen {
             AbstractGuiUtils.drawLimitedText(errorText, this.width / 2.0f - 100, this.height / 2.0f + 2, 200, AbstractGuiUtils.EllipsisPosition.MIDDLE);
         }
         if (StringUtils.isNotNullOrEmpty(this.inputField.getValue())) {
-            this.submitButton.setMessage(new StringTextComponent(I18nUtils.getByZh("提交")));
+            this.submitButton.setMessage(I18nUtils.getByZh("提交"));
         } else {
-            this.submitButton.setMessage(new StringTextComponent(I18nUtils.getByZh("取消")));
+            this.submitButton.setMessage(I18nUtils.getByZh("取消"));
         }
     }
 

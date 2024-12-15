@@ -8,7 +8,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -119,6 +118,8 @@ public class SakuraSignIn {
     private void onServerStarting(FMLServerStartingEvent event) {
         RewardOptionDataManager.loadRewardOption();
         LOGGER.debug("SignIn data loaded.");
+        LOGGER.debug("Registering commands");
+        SignInCommand.register(event.getServer().getCommands().getDispatcher());
     }
 
     // 服务器关闭时保存数据
@@ -140,20 +141,6 @@ public class SakuraSignIn {
         ClientEventHandler.createConfigPath();
         // 加载主题纹理
         ClientEventHandler.loadThemeTexture();
-    }
-
-    /**
-     * 注册命令事件的处理方法
-     * 当注册命令事件被触发时，此方法将被调用
-     * 该方法主要用于注册签到命令到事件调度器
-     *
-     * @param event 注册命令事件对象，通过该对象可以获取到事件调度器
-     */
-    @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        LOGGER.debug("Registering commands");
-        // 注册签到命令到事件调度器
-        SignInCommand.register(event.getDispatcher());
     }
 
     /**

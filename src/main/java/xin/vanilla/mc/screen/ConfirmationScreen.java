@@ -1,6 +1,5 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
@@ -72,10 +71,10 @@ public class ConfirmationScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrixStack);
+    public void render(int mouseX, int mouseY, float delta) {
+        this.renderBackground();
         // 绘制背景
-        super.render(matrixStack, mouseX, mouseY, delta);
+        super.render(mouseX, mouseY, delta);
         // 绘制标题
         AbstractGuiUtils.drawString(titleText, this.width / 2.0f - 100, this.height / 2.0f - 33);
     }

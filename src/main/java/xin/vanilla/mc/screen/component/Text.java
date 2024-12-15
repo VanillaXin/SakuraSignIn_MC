@@ -1,6 +1,5 @@
 package xin.vanilla.mc.screen.component;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
@@ -13,10 +12,6 @@ import xin.vanilla.mc.util.I18nUtils;
 @Accessors(chain = true)
 @OnlyIn(Dist.CLIENT)
 public class Text {
-    /**
-     * 矩阵栈
-     */
-    private MatrixStack matrixStack;
     /**
      * 字体渲染器
      */
@@ -139,12 +134,7 @@ public class Text {
                 .setHoverUnderlined(this.hoverUnderlined)
                 .setHoverStrikethrough(this.hoverStrikethrough)
                 .setHoverObfuscated(this.hoverObfuscated)
-                .setMatrixStack(this.matrixStack)
                 .setFont(this.font);
-    }
-
-    public MatrixStack getMatrixStack() {
-        return matrixStack == null ? new MatrixStack() : this.matrixStack;
     }
 
     public FontRenderer getFont() {

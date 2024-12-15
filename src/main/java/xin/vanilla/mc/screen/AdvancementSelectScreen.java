@@ -1,7 +1,6 @@
 package xin.vanilla.mc.screen;
 
 import com.google.gson.JsonObject;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
@@ -232,16 +231,16 @@ public class AdvancementSelectScreen extends Screen {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
+    public void render(int mouseX, int mouseY, float delta) {
         // 绘制背景
-        this.renderBackground(matrixStack);
-        AbstractGuiUtils.fill(matrixStack, (int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (112 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
-        AbstractGuiUtils.fillOutLine(matrixStack, (int) (this.effectBgX - this.margin), (int) (this.effectBgY - this.margin), 104, (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
-        super.render(matrixStack, mouseX, mouseY, delta);
+        this.renderBackground();
+        AbstractGuiUtils.fill((int) (this.bgX - this.margin), (int) (this.bgY - this.margin), (int) (112 + this.margin * 2), (int) (20 + (AbstractGuiUtils.ITEM_ICON_SIZE + 3) * 5 + 20 + margin * 2 + 5), 0xCCC6C6C6, 2);
+        AbstractGuiUtils.fillOutLine((int) (this.effectBgX - this.margin), (int) (this.effectBgY - this.margin), 104, (int) ((AbstractGuiUtils.ITEM_ICON_SIZE + this.margin) * this.maxLine + this.margin), 1, 0xFF000000, 1);
+        super.render(mouseX, mouseY, delta);
         // 保存输入框的文本, 防止窗口重绘时输入框内容丢失
         this.inputFieldText = this.inputField.getValue();
 
-        this.renderButton(matrixStack, mouseX, mouseY);
+        this.renderButton(mouseX, mouseY);
     }
 
     @Override
@@ -351,8 +350,8 @@ public class AdvancementSelectScreen extends Screen {
         this.OP_BUTTONS.put(OperationButtonType.TYPE.getCode(), new OperationButton(OperationButtonType.TYPE.getCode(), context -> {
             // 绘制背景
             int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            AbstractGuiUtils.fill((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.displayMode ? Items.CHEST : Items.COMPASS);
             this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
             Text text = this.displayMode ? Text.i18n("列出模式\n有图标的 (%s)", displayableAdvancementList.size()) : Text.i18n("列出模式\n所有进度 (%s)", allAdvancementList.size());
@@ -361,8 +360,8 @@ public class AdvancementSelectScreen extends Screen {
         this.OP_BUTTONS.put(OperationButtonType.ADVANCEMENT.getCode(), new OperationButton(OperationButtonType.ADVANCEMENT.getCode(), context -> {
             // 绘制背景
             int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
-            AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
-            AbstractGuiUtils.fillOutLine(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
+            AbstractGuiUtils.fill((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
+            AbstractGuiUtils.fillOutLine((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             this.itemRenderer.renderGuiItem(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getIcon(), (int) context.button.getX() + 2, (int) context.button.getY() + 2);
             context.button.setTooltip(Text.literal(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getTitle()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -389,10 +388,10 @@ public class AdvancementSelectScreen extends Screen {
             this.inScrollHeight = Math.max(2, (outScrollHeight - 2) * inScrollWidthScale);
             this.inScrollY = outScrollY + inScrollTopHeight + 1;
             // 绘制滚动条外层背景
-            AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
+            AbstractGuiUtils.fill((int) this.outScrollX, (int) this.outScrollY, this.outScrollWidth, this.outScrollHeight, 0xCC232323);
             // 绘制滚动条滑块
             int color = context.button.isHovered() ? 0xCCFFFFFF : 0xCC8B8B8B;
-            AbstractGuiUtils.fill(context.matrixStack, (int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
+            AbstractGuiUtils.fill((int) this.outScrollX, (int) Math.ceil(this.inScrollY), this.outScrollWidth, (int) this.inScrollHeight, color);
             context.button.setX(this.outScrollX).setY(this.outScrollY).setWidth(this.outScrollWidth).setHeight(this.outScrollHeight);
         }));
 
@@ -418,8 +417,8 @@ public class AdvancementSelectScreen extends Screen {
                     context.button.setX(effectX - 1).setY(effectY - 1).setWidth(100).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 2)
                             .setId(AdvancementRewardParser.getId(advancementData));
 
-                    AbstractGuiUtils.fill(context.matrixStack, (int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), bgColor);
-                    AbstractGuiUtils.drawLimitedText(Text.literal(AdvancementRewardParser.getDisplayName(advancementData)).setMatrixStack(context.matrixStack).setFont(this.font), context.button.getX() + AbstractGuiUtils.ITEM_ICON_SIZE + this.margin * 2, context.button.getY() + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 - this.font.lineHeight) / 2.0, (int) context.button.getWidth() - AbstractGuiUtils.ITEM_ICON_SIZE - 4);
+                    AbstractGuiUtils.fill((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), bgColor);
+                    AbstractGuiUtils.drawLimitedText(Text.literal(AdvancementRewardParser.getDisplayName(advancementData)).setFont(this.font), context.button.getX() + AbstractGuiUtils.ITEM_ICON_SIZE + this.margin * 2, context.button.getY() + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 - this.font.lineHeight) / 2.0, (int) context.button.getWidth() - AbstractGuiUtils.ITEM_ICON_SIZE - 4);
                     this.itemRenderer.renderGuiItem(advancementData.getIcon(), (int) (context.button.getX() + this.margin), (int) context.button.getY());
                     context.button.setTooltip(AdvancementRewardParser.getDisplayName(advancementData) + "\n" + AdvancementRewardParser.getDescription(advancementData));
                 } else {
@@ -454,13 +453,13 @@ public class AdvancementSelectScreen extends Screen {
     /**
      * 绘制按钮
      */
-    private void renderButton(MatrixStack matrixStack, int mouseX, int mouseY) {
-        for (OperationButton button : OP_BUTTONS.values()) button.render(matrixStack, mouseX, mouseY);
-        for (OperationButton button : ADVANCEMENT_BUTTONS) button.render(matrixStack, mouseX, mouseY);
+    private void renderButton(int mouseX, int mouseY) {
+        for (OperationButton button : OP_BUTTONS.values()) button.render(mouseX, mouseY);
+        for (OperationButton button : ADVANCEMENT_BUTTONS) button.render(mouseX, mouseY);
         for (OperationButton button : OP_BUTTONS.values())
-            button.renderPopup(matrixStack, this.font, mouseX, mouseY);
+            button.renderPopup(this.font, mouseX, mouseY);
         for (OperationButton button : ADVANCEMENT_BUTTONS)
-            button.renderPopup(matrixStack, this.font, mouseX, mouseY);
+            button.renderPopup(this.font, mouseX, mouseY);
     }
 
     private void handleAdvancement(OperationButton bt, int button, AtomicBoolean flag) {
