@@ -1,5 +1,6 @@
 package xin.vanilla.mc.screen.component;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import org.lwjgl.glfw.GLFW;
@@ -27,14 +28,14 @@ public class MouseCursor {
      */
     public static MouseCursor init() {
         // 隐藏鼠标指针
-        long windowHandle = Minecraft.getInstance().getWindow().getWindow();
+        long windowHandle = Minecraft.getInstance().window.getWindow();
         GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_HIDDEN);
         return new MouseCursor();
     }
 
     public void removed() {
         // 恢复鼠标指针
-        long windowHandle = Minecraft.getInstance().getWindow().getWindow();
+        long windowHandle = Minecraft.getInstance().window.getWindow();
         GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
     }
 
@@ -55,6 +56,10 @@ public class MouseCursor {
         if (status == 4 || status == 5 || status == 6 || status == 7) {
             color3 = 0xFF777777;
         }
+
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
 
         AbstractGuiUtils.setDepth(AbstractGuiUtils.EDepth.MOUSE);
         AbstractGui.fill(mouseX, mouseY + this.scroll, mouseX + 1, mouseY + this.scroll + 1, color3);

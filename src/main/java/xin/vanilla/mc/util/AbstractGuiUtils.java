@@ -1,6 +1,6 @@
 package xin.vanilla.mc.util;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import lombok.Getter;
 import lombok.NonNull;
 import net.minecraft.client.Minecraft;
@@ -76,7 +76,7 @@ public class AbstractGuiUtils {
      * @param depth 深度
      */
     public static void setDepth(EDepth depth) {
-        RenderSystem.disableDepthTest();
+        GlStateManager.disableDepthTest();
         GL11.glPushMatrix();
         GL11.glTranslatef(0, 0, depth.getDepth());
     }
@@ -86,7 +86,7 @@ public class AbstractGuiUtils {
      */
     public static void resetDepth() {
         GL11.glPopMatrix();
-        RenderSystem.enableDepthTest();
+        GlStateManager.enableDepthTest();
     }
 
     // endregion 设置深度
@@ -94,10 +94,16 @@ public class AbstractGuiUtils {
     // region 绘制纹理
 
     public static void blit(int x0, int y0, int z, int destWidth, int destHeight, TextureAtlasSprite sprite) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         AbstractGui.blit(x0, y0, z, destWidth, destHeight, sprite);
     }
 
     public static void blit(int x0, int y0, int z, float u0, float v0, int width, int height, int textureHeight, int textureWidth) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         AbstractGui.blit(x0, y0, z, u0, v0, width, height, textureHeight, textureWidth);
     }
 
@@ -116,10 +122,17 @@ public class AbstractGuiUtils {
      * @param textureHeight 整个纹理的高度，用于计算纹理坐标。
      */
     public static void blit(int x0, int y0, int destWidth, int destHeight, float u0, float v0, int srcWidth, int srcHeight, int textureWidth, int textureHeight) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         AbstractGui.blit(x0, y0, destWidth, destHeight, u0, v0, srcWidth, srcHeight, textureWidth, textureHeight);
     }
 
     public static void blit(int x0, int y0, float u0, float v0, int destWidth, int destHeight, int textureWidth, int textureHeight) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableAlphaTest();
+        GlStateManager.disableLighting();
         AbstractGui.blit(x0, y0, u0, v0, destWidth, destHeight, textureWidth, textureHeight);
     }
 
@@ -166,11 +179,11 @@ public class AbstractGuiUtils {
         // 平移回原点
         GL11.glTranslatef((float) (-width / 2.0), (float) (-height / 2.0), 0);
         // 启用混合模式来正确处理透明度
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         // 绘制纹理
         AbstractGuiUtils.blit(0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
-        RenderSystem.disableBlend();
+        GlStateManager.disableBlend();
         // 恢复矩阵状态
         GL11.glPopMatrix();
     }
@@ -199,8 +212,8 @@ public class AbstractGuiUtils {
         Random random = new Random();
         // 绑定纹理
         Minecraft.getInstance().getTextureManager().bind(texture);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GL11.glPushMatrix();
         // 添加偏移
         if (tremblingAmplitude > 0) {
@@ -213,7 +226,7 @@ public class AbstractGuiUtils {
         // 绘制纹理
         AbstractGuiUtils.blit(0, 0, width, height, u0, v0, uWidth, vHeight, textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         GL11.glPopMatrix();
-        RenderSystem.disableBlend();
+        GlStateManager.disableBlend();
     }
 
     // endregion 绘制纹理
@@ -578,6 +591,8 @@ public class AbstractGuiUtils {
                 }
                 if (skip) continue;
                 else index++;
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 if (text.isShadow()) {
                     font.drawShadow(line, (float) x, (float) y + index * font.lineHeight, text.getColor());
                 } else {
@@ -585,10 +600,15 @@ public class AbstractGuiUtils {
                 }
                 // 绘制下划线
                 if (text.isUnderlined()) {
+                    // 重置为白色, 避免颜色叠加问题
+                    GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                     AbstractGui.fill((int) x, (int) (y + font.lineHeight), (int) (x + font.width(line)), (int) (y + font.lineHeight + 1), text.getColor());
                 }
             }
         }
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
     }
 
     // endregion 绘制文字
@@ -623,6 +643,8 @@ public class AbstractGuiUtils {
                 int amplifierWidth = font.width(amplifierString);
                 float fontX = x + width - (float) amplifierWidth / 2;
                 float fontY = y - 1;
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 font.drawShadow(amplifierString, fontX, fontY, 0xFFFFFF);
             }
             // 效果持续时间
@@ -631,6 +653,8 @@ public class AbstractGuiUtils {
                 int durationWidth = font.width(durationString);
                 float fontX = x + width - (float) durationWidth / 2 - 2;
                 float fontY = y + (float) height / 2 + 1;
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 font.drawShadow(durationString, fontX, fontY, 0xFFFFFF);
             }
         }
@@ -657,6 +681,8 @@ public class AbstractGuiUtils {
             int numWidth = font.width(num);
             float fontX = x + ITEM_ICON_SIZE - (float) numWidth / 2 - 2;
             float fontY = y + (float) ITEM_ICON_SIZE - font.lineHeight + 2;
+            // 重置为白色, 避免颜色叠加问题
+            GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
             font.drawShadow(num, fontX, fontY, 0xFFFFFF);
         }
     }
@@ -672,6 +698,9 @@ public class AbstractGuiUtils {
      * @param showText     是否显示物品数量等信息
      */
     public static void renderCustomReward(ItemRenderer itemRenderer, FontRenderer fontRenderer, ResourceLocation textureLocation, TextureCoordinate textureUV, Reward reward, int x, int y, boolean showText) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         // 物品
         if (reward.getType().equals(ERewardType.ITEM)) {
             ItemStack itemStack = RewardManager.deserializeReward(reward);
@@ -705,16 +734,23 @@ public class AbstractGuiUtils {
             AdvancementData advancementData = SakuraSignIn.getAdvancementData().stream()
                     .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
                     .findFirst().orElse(new AdvancementData(resourceLocation, "", "", new ItemStack(Items.AIR)));
-            itemRenderer.renderGuiItem(advancementData.getIcon(), x, y);
+            AbstractGuiUtils.renderItem(itemRenderer, fontRenderer, advancementData.getIcon(), x, y, false);
         }
         // 指令
         else if (reward.getType().equals(ERewardType.COMMAND)) {
             renderItem(itemRenderer, fontRenderer, new ItemStack(Items.REPEATING_COMMAND_BLOCK), x, y, false);
         }
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
     }
 
     public static void renderItem(ItemRenderer itemRenderer, FontRenderer fontRenderer, ItemStack itemStack, int x, int y, boolean showText) {
-        itemRenderer.renderGuiItem(itemStack, x, y);
+        // FIXME 方块物品渲染颜色问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        itemRenderer.renderAndDecorateItem(itemStack, x, y);
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         if (showText) {
             itemRenderer.renderGuiItemDecorations(fontRenderer, itemStack, x, y, String.valueOf(itemStack.getCount()));
         }
@@ -732,6 +768,9 @@ public class AbstractGuiUtils {
      * @param color 像素的颜色
      */
     public static void drawPixel(int x, int y, int color) {
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         AbstractGui.fill(x, y, x + 1, y + 1, color);
     }
 
@@ -762,6 +801,8 @@ public class AbstractGuiUtils {
     public static void fill(int x, int y, int width, int height, int color, int radius) {
         // 如果半径为0，则直接绘制普通矩形
         if (radius <= 0) {
+            // 重置为白色, 避免颜色叠加问题
+            GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
             AbstractGui.fill(x, y, x + width, y + height, color);
             return;
         }
@@ -1064,6 +1105,9 @@ public class AbstractGuiUtils {
         adjustedX = Math.max(margin, Math.min(adjustedX, screenWidth - msgWidth - margin));
         adjustedY = Math.max(margin, Math.min(adjustedY, screenHeight - msgHeight - margin));
         AbstractGuiUtils.setDepth(EDepth.POPUP_TIPS);
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         // 在计算完的坐标位置绘制消息框背景
         AbstractGui.fill(adjustedX, adjustedY, adjustedX + msgWidth, adjustedY + msgHeight, bgColor);
         // 绘制消息文字

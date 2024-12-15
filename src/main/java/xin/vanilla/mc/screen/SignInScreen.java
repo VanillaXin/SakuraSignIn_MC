@@ -1,6 +1,6 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -370,13 +370,13 @@ public class SignInScreen extends Screen {
      */
     private void renderBackgroundTexture() {
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         // 绘制背景纹理，使用缩放后的宽度和高度
         Minecraft.getInstance().getTextureManager().bind(SakuraSignIn.getThemeTexture());
         AbstractGuiUtils.blit(bgX, bgY, bgW, bgH, (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getU0(), (float) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getV0(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getUWidth(), (int) SakuraSignIn.getThemeTextureCoordinate().getBgUV().getVHeight(), SakuraSignIn.getThemeTextureCoordinate().getTotalWidth(), SakuraSignIn.getThemeTextureCoordinate().getTotalHeight());
         // 关闭 OpenGL 的混合模式
-        RenderSystem.disableBlend();
+        GlStateManager.disableBlend();
     }
 
     @Override
@@ -391,13 +391,13 @@ public class SignInScreen extends Screen {
         double yearX = bgX + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getX() * this.scale;
         double yearY = bgY + SakuraSignIn.getThemeTextureCoordinate().getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(yearTitle, (float) yearX, (float) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
+        AbstractGuiUtils.drawString(super.font, yearTitle, (float) yearX, (float) yearY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
 
         // 渲染月份
         double monthX = bgX + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + SakuraSignIn.getThemeTextureCoordinate().getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(SakuraSignIn.getCalendarCurrentDate(), Minecraft.getInstance().options.languageCode);
-        super.font.draw(monthTitle, (float) monthX, (float) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
+        AbstractGuiUtils.drawString(super.font, monthTitle, (float) monthX, (float) monthY, SakuraSignIn.getThemeTextureCoordinate().getTextColorDate());
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {

@@ -46,7 +46,7 @@ public class AdvancementPacket {
         ctx.get().enqueueWork(() -> {
             if (ctx.get().getDirection().getReceptionSide().isClient()) {
                 // 在客户端更新 List<AdvancementData>
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleAdvancement(packet));
+                DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleAdvancement(packet));
             }
         });
         // 设置数据包已处理状态，防止重复处理

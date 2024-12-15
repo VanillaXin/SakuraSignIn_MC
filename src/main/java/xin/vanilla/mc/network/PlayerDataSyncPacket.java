@@ -37,7 +37,7 @@ public class PlayerDataSyncPacket {
             if (ctx.get().getDirection().getReceptionSide().isClient()) {
                 // 在客户端更新 PlayerSignInDataCapability
                 // 获取玩家并更新 Capability 数据
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleSynPlayerData(packet));
+                DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> ClientProxy.handleSynPlayerData(packet));
             }
         });
         ctx.get().setPacketHandled(true);

@@ -1,6 +1,6 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -176,8 +176,8 @@ public class RewardOptionScreen extends Screen {
      */
     private void renderBackgroundTexture() {
         // 启用混合模式以支持透明度
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
         // 绑定背景纹理
         Minecraft.getInstance().getTextureManager().bind(SakuraSignIn.getThemeTexture());
@@ -257,7 +257,7 @@ public class RewardOptionScreen extends Screen {
         }
 
         // 禁用混合模式
-        RenderSystem.disableBlend();
+        GlStateManager.disableBlend();
     }
 
     /**
@@ -271,8 +271,12 @@ public class RewardOptionScreen extends Screen {
     private void addRewardTitleButton(String title, String key, int titleIndex, int index) {
         REWARD_BUTTONS.put(String.format("标题,%s", key), new OperationButton(titleIndex, context -> {
             if (context.button.getRealY() < super.height && context.button.getRealY() + context.button.getRealHeight() >= 0) {
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 AbstractGui.fill((int) context.button.getRealX(), (int) (context.button.getRealY()), (int) (context.button.getRealX() + context.button.getRealWidth()), (int) (context.button.getRealY() + 1), 0xAC000000);
                 AbstractGuiUtils.drawLimitedText(super.font, title, (int) context.button.getRealX(), (int) (context.button.getRealY() + (context.button.getRealHeight() - super.font.lineHeight) / 2), (int) context.button.getRealWidth(), 0xAC000000, false);
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 AbstractGui.fill((int) context.button.getRealX(), (int) (context.button.getRealY() + context.button.getRealHeight()), (int) (context.button.getRealX() + super.font.width(title)), (int) (context.button.getRealY() + context.button.getRealHeight() - 1), 0xAC000000);
             }
         })
@@ -1132,9 +1136,13 @@ public class RewardOptionScreen extends Screen {
             int realX2 = (int) (context.button.getRealX() + realWidth);
             int realY2 = (int) (context.button.getRealY() + realHeight);
             if (this.currOpButton == context.button.getOperation()) {
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 AbstractGui.fill(realX + 1, realY, realX2 - 1, realY2, 0x44ACACAC);
             }
             if (context.button.isHovered()) {
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 AbstractGui.fill(realX, realY, realX2, realY2, 0x99ACACAC);
             }
             AbstractGuiUtils.drawLimitedText(super.font, getByZh(content), realX + 4, (int) (realY + (realHeight - super.font.lineHeight) / 2), (int) (realWidth - 22), 0xFFEBD4B1);
@@ -1276,14 +1284,22 @@ public class RewardOptionScreen extends Screen {
         // 绘制奖励项目
         this.renderRewardList(mouseX, mouseY);
 
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         // 绘制左侧边栏列表背景
         AbstractGui.fill(0, 0, leftBarWidth, super.height, 0xAA000000);
         AbstractGuiUtils.fillOutLine(0, 0, leftBarWidth, super.height, 1, 0xFF000000);
         // 绘制左侧边栏列表标题
         if (SakuraSignIn.isRewardOptionBarOpened()) {
             super.drawString(super.font, getByZh("奖励规则类型"), 4, 5, 0xFFACACAC);
+            // 重置为白色, 避免颜色叠加问题
+            GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
             AbstractGui.fill(0, leftBarTitleHeight, leftBarWidth, leftBarTitleHeight - 1, 0xAA000000);
         }
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         // 绘制右侧边栏列表背景
         AbstractGui.fill(super.width - rightBarWidth, 0, super.width, super.height, 0xAA000000);
         AbstractGuiUtils.fillOutLine(super.width - rightBarWidth, 0, rightBarWidth, super.height, 1, 0xFF000000);

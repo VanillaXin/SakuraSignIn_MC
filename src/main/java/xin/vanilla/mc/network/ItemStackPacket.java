@@ -62,7 +62,7 @@ public class ItemStackPacket {
                 boolean added = player.inventory.add(packet.itemStack);
                 // 如果物品堆无法添加到库存，则以物品实体的形式生成在世界上
                 if (!added) {
-                    ItemEntity itemEntity = new ItemEntity(player.level, player.getX(), player.getY(), player.getZ(), packet.itemStack);
+                    ItemEntity itemEntity = new ItemEntity(player.level, player.x, player.y, player.z, packet.itemStack);
                     player.level.addFreshEntity(itemEntity);
                 }
             }

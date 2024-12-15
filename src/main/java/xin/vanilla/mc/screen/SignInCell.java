@@ -1,6 +1,6 @@
 package xin.vanilla.mc.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -141,18 +141,20 @@ public class SignInCell {
             float dayWidth = font.width(dayStr);
             float fontX = (float) (x + (width - dayWidth) / 2);
             float fontY = (float) (y + height + 0.1f);
-            font.draw(dayStr, fontX, fontY, color);
+            AbstractGuiUtils.drawString(font, dayStr, fontX, fontY, color);
             // 绘制下划线
             if (underLine) {
+                // 重置为白色, 避免颜色叠加问题
+                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 AbstractGui.fill((int) fontX, (int) (fontY + font.lineHeight), (int) (fontX + dayWidth), (int) (fontY + font.lineHeight + 1), color);
             }
         }
     }
 
     // 绘制奖励详情弹出层
-    public void renderTooltip(FontRenderer fontRenderer, ItemRenderer itemRenderer, int mouseX, int mouseY) {
+    public void renderTooltip(FontRenderer font, ItemRenderer itemRenderer, int mouseX, int mouseY) {
         // 禁用深度测试
-        RenderSystem.disableDepthTest();
+        GlStateManager.disableDepthTest();
         GL11.glPushMatrix();
         // 提升Z坐标以确保弹出层在最上层
         GL11.glTranslatef(0, 0, 200.0F);
@@ -168,15 +170,15 @@ public class SignInCell {
         double tooltipScale = tooltipWidth / tooltipUV.getUWidth();
 
         // 开启 OpenGL 的混合模式，使得纹理的透明区域渲染生效
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         // 在鼠标位置左上角绘制弹出层背景
         Minecraft.getInstance().getTextureManager().bind(BACKGROUND_TEXTURE);
         double tooltipX0 = (x == x1 ? (mouseX) : x1 + width / 2) - tooltipWidth / 2;
         double tooltipY0 = (y == y1 ? mouseY : y1 - 2) - tooltipHeight - 1;
         AbstractGuiUtils.blit((int) tooltipX0, (int) tooltipY0, (int) tooltipWidth, (int) tooltipHeight, (float) tooltipUV.getU0(), (float) tooltipUV.getV0(), (int) tooltipUV.getUWidth(), (int) tooltipUV.getVHeight(), textureCoordinate.getTotalWidth(), textureCoordinate.getTotalHeight());
         // 关闭 OpenGL 的混合模式
-        RenderSystem.disableBlend();
+        GlStateManager.disableBlend();
 
         // 绘制滚动条
         Coordinate scrollCoordinate = textureCoordinate.getTooltipScrollCoordinate();
@@ -184,6 +186,9 @@ public class SignInCell {
         double outScrollX1 = outScrollX0 + scrollCoordinate.getWidth() * tooltipScale;
         double outScrollY0 = tooltipY0 + scrollCoordinate.getY() * tooltipScale;
         double outScrollY1 = outScrollY0 + scrollCoordinate.getHeight() * tooltipScale;
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         AbstractGui.fill((int) outScrollX0, (int) outScrollY0, (int) outScrollX1, (int) outScrollY1, 0xCC232323);
         // 滚动条百分比
         double inScrollWidthScale = rewardList.size() > TOOLTIP_MAX_VISIBLE_ITEMS ? (double) TOOLTIP_MAX_VISIBLE_ITEMS / rewardList.size() : 1;
@@ -200,6 +205,9 @@ public class SignInCell {
         double inScrollX1 = inScrollX0 + inScrollWidth;
         double inScrollY0 = outScrollY0;
         double inScrollY1 = outScrollY1;
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
         AbstractGui.fill((int) inScrollX0 + 1, (int) inScrollY0, (int) inScrollX1 - 1, (int) inScrollY1, 0xCCCCCCCC);
 
         for (int i = 0; i < TOOLTIP_MAX_VISIBLE_ITEMS; i++) {
@@ -210,23 +218,28 @@ public class SignInCell {
                 double itemX = (tooltipX0 + cellCoordinate.getX() * tooltipScale) + i * (itemIconSize + margin);
                 // 物品图标在弹出层中的 y 位置
                 double itemY = tooltipY0 + cellCoordinate.getY() * tooltipScale;
+                // 绘制原版物品会导致深度测试被启用, 所以需要再次禁用深度测试
+                GlStateManager.disableDepthTest();
                 // 渲染物品图标
-                AbstractGuiUtils.renderCustomReward(itemRenderer, fontRenderer, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) itemX, (int) itemY, true);
+                AbstractGuiUtils.renderCustomReward(itemRenderer, font, BACKGROUND_TEXTURE, textureCoordinate, reward, (int) itemX, (int) itemY, true);
             }
         }
         // 绘制文字
         String monthTitle = DateUtils.toLocalStringMonth(DateUtils.getDate(year, month, day), Minecraft.getInstance().options.languageCode);
         String dayTitle = DateUtils.toLocalStringDay(DateUtils.getDate(year, month, day), Minecraft.getInstance().options.languageCode);
         String title = String.format("%s %s", monthTitle, dayTitle);
-        double fontWidth = fontRenderer.width(title);
+        double fontWidth = font.width(title);
         Coordinate dateCoordinate = textureCoordinate.getTooltipDateCoordinate();
         double tooltipDateX = tooltipX0 + (tooltipWidth - fontWidth) / 2;
         double tooltipDateY = tooltipY0 + (dateCoordinate.getY() * tooltipScale);
-        fontRenderer.draw(title, (int) tooltipDateX, (int) tooltipDateY, 0xFFFFFF);
+        // 重置为白色, 避免颜色叠加问题
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
+        font.draw(title, (int) tooltipDateX, (int) tooltipDateY, 0xFFFFFF);
 
         // 恢复原来的矩阵状态
         GL11.glPopMatrix();
         // 恢复深度测试
-        RenderSystem.enableDepthTest();
+        GlStateManager.enableDepthTest();
     }
 }

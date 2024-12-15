@@ -353,7 +353,7 @@ public class AdvancementSelectScreen extends Screen {
             AbstractGuiUtils.fill((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
             ItemStack itemStack = new ItemStack(this.displayMode ? Items.CHEST : Items.COMPASS);
-            this.itemRenderer.renderGuiItem(itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            AbstractGuiUtils.renderItem(itemRenderer, font, itemStack, (int) context.button.getX() + 2, (int) context.button.getY() + 2, false);
             Text text = this.displayMode ? Text.i18n("列出模式\n有图标的 (%s)", displayableAdvancementList.size()) : Text.i18n("列出模式\n所有进度 (%s)", allAdvancementList.size());
             context.button.setTooltip(text);
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
@@ -362,7 +362,7 @@ public class AdvancementSelectScreen extends Screen {
             int lineColor = context.button.isHovered() ? 0xEEFFFFFF : 0xEE000000;
             AbstractGuiUtils.fill((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), 1, lineColor, 2);
-            this.itemRenderer.renderGuiItem(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getIcon(), (int) context.button.getX() + 2, (int) context.button.getY() + 2);
+            AbstractGuiUtils.renderItem(itemRenderer, font, AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getIcon(), (int) context.button.getX() + 2, (int) context.button.getY() + 2, false);
             context.button.setTooltip(Text.literal(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getTitle()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
@@ -419,7 +419,7 @@ public class AdvancementSelectScreen extends Screen {
 
                     AbstractGuiUtils.fill((int) context.button.getX(), (int) context.button.getY(), (int) context.button.getWidth(), (int) context.button.getHeight(), bgColor);
                     AbstractGuiUtils.drawLimitedText(Text.literal(AdvancementRewardParser.getDisplayName(advancementData)).setFont(this.font), context.button.getX() + AbstractGuiUtils.ITEM_ICON_SIZE + this.margin * 2, context.button.getY() + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 - this.font.lineHeight) / 2.0, (int) context.button.getWidth() - AbstractGuiUtils.ITEM_ICON_SIZE - 4);
-                    this.itemRenderer.renderGuiItem(advancementData.getIcon(), (int) (context.button.getX() + this.margin), (int) context.button.getY());
+                    AbstractGuiUtils.renderItem(itemRenderer, font, advancementData.getIcon(), (int) (context.button.getX() + this.margin), (int) context.button.getY(), false);
                     context.button.setTooltip(AdvancementRewardParser.getDisplayName(advancementData) + "\n" + AdvancementRewardParser.getDescription(advancementData));
                 } else {
                     context.button.setX(0).setY(0).setWidth(0).setHeight(0).setId("");
