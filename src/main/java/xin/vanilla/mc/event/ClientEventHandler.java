@@ -40,16 +40,15 @@ public class ClientEventHandler {
     private static final String CATEGORIES = "key.sakura_sign_in.categories";
 
     // 定义按键绑定
-    public static KeyMapping SIGN_IN_SCREEN_KEY = new KeyMapping("key.sakura_sign_in.sign_in",
+    public static final KeyMapping SIGN_IN_SCREEN_KEY = new KeyMapping("key.sakura_sign_in.sign_in",
             GLFW.GLFW_KEY_H, CATEGORIES);
-    public static KeyMapping REWARD_OPTION_SCREEN_KEY = new KeyMapping("key.sakura_sign_in.reward_option",
+    public static final KeyMapping REWARD_OPTION_SCREEN_KEY = new KeyMapping("key.sakura_sign_in.reward_option",
             GLFW.GLFW_KEY_O, CATEGORIES);
 
     /**
      * 注册键绑定
      */
-    @SubscribeEvent
-    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+    public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         LOGGER.debug("Registering key bindings");
         event.register(SIGN_IN_SCREEN_KEY);
         event.register(REWARD_OPTION_SCREEN_KEY);
