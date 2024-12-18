@@ -5,8 +5,6 @@ import lombok.NonNull;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ERewardType;
 import xin.vanilla.mc.network.AdvancementData;
@@ -34,14 +32,10 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
         return json;
     }
 
-    @Override
-    public String getDisplayName(JsonObject json) {
-        ResourceLocation deserialize = deserialize(json);
-        return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode()))
-                , SakuraSignIn.getAdvancementData().stream()
-                        .filter(data -> data.getId().equals(deserialize))
-                        .findFirst().orElse(new AdvancementData(deserialize, "", "", new ItemStack(Items.AIR)))
-                        .getTitle());
+    public static AdvancementData getAdvancementData(String id) {
+        return SakuraSignIn.getAdvancementData().stream()
+                .filter(data -> data.getId().toString().equalsIgnoreCase(id))
+                .findFirst().orElse(new AdvancementData(new ResourceLocation(id), null));
     }
 
     public static String getId(AdvancementData advancementData) {
@@ -60,14 +54,12 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
         return getAdvancementData(resourceLocation.toString());
     }
 
-    public static AdvancementData getAdvancementData(String id) {
-        return SakuraSignIn.getAdvancementData().stream()
-                .filter(data -> data.getId().toString().equalsIgnoreCase(id))
-                .findFirst().orElse(new AdvancementData(new ResourceLocation(id), "", "", new ItemStack(Items.AIR)));
+    public static String getDisplayName(AdvancementData advancementData) {
+        return advancementData.getDisplayInfo().getTitle().getString();
     }
 
-    public static String getDisplayName(AdvancementData advancementData) {
-        return advancementData.getTitle();
+    public static String getDescription(AdvancementData advancementData) {
+        return advancementData.getDisplayInfo().getDescription().getString();
     }
 
     public static String getDisplayName(Advancement advancement) {
@@ -78,8 +70,14 @@ public class AdvancementRewardParser implements RewardParser<ResourceLocation> {
         return result;
     }
 
-    public static String getDescription(AdvancementData advancementData) {
-        return advancementData.getDescription();
+    @Override
+    public String getDisplayName(JsonObject json) {
+        ResourceLocation deserialize = deserialize(json);
+        return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode()))
+                , SakuraSignIn.getAdvancementData().stream()
+                        .filter(data -> data.getId().equals(deserialize))
+                        .findFirst().orElse(new AdvancementData(deserialize, null))
+                        .getDisplayInfo().getTitle().getString());
     }
 
     public static String getDescription(Advancement advancement) {

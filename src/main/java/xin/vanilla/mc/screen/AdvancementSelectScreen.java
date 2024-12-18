@@ -40,7 +40,7 @@ public class AdvancementSelectScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final List<AdvancementData> allAdvancementList = SakuraSignIn.getAdvancementData();
-    private final List<AdvancementData> displayableAdvancementList = SakuraSignIn.getAdvancementData().stream().filter(o -> o.getIcon().getItem() != Items.AIR).toList();
+    private final List<AdvancementData> displayableAdvancementList = SakuraSignIn.getAdvancementData().stream().filter(o -> o.getDisplayInfo().getIcon().getItem() != Items.AIR).toList();
     // 每页显示行数
     private final int maxLine = 5;
 
@@ -363,8 +363,8 @@ public class AdvancementSelectScreen extends Screen {
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
             AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
-            this.itemRenderer.renderGuiItem(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getIcon(), (int) context.button().getX() + 2, (int) context.button().getY() + 2);
-            context.button().setTooltip(Text.literal(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getTitle()));
+            this.itemRenderer.renderGuiItem(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getDisplayInfo().getIcon(), (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            context.button().setTooltip(Text.literal(AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getDisplayInfo().getTitle().getString()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
 
         // 滚动条
@@ -420,7 +420,7 @@ public class AdvancementSelectScreen extends Screen {
 
                     AbstractGuiUtils.fill(context.poseStack(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), bgColor);
                     AbstractGuiUtils.drawLimitedText(Text.literal(AdvancementRewardParser.getDisplayName(advancementData)).setPoseStack(context.poseStack()).setFont(this.font), context.button().getX() + AbstractGuiUtils.ITEM_ICON_SIZE + this.margin * 2, context.button().getY() + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 - this.font.lineHeight) / 2.0, (int) context.button().getWidth() - AbstractGuiUtils.ITEM_ICON_SIZE - 4);
-                    this.itemRenderer.renderGuiItem(advancementData.getIcon(), (int) (context.button().getX() + this.margin), (int) context.button().getY());
+                    this.itemRenderer.renderGuiItem(advancementData.getDisplayInfo().getIcon(), (int) (context.button().getX() + this.margin), (int) context.button().getY());
                     context.button().setTooltip(AdvancementRewardParser.getDisplayName(advancementData) + "\n" + AdvancementRewardParser.getDescription(advancementData));
                 } else {
                     context.button().setX(0).setY(0).setWidth(0).setHeight(0).setId("");
@@ -467,7 +467,7 @@ public class AdvancementSelectScreen extends Screen {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             if (StringUtils.isNotNullOrEmpty(bt.getId())) {
                 this.currentAdvancement = new ResourceLocation(bt.getId());
-                LOGGER.debug("Select effect: {}", AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getTitle());
+                LOGGER.debug("Select effect: {}", AdvancementRewardParser.getAdvancementData(this.currentAdvancement).getDisplayInfo().getTitle().getString());
                 flag.set(true);
             }
         }
