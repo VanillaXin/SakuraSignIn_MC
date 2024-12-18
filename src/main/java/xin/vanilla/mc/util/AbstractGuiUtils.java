@@ -683,9 +683,9 @@ public class AbstractGuiUtils {
         else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
             ResourceLocation resourceLocation = RewardManager.deserializeReward(reward);
             AdvancementData advancementData = SakuraSignIn.getAdvancementData().stream()
-                    .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
-                    .findFirst().orElse(new AdvancementData(resourceLocation, "", "", new ItemStack(Items.AIR)));
-            graphics.renderItem(advancementData.getIcon(), x, y);
+                    .filter(data -> data.id().toString().equalsIgnoreCase(resourceLocation.toString()))
+                    .findFirst().orElse(new AdvancementData(resourceLocation, null));
+            graphics.renderItem(advancementData.displayInfo().getIcon(), x, y);
         }
         // 指令
         else if (reward.getType().equals(ERewardType.COMMAND)) {
