@@ -27,6 +27,7 @@ import xin.vanilla.mc.config.ServerConfig;
 import xin.vanilla.mc.event.ClientEventHandler;
 import xin.vanilla.mc.network.AdvancementData;
 import xin.vanilla.mc.network.ModNetworkHandler;
+import xin.vanilla.mc.network.SplitPacket;
 import xin.vanilla.mc.screen.coordinate.TextureCoordinate;
 
 import java.io.IOException;
@@ -34,6 +35,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Mod(SakuraSignIn.MODID)
 public class SakuraSignIn {
@@ -92,6 +95,12 @@ public class SakuraSignIn {
     @Getter
     @Setter
     private static int permissionLevel;
+
+    /**
+     * 分片网络包缓存
+     */
+    @Getter
+    private static final Map<String, List<? extends SplitPacket>> packetCache = new ConcurrentHashMap<>();
 
     public SakuraSignIn() {
 
