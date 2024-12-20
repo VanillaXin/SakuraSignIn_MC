@@ -31,7 +31,9 @@ public class DownloadRewardOptionNotice {
             ServerPlayer player = ctx.get().getSender();
             if (player != null) {
                 // 同步签到奖励配置到客户端
-                ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket().split()) {
+                    ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), rewardOptionSyncPacket);
+                }
             }
         });
         // 设置数据包已处理状态，防止重复处理
