@@ -10,6 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xin.vanilla.mc.SakuraSignIn;
 import xin.vanilla.mc.enums.ERewardRule;
+import xin.vanilla.mc.network.RewardOptionSyncData;
+import xin.vanilla.mc.network.RewardOptionSyncPacket;
 import xin.vanilla.mc.rewards.Reward;
 import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.util.DateUtils;
@@ -735,6 +737,92 @@ public class RewardOptionDataManager {
             result = RewardOptionData.getDefault();
             RewardOptionDataManager.saveRewardOption();
         }
+        return result;
+    }
+
+    public static Map<String, RewardList> getRewardMap(ERewardRule rule) {
+        Map<String, RewardList> result = new LinkedHashMap<>();
+        switch (rule) {
+            case BASE_REWARD:
+                result.put("base", rewardOptionData.getBaseRewards());
+                break;
+            case CONTINUOUS_REWARD:
+                result = rewardOptionData.getContinuousRewards();
+                break;
+            case CYCLE_REWARD:
+                result = rewardOptionData.getCycleRewards();
+                break;
+            case YEAR_REWARD:
+                result = rewardOptionData.getYearRewards();
+                break;
+            case MONTH_REWARD:
+                result = rewardOptionData.getMonthRewards();
+                break;
+            case WEEK_REWARD:
+                result = rewardOptionData.getWeekRewards();
+                break;
+            case DATE_TIME_REWARD:
+                result = rewardOptionData.getDateTimeRewards();
+                break;
+            case CUMULATIVE_REWARD:
+                result = rewardOptionData.getCumulativeRewards();
+                break;
+        }
+        return result;
+    }
+
+    public static void setRewardMap(RewardOptionData data, ERewardRule rule, Map<String, RewardList> map) {
+        switch (rule) {
+            case BASE_REWARD:
+                data.setBaseRewards(map.get("base"));
+                break;
+            case CONTINUOUS_REWARD:
+                data.setContinuousRewards(map);
+                break;
+            case CYCLE_REWARD:
+                data.setCycleRewards(map);
+                break;
+            case YEAR_REWARD:
+                data.setYearRewards(map);
+                break;
+            case MONTH_REWARD:
+                data.setMonthRewards(map);
+                break;
+            case WEEK_REWARD:
+                data.setWeekRewards(map);
+                break;
+            case DATE_TIME_REWARD:
+                data.setDateTimeRewards(map);
+                break;
+            case CUMULATIVE_REWARD:
+                data.setCumulativeRewards(map);
+                break;
+        }
+    }
+
+    public static RewardOptionSyncPacket toSyncPacket() {
+        List<RewardOptionSyncData> dataList = new ArrayList<>();
+        for (ERewardRule rule : ERewardRule.values()) {
+            RewardOptionDataManager.getRewardMap(rule).forEach((key, value) -> {
+                List<RewardOptionSyncData> list = value.stream()
+                        .map(reward -> new RewardOptionSyncData(rule, key, reward))
+                        .collect(Collectors.toList());
+                dataList.addAll(list);
+            });
+        }
+        return new RewardOptionSyncPacket(dataList);
+    }
+
+    public static RewardOptionData fromSyncPacketList(List<RewardOptionSyncPacket> packetList) {
+        RewardOptionData result = new RewardOptionData();
+        packetList.stream().flatMap(packet -> packet.getRewardOptionData().stream()).collect(Collectors.groupingBy(RewardOptionSyncData::getRule)).forEach((rule, dataList) -> {
+            Map<String, RewardList> rewardMap = new LinkedHashMap<>();
+            dataList.forEach(data -> {
+                RewardList rewardList = rewardMap.computeIfAbsent(data.getKey(), key -> new RewardList());
+                rewardList.add(data.getReward());
+            });
+            RewardOptionDataManager.setRewardMap(result, rule, rewardMap);
+        });
         return result;
     }
 }
