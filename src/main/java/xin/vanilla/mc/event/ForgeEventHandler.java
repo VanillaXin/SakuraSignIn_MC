@@ -105,9 +105,13 @@ public class ForgeEventHandler {
             // 同步玩家签到数据到客户端
             PlayerSignInDataCapability.syncPlayerData((ServerPlayer) event.getPlayer());
             // 同步签到奖励配置到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+            for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket().split()) {
+                ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), rewardOptionSyncPacket);
+            }
             // 同步进度列表到客户端
-            ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new AdvancementPacket(((ServerPlayer) event.getPlayer()).server.getAdvancements().getAllAdvancements()));
+            for (AdvancementPacket advancementPacket : new AdvancementPacket(((ServerPlayer) event.getPlayer()).server.getAdvancements().getAllAdvancements()).split()) {
+                ModNetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), advancementPacket);
+            }
         }
     }
 }
