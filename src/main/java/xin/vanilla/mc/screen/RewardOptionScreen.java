@@ -532,7 +532,9 @@ public class RewardOptionScreen extends Screen {
             if (!Minecraft.getInstance().isLocalServer()) {
                 if (Minecraft.getInstance().player != null) {
                     if (Minecraft.getInstance().player.hasPermissions(3)) {
-                        ModNetworkHandler.INSTANCE.sendToServer(new RewardOptionSyncPacket(RewardOptionDataManager.getRewardOptionData()));
+                        for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket().split()) {
+                            ModNetworkHandler.INSTANCE.sendToServer(rewardOptionSyncPacket);
+                        }
                         flag.set(true);
                     }
                 }
