@@ -121,6 +121,7 @@ public class SakuraSignIn {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             FMLJavaModLoadingContext.get().getModEventBus().addListener(ClientEventHandler::registerKeyMappings);
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
         }
 
         // 注册客户端设置事件到MOD事件总线
