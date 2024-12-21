@@ -28,6 +28,7 @@ import xin.vanilla.mc.rewards.RewardList;
 import xin.vanilla.mc.rewards.RewardManager;
 import xin.vanilla.mc.screen.component.OperationButton;
 import xin.vanilla.mc.screen.component.PopupOption;
+import xin.vanilla.mc.screen.component.Text;
 import xin.vanilla.mc.util.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -661,7 +662,7 @@ public class SignInScreen extends Screen {
                         return name;
                     }).toArray(String[]::new));
                 }
-                popupOption.setMaxWidth(font.width("cal_text_width"))
+                popupOption.setMaxWidth(AbstractGuiUtils.multilineTextWidth(Text.i18n("screen.sakura_sign_in.theme_selector.empty")))
                         .setMaxLines(5)
                         .build(super.font, mouseX, mouseY, String.format("主题选择按钮:%s", value.getOperation()));
             }
