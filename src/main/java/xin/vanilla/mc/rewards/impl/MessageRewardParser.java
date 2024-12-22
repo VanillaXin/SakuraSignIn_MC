@@ -26,7 +26,7 @@ public class MessageRewardParser implements RewardParser<IFormattableTextCompone
                 style.withColor(Color.fromRgb(styleJson.get("color").getAsInt()));
             style.withBold(styleJson.get("bold").getAsBoolean());
             style.withItalic(styleJson.get("italic").getAsBoolean());
-            style.withUnderlined(styleJson.get("underlined").getAsBoolean());
+            style.setUnderlined(styleJson.get("underlined").getAsBoolean());
             style.setStrikethrough(styleJson.get("strikethrough").getAsBoolean());
             style.setObfuscated(styleJson.get("obfuscated").getAsBoolean());
             style.withFont(new ResourceLocation(styleJson.get("font").getAsString()));
