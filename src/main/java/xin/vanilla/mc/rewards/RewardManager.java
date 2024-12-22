@@ -431,12 +431,8 @@ public class RewardManager {
         int serverCompensateDateInt = DateUtils.toDateInt(serverCompensateDate);
         int signInDateInt = DateUtils.toDateInt(packet.getSignInTime());
         // 判断签到/补签时间合法性
-        if (serverCompensateDateInt < signInDateInt) {
-            if (ESignInType.SIGN_IN.equals(packet.getSignInType())
-                    && (coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED))
-                    && DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE)) {
-                player.sendSystemMessage(Component.translatable(getI18nKey("要到今天的%05.2f后才能签到哦"), ServerConfig.TIME_COOLING_TIME.get()));
-            } else {
+        if (serverCompensateDateInt < signInDateInt && !DateUtils.equals(serverDate, packet.getSignInTime(), DateUtils.DateUnit.MINUTE)) {
+            if (!(ESignInType.SIGN_IN.equals(packet.getSignInType()) && (coolingMethod.equals(ETimeCoolingMethod.FIXED_TIME) || coolingMethod.equals(ETimeCoolingMethod.MIXED)))) {
                 player.sendSystemMessage(Component.translatable(getI18nKey("签到日期晚于服务器当前日期，签到失败")));
             }
             return;
